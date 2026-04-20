@@ -1,0 +1,284 @@
+import { useMemo } from "react";
+import { PILARES, PLANOS, MODULOS_ALL, fmtMoney, getBarColor, classifFor } from "../data";
+import type { OrcamentoForm } from "../types";
+
+interface Props {
+  form: OrcamentoForm;
+}
+
+export function OrcamentoPreview({ form }: Props) {
+  const data = useMemo(() => {
+    const nome = form.nome || "Cliente";
+    const espec = form.especialidade;
+    const cidade = form.cidade || "—";
+    const fat = parseFloat(form.faturamento) || 0;
+    const meta = parseFloat(form.meta) || 0;
+    const score = parseFloat(form.score) || 0;
+    const scoreMax = parseFloat(form.scoreMax) || 96;
+    const scorePct = scoreMax > 0 ? (score / scoreMax) * 100 : 0;
+    const classif = classifFor(scorePct);
+    const plano = PLANOS[form.plano];
+
+    const pilares = PILARES.map((p) => {
+      const raw = form.pilarScores[p.id];
+      const v = raw === undefined || raw === "" ? null : parseFloat(raw);
+      const pct = v === null || isNaN(v) ? null : Math.min(100, Math.max(0, v));
+      return { ...p, pct };
+    });
+
+    const selectedMods = MODULOS_ALL.filter((m) => form.modulos[m.id]);
+
+    const dataFmt = form.data
+      ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+      : "—";
+
+    const pilarSorted = [...pilares]
+      .map((p) => ({ ...p, pctFallback: p.pct ?? 50 }))
+      .sort((a, b) => a.pctFallback - b.pctFallback);
+
+    const timeline = [
+      { n: "1", period: "Semanas 1–2", title: "Diagnóstico Profundo & Kickoff", desc: "Onboarding completo, mapeamento detalhado de processos, definição de metas, indicadores e cronograma de execução." },
+      { n: "2", period: "Meses 1–2", title: `Estruturação: ${pilarSorted[0].name.split("&")[0].trim()}`, desc: "Implementação dos processos prioritários, criação de scripts e templates, primeiro treinamento de equipe." },
+      { n: "3", period: "Mês 2–3", title: `Ativação: ${(pilarSorted[1] || pilarSorted[0]).name.split("&")[0].trim()}`, desc: "Lançamento de estratégias de captação e conversão. Acompanhamento semanal de métricas e ajustes." },
+      { n: "4", period: "Mês 3+", title: "Aceleração & Consolidação", desc: "Otimização dos resultados, ajuste de estratégias e escalonamento do que está funcionando." },
+      { n: "5", period: "Resultado Final", title: "Faturamento em Trajetória", desc: "Meta: " + (meta ? fmtMoney(meta) : "faturamento crescente") + " com processos documentados e negócio com menos dependência do dono." },
+    ];
+
+    const roiAbs = fat && meta
+      ? `potencial de +${fmtMoney(meta - fat)}/mês no faturamento`
+      : "no faturamento em até 6 meses";
+
+    return {
+      nome, espec, cidade, fat, meta, score, scoreMax, scorePct,
+      classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
+    };
+  }, [form]);
+
+  return (
+    <div className="orc-doc-wrap flex-1 px-4 md:px-8 py-6 md:py-10 overflow-y-auto flex justify-center bg-[#E8E4E0]">
+      <div
+        className="orc-doc bg-white shadow-[0_8px_40px_rgba(0,0,0,0.15)] rounded-[4px] overflow-hidden relative"
+        style={{ width: 794, minHeight: 1123 }}
+      >
+        {/* CAPA */}
+        <div className="pg-cover relative overflow-hidden px-[52px] pt-14 pb-12" style={{ background: "#1C3D2E", minHeight: 420 }}>
+          <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ border: "70px solid rgba(201,168,76,0.1)" }} />
+          <div className="absolute -top-[60px] -left-[60px] w-[240px] h-[240px] rounded-full" style={{ border: "50px solid rgba(255,255,255,0.04)" }} />
+          <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-white/40 mb-10">
+            Raiz Consultoria Estratégica · Confidencial
+          </div>
+          <div className="text-[11px] font-bold tracking-[0.12em] uppercase text-dourado mb-2.5">
+            Proposta Comercial
+          </div>
+          <h1 className="font-display text-[44px] font-semibold text-white leading-[1.1] mb-2">
+            Planejamento<br />Estratégico &amp; Orçamento
+          </h1>
+          <div className="text-[18px] text-white/70 italic font-display mb-8">
+            {data.nome}{data.espec ? ` · ${data.espec}` : ""}
+          </div>
+          <div className="w-[60px] h-[2px] bg-dourado my-7" />
+          <div className="flex gap-6 flex-wrap relative z-10">
+            <CoverMeta label="Localização" value={data.cidade} />
+            <CoverMeta label="Data da proposta" value={data.dataFmt} />
+            <CoverMeta label="Faturamento atual" value={data.fat ? fmtMoney(data.fat) : "—"} />
+            <CoverMeta label="Meta 6 meses" value={data.meta ? fmtMoney(data.meta) : "—"} />
+          </div>
+        </div>
+
+        {/* DIAGNÓSTICO */}
+        <Section label="01 · Resultado do Diagnóstico" title={`Diagnóstico 360° · ${data.nome}`}>
+          <div className="grid grid-cols-[auto_1fr] gap-5 items-center bg-[#f8f7f5] rounded-[10px] p-5 mb-5">
+            <div className="text-center">
+              <div className="font-display text-[48px] font-semibold text-verde-raiz leading-none">
+                {data.score || "—"}
+              </div>
+              <div className="text-[11px] text-[#718096] mt-0.5">de {data.scoreMax} pts</div>
+              <div className="text-[11px] font-bold text-dourado mt-1.5">
+                {data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : "—%"}
+              </div>
+            </div>
+            <div>
+              <div className="text-[13px] font-bold text-verde-raiz mb-1">{data.classif.label}</div>
+              <div className="text-[12px] text-[#718096] leading-[1.55]">{data.classif.desc}</div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            {data.pilares.map((p) => {
+              const color = p.pct !== null ? getBarColor(p.pct) : "#E2E8F0";
+              return (
+                <div key={p.id} className="mb-2.5">
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-[12px] font-semibold text-quase-preto">{p.name}</div>
+                    <div className="text-[11px] font-bold" style={{ color }}>
+                      {p.pct !== null ? `${p.pct}%` : "—"}
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-[#E2E8F0] rounded-[3px] overflow-hidden">
+                    <div
+                      className="h-full rounded-[3px] transition-all duration-500"
+                      style={{ width: `${p.pct || 0}%`, background: color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5 mt-5">
+            Análise Estratégica
+          </div>
+          <div
+            className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-5 py-4 text-[12.5px] leading-[1.8] text-quase-preto"
+            dangerouslySetInnerHTML={{
+              __html: (form.analise || 'Preencha o campo "Gargalos identificados" para inserir a análise.').replace(/\n/g, "<br>"),
+            }}
+          />
+        </Section>
+
+        {/* PLANO */}
+        <Section label="02 · Plano Recomendado" title="Proposta de Trabalho">
+          <div className="mb-5">
+            <div className="plan-header bg-verde-raiz rounded-t-[10px] px-6 py-5">
+              <div className="inline-block bg-dourado rounded text-white text-[9px] font-bold tracking-[0.1em] px-2.5 py-[3px] mb-2">
+                {data.plano.badge}
+              </div>
+              <div className="font-display text-[30px] font-semibold text-white">{data.plano.name}</div>
+              <div className="text-[12.5px] text-white/75 mt-1.5 leading-[1.65]">{data.plano.desc}</div>
+            </div>
+            <div className="border-[1.5px] border-t-0 border-[#e8e4e0] rounded-b-[10px] px-6 py-5">
+              <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">
+                Módulos incluídos nesta proposta
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-3.5">
+                {data.selectedMods.length > 0 ? (
+                  data.selectedMods.map((m) => (
+                    <div
+                      key={m.id}
+                      className="bg-[#f0f7f4] border border-verde-menta rounded-[5px] px-2.5 py-1 text-[11px] font-semibold text-verde-raiz"
+                    >
+                      {m.id} · {m.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-[12px] text-[#718096]">Selecione os módulos na barra lateral</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
+            <div className="px-6 py-5 bg-white border-r-[1.5px] border-[#DDD8D0]">
+              <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
+                Investimento Mensal
+              </div>
+              <div className="font-display text-[30px] font-semibold text-verde-raiz leading-none">
+                {data.plano.valor}/mês
+              </div>
+              <div className="text-[11px] text-[#718096] mt-1">{data.plano.dur}</div>
+            </div>
+            <div className="px-6 py-5 bg-white">
+              <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
+                Potencial de Crescimento
+              </div>
+              <div className="font-display text-[30px] font-semibold text-dourado leading-none">
+                {data.plano.roi}
+              </div>
+              <div className="text-[11px] text-[#718096] mt-1">{data.roiAbs}</div>
+            </div>
+          </div>
+        </Section>
+
+        {/* CRONOGRAMA */}
+        <Section label="03 · Cronograma de Execução" title="Fases do Trabalho">
+          <div className="relative pl-7">
+            <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #C8E6D5)" }} />
+            {data.timeline.map((t) => (
+              <div key={t.n} className="relative mb-4">
+                <div className="absolute -left-7 w-5 h-5 bg-verde-raiz rounded-full flex items-center justify-center text-[9px] font-bold text-white font-display top-0.5">
+                  {t.n}
+                </div>
+                <div className="text-[10px] font-bold tracking-[0.08em] uppercase text-dourado mb-0.5">
+                  {t.period}
+                </div>
+                <div className="text-[13px] font-bold text-quase-preto mb-1">{t.title}</div>
+                <div className="text-[12px] text-[#718096] leading-[1.6]">{t.desc}</div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* PRÓXIMOS PASSOS */}
+        <Section label="04 · Próximos Passos" title="Como iniciamos o trabalho">
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {[
+              ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],
+              ["Pagamento Inicial", "Confirmação do primeiro pagamento via PIX ou boleto. Parcelamento disponível sob consulta."],
+              ["Onboarding Estratégico", "Sessão de onboarding em até 7 dias: metas, indicadores e primeiro módulo definidos."],
+              ["Dashboard Ativado", "Dashboard exclusivo do cliente configurado com KPIs iniciais do diagnóstico."],
+            ].map(([t, d], i) => (
+              <div key={i} className="border-[1.5px] border-[#DDD8D0] rounded-lg px-4 py-3.5 flex gap-3 items-start">
+                <div className="w-[26px] h-[26px] min-w-[26px] bg-verde-raiz rounded-full flex items-center justify-center text-[11px] font-bold text-white font-display">
+                  {i + 1}
+                </div>
+                <div>
+                  <strong className="block text-[12.5px] font-bold text-quase-preto mb-0.5">{t}</strong>
+                  <span className="text-[11px] text-[#718096]">{d}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-verde-raiz rounded-[10px] px-7 py-6 text-center">
+            <div className="font-display text-[24px] font-semibold text-white mb-2">Pronto para começar?</div>
+            <div className="text-[13px] text-white/70 mb-4">
+              Entre em contato para confirmar sua proposta e dar o próximo passo.
+            </div>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <div className="text-[12px] text-white/80">
+                📱 WhatsApp: <strong className="text-dourado">{form.whatsapp || "—"}</strong>
+              </div>
+              <div className="text-[12px] text-white/80">
+                ✉️ E-mail: <strong className="text-dourado">{form.email || "—"}</strong>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* RODAPÉ */}
+        <div className="bg-[#f4f3f1] border-t border-[#DDD8D0] px-[52px] py-3 flex justify-between items-center">
+          <div className="text-[11px] font-bold tracking-[0.06em] text-[#718096]">
+            RAIZ CONSULTORIA ESTRATÉGICA
+          </div>
+          <div className="text-[10px] text-[#aaa] tracking-[0.04em]">
+            DOCUMENTO CONFIDENCIAL · USO EXCLUSIVO DO CLIENTE
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CoverMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-[12px] text-white/60">
+      <strong className="text-white/90 block text-[14px] mb-0.5">{value}</strong>
+      {label}
+    </div>
+  );
+}
+
+function Section({ label, title, children }: { label: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
+      <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">{label}</div>
+      <h2 className="font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
+      <div className="w-full h-px bg-gradient-to-r from-verde-raiz to-transparent mb-5" />
+      {children}
+    </div>
+  );
+}
