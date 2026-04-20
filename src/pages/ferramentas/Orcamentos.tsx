@@ -1,12 +1,45 @@
+import { useEffect } from "react";
+import { useOrcamento } from "@/features/orcamentos/hooks/useOrcamento";
+import { OrcamentoSidebar } from "@/features/orcamentos/components/OrcamentoSidebar";
+import { OrcamentoPreview } from "@/features/orcamentos/components/OrcamentoPreview";
+import "@/features/orcamentos/print.css";
+
 export default function Orcamentos() {
+  const orc = useOrcamento();
+
+  // SEO
+  useEffect(() => {
+    const prev = document.title;
+    document.title = "Máquina de Orçamentos · Raiz Consultoria";
+    return () => { document.title = prev; };
+  }, []);
+
+  const handlePrint = () => {
+    document.body.classList.add("printing-orcamento");
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove("printing-orcamento");
+    }, 50);
+  };
+
   return (
-    <div className="mx-auto max-w-3xl">
-      <span className="eyebrow">Ferramenta interna</span>
-      <h1 className="mt-2 font-display text-4xl text-verde-raiz md:text-5xl">Máquina de Orçamentos</h1>
-      <p className="mt-4 font-body text-base text-quase-preto/75">
-        Em construção. Aqui o consultor configurará planos Base, Crescimento e Expansão, com escopo,
-        prazos e valores, e exportará a proposta para o cliente.
-      </p>
+    <div className="-mx-4 md:-mx-8 -my-6 md:-my-8">
+      <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-[#E8E4E0]">
+        <OrcamentoSidebar
+          form={orc.form}
+          setField={orc.setField}
+          setPilarScore={orc.setPilarScore}
+          toggleModulo={orc.toggleModulo}
+          reset={orc.reset}
+          clientes={orc.clientes}
+          clienteId={orc.clienteId}
+          selectCliente={orc.selectCliente}
+          loadingClientes={orc.loadingClientes}
+          loadingDiag={orc.loadingDiag}
+          onPrint={handlePrint}
+        />
+        <OrcamentoPreview form={orc.form} />
+      </div>
     </div>
   );
 }

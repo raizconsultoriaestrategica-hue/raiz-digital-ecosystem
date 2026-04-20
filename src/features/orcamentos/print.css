@@ -1,0 +1,46 @@
+/* Estilos de impressão para a Máquina de Orçamentos.
+   Quando o body tiver a classe `printing-orcamento`, escondemos tudo
+   exceto o documento do preview e ajustamos o layout para A4. */
+
+@media print {
+  body.printing-orcamento {
+    background: #fff !important;
+  }
+  body.printing-orcamento .orc-no-print,
+  body.printing-orcamento [data-orc-no-print] {
+    display: none !important;
+  }
+  body.printing-orcamento .orc-doc-wrap {
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    background: #fff !important;
+  }
+  body.printing-orcamento .orc-doc {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+  body.printing-orcamento .pg-cover,
+  body.printing-orcamento .plan-header {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Esconder layout de app/sidebar do app principal */
+  body.printing-orcamento [data-sidebar],
+  body.printing-orcamento header,
+  body.printing-orcamento nav,
+  body.printing-orcamento footer {
+    display: none !important;
+  }
+  body.printing-orcamento main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
