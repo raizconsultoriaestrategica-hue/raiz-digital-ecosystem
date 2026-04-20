@@ -108,12 +108,12 @@ function SelectGroup({
   value?: string;
   options: string[];
   onChange: (g: string, v: string) => void;
-  cols?: 2 | 3;
+  cols?: 2 | 3 | 4;
 }) {
   return (
     <div>
       <Label className="mb-2 block">{label}</Label>
-      <SelectOpts group={group} value={value} options={options} onChange={(v) => onChange(group, v)} cols={cols === 3 ? 3 : 2} />
+      <SelectOpts group={group} value={value} options={options} onChange={(v) => onChange(group, v)} cols={cols} />
     </div>
   );
 }
