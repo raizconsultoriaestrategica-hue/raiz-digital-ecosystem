@@ -12,7 +12,7 @@ import type { ClientData, ScoresMap, SelOpts } from "../types";
 import { RadarPilares } from "../components/RadarPilares";
 import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
-import { saveDiagnosticoToSupabase, saveStoredDiagnostico } from "../persistence";
+import { saveDiagnosticoToSupabase } from "../persistence";
 
 interface ResultScreenProps {
   client: ClientData;
@@ -79,8 +79,7 @@ export function ResultScreen({
     try {
       const snap = buildSnapshot();
       await saveDiagnosticoToSupabase(clienteId, snap);
-      saveStoredDiagnostico(snap);
-      toast.success("Diagnóstico salvo no Supabase e no painel admin.");
+      toast.success("Diagnóstico salvo no Supabase e disponível no painel admin.");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Falha ao salvar";
       toast.error(msg);
@@ -91,7 +90,6 @@ export function ResultScreen({
 
   const handlePDF = () => {
     const snap = buildSnapshot();
-    saveStoredDiagnostico(snap);
     generatePDF(snap, notas);
   };
 
