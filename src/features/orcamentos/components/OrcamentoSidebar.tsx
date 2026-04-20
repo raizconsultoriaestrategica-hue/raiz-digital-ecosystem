@@ -51,7 +51,7 @@ export function OrcamentoSidebar(p: Props) {
       <div className="mb-5">
         <label className={labelCls}>Selecionar cliente cadastrado</label>
         <select
-          value={clienteId}
+          value={p.clienteId}
           onChange={(e) => p.selectCliente(e.target.value)}
           className={inputCls + " cursor-pointer appearance-none"}
         >
