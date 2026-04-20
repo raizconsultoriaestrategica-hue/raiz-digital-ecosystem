@@ -7,10 +7,8 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      padding: "1.5rem",
+      screens: { "2xl": "1320px" },
     },
     extend: {
       colors: {
@@ -57,33 +55,48 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Raiz brand palette
+        "verde-raiz": "#1C3D2E",
+        "verde-musgo": "#4A7C5F",
+        "verde-menta": "#C8E6D5",
+        dourado: "#C9A84C",
+        "dourado-pale": "#F5EDD4",
+        linho: "#F0EDEA",
+        "quase-preto": "#1A1A18",
+        "marrom-raiz": "#3D1F0D",
+        caramelo: "#A0622A",
+        "off-white": "#F5F0EA",
+        "bege-terroso": "#E8DDD0",
+      },
+      fontFamily: {
+        display: ['"Cormorant Garamond"', "serif"],
+        body: ["Lato", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backgroundImage: {
+        "gradient-raiz": "linear-gradient(135deg, #1C3D2E 0%, #4A7C5F 100%)",
+        "gradient-dourado": "linear-gradient(135deg, #C9A84C 0%, #F5EDD4 100%)",
+      },
+      boxShadow: {
+        editorial: "0 20px 60px -20px rgba(28, 61, 46, 0.25)",
+        soft: "0 8px 30px -12px rgba(26, 26, 24, 0.15)",
+      },
       keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
-        },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.7s ease-out both",
       },
     },
   },
