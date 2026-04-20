@@ -14,16 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          cidade: string | null
+          consultor: string | null
+          created_at: string | null
+          especialidade: string | null
+          id: string
+          nome_cliente: string
+          nome_clinica: string | null
+          plano: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          consultor?: string | null
+          created_at?: string | null
+          especialidade?: string | null
+          id?: string
+          nome_cliente: string
+          nome_clinica?: string | null
+          plano?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          consultor?: string | null
+          created_at?: string | null
+          especialidade?: string | null
+          id?: string
+          nome_cliente?: string
+          nome_clinica?: string | null
+          plano?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      dashboard_data: {
+        Row: {
+          benchmark: string | null
+          campo: string
+          cliente_id: string | null
+          created_at: string | null
+          id: string
+          mes: string | null
+          tipo: string
+          updated_at: string | null
+          valor: string | null
+        }
+        Insert: {
+          benchmark?: string | null
+          campo: string
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          mes?: string | null
+          tipo: string
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Update: {
+          benchmark?: string | null
+          campo?: string
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          mes?: string | null
+          tipo?: string
+          updated_at?: string | null
+          valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_data_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +256,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "cliente"],
+    },
   },
 } as const
