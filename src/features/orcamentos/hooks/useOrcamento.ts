@@ -48,7 +48,7 @@ export function useOrcamento() {
     setClienteId("");
   };
 
-  // Selecionar cliente → pré-preenche dados + busca diagnóstico
+  // Selecionar cliente → pré-preenche dados + busca diagnóstico + CONFIG
   const selectCliente = async (id: string) => {
     setClienteId(id);
     if (!id) return;
@@ -56,43 +56,49 @@ export function useOrcamento() {
     if (c) {
       setForm((f) => ({
         ...f,
-        nome: c.nome_clinica || c.nome_cliente,
+        nomeCliente: c.nome_cliente || "",
+        nomeClinica: c.nome_clinica || "",
         cidade: c.cidade || "",
         especialidade: c.especialidade || "",
       }));
     }
 
-    // Buscar diagnóstico salvo
+    // Buscar diagnóstico salvo + CONFIG (faturamento/meta/dor)
     setLoadingDiag(true);
     const { data, error } = await supabase
       .from("dashboard_data")
-      .select("campo, valor, benchmark")
+      .select("campo, valor, benchmark, tipo, mes")
       .eq("cliente_id", id)
-      .eq("tipo", "PILAR")
-      .eq("mes", "Diagnóstico");
+      .or("and(tipo.eq.PILAR,mes.eq.Diagnóstico),tipo.eq.CONFIG");
     setLoadingDiag(false);
 
     if (error) {
-      toast.error("Erro ao buscar diagnóstico: " + error.message);
+      toast.error("Erro ao buscar dados do cliente: " + error.message);
       return;
     }
     if (!data || data.length === 0) {
-      toast.info("Nenhum diagnóstico salvo encontrado para este cliente");
+      toast.info("Nenhum diagnóstico ou contexto salvo para este cliente");
       return;
     }
 
-    // Mapeia: SCORE_TOTAL → score/scoreMax; pilares → pilarScores (por nome)
+    // Mapeia: SCORE_TOTAL → score/scoreMax; pilares → pilarScores; CONFIG → fat/meta/dor
     const updates: Partial<OrcamentoForm> = { pilarScores: {} };
     const pilarScores: Record<string, string> = {};
 
     data.forEach((row) => {
+      if (row.tipo === "CONFIG") {
+        if (row.campo === "fat" && row.valor) updates.faturamento = row.valor;
+        else if (row.campo === "meta" && row.valor) updates.meta = row.valor;
+        else if (row.campo === "dor" && row.valor) updates.dor = row.valor;
+        return;
+      }
+      // tipo === PILAR
       if (row.campo === "SCORE_TOTAL") {
         updates.score = row.valor || "";
         updates.scoreMax = row.benchmark || "";
       } else if (row.campo === "CLASSIFICACAO") {
         // ignora — derivamos do score
       } else {
-        // tenta casar pelo nome do pilar
         const pilar = PILARES.find((p) => p.name === row.campo || p.name.startsWith(row.campo));
         if (pilar && row.valor && row.benchmark) {
           const v = parseFloat(row.valor);
@@ -106,7 +112,7 @@ export function useOrcamento() {
 
     updates.pilarScores = pilarScores;
     setForm((f) => ({ ...f, ...updates }));
-    toast.success("Diagnóstico carregado e aplicado à proposta");
+    toast.success("Dados do cliente carregados");
   };
 
   return {

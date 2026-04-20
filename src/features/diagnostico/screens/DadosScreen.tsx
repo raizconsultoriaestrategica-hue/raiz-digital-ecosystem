@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
+import { saveClienteConfigToSupabase } from "../persistence";
 import {
   OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO,
 } from "../data";
@@ -24,6 +26,20 @@ export function DadosScreen({
   client, selOpts, clienteId, onClientField, onSel, onClienteIdChange, onBack, onNext,
 }: DadosScreenProps) {
   const canProceed = client.name.trim().length > 0;
+  const handleNext = async () => {
+    if (clienteId) {
+      try {
+        await saveClienteConfigToSupabase(clienteId, {
+          fat: selOpts.fat,
+          meta: client.meta,
+          dor: client.dor,
+        });
+      } catch (e: any) {
+        toast.error("Não foi possível salvar dados do cliente: " + (e?.message ?? e));
+      }
+    }
+    onNext();
+  };
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background pb-32">
       <div className="mx-auto max-w-2xl px-5 pt-8 md:px-8">
@@ -91,7 +107,7 @@ export function DadosScreen({
       <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-card px-6 py-3.5 md:left-[var(--sidebar-width,0)]">
         <div className="mx-auto flex max-w-2xl gap-2.5">
           <Button variant="outline" onClick={onBack}>Voltar</Button>
-          <Button onClick={onNext} disabled={!canProceed} className="flex-1 bg-verde-raiz text-linho hover:bg-verde-musgo">
+          <Button onClick={handleNext} disabled={!canProceed} className="flex-1 bg-verde-raiz text-linho hover:bg-verde-musgo">
             Iniciar Diagnóstico →
           </Button>
         </div>

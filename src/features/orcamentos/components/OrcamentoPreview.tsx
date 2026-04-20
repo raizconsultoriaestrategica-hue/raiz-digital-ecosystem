@@ -8,7 +8,9 @@ interface Props {
 
 export function OrcamentoPreview({ form }: Props) {
   const data = useMemo(() => {
-    const nome = form.nome || "Cliente";
+    const nomeCliente = form.nomeCliente || "Cliente";
+    const nomeClinica = form.nomeClinica || "";
+    const nome = nomeClinica || nomeCliente;
     const espec = form.especialidade;
     const cidade = form.cidade || "—";
     const fat = parseFloat(form.faturamento) || 0;
@@ -53,7 +55,7 @@ export function OrcamentoPreview({ form }: Props) {
       : "no faturamento em até 6 meses";
 
     return {
-      nome, espec, cidade, fat, meta, score, scoreMax, scorePct,
+      nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
     };
   }, [form]);
@@ -77,9 +79,13 @@ export function OrcamentoPreview({ form }: Props) {
           <h1 className="font-display text-[44px] font-semibold text-white leading-[1.1] mb-2">
             Planejamento<br />Estratégico &amp; Orçamento
           </h1>
-          <div className="text-[18px] text-white/70 italic font-display mb-8">
-            {data.nome}{data.espec ? ` · ${data.espec}` : ""}
+          <div className="text-[18px] text-white/70 italic font-display mb-1">
+            {data.nomeClinica || data.nomeCliente}{data.espec ? ` · ${data.espec}` : ""}
           </div>
+          {data.nomeClinica && data.nomeCliente && (
+            <div className="text-[13px] text-white/50 mb-8">{data.nomeCliente}</div>
+          )}
+          {!(data.nomeClinica && data.nomeCliente) && <div className="mb-8" />}
           <div className="w-[60px] h-[2px] bg-dourado my-7" />
           <div className="flex gap-6 flex-wrap relative z-10">
             <CoverMeta label="Localização" value={data.cidade} />
