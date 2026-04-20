@@ -77,6 +77,39 @@ export async function saveDiagnosticoToSupabase(
  * Mantém em localStorage (igual ao HTML original) com a serialização
  * completa do snapshot para permitir reabrir/exportar.
  * ============================================================ */
+/**
+ * Salva os dados de contexto do cliente (faturamento, meta, dor) como tipo='CONFIG'
+ * em dashboard_data, para serem reaproveitados por outras ferramentas
+ * (ex: Máquina de Orçamentos pré-preenche esses campos).
+ */
+export async function saveClienteConfigToSupabase(
+  clienteId: string,
+  config: { fat?: string; meta?: string; dor?: string },
+) {
+  const entries = Object.entries(config).filter(([, v]) => v && v.trim().length > 0);
+  if (entries.length === 0) return;
+
+  // Apaga apenas os campos que vamos sobrescrever
+  await supabase
+    .from("dashboard_data")
+    .delete()
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "CONFIG")
+    .in("campo", entries.map(([k]) => k));
+
+  const rows = entries.map(([campo, valor]) => ({
+    cliente_id: clienteId,
+    tipo: "CONFIG",
+    mes: null as string | null,
+    campo,
+    valor: valor as string,
+    benchmark: null as string | null,
+  }));
+
+  const { error } = await supabase.from("dashboard_data").insert(rows);
+  if (error) throw error;
+}
+
 const STORAGE_KEY = "raiz_diag";
 
 export interface StoredDiagnostico extends DiagnosticoSnapshot {
