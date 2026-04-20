@@ -1,23 +1,25 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { PILARES } from "@/features/diagnostico/data";
 
-type KpiRow = {
+type Row = {
   campo: string;
   valor: string | null;
   benchmark: string | null;
   mes: string | null;
 };
 
-const KPI_LABELS = ["Faturamento", "NPS", "Ocupação"] as const;
-
 export default function Dashboard() {
   const { user, role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [clienteNome, setClienteNome] = useState<string | null>(null);
-  const [kpis, setKpis] = useState<Record<string, KpiRow | undefined>>({});
+  const [rows, setRows] = useState<Row[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -25,7 +27,6 @@ export default function Dashboard() {
       if (!user) return;
       setLoading(true);
 
-      // Busca o(s) cliente(s) vinculados ao usuário (admin pode não ter)
       const { data: clientes } = await supabase
         .from("clientes")
         .select("id, nome_clinica, nome_cliente")
@@ -38,35 +39,22 @@ export default function Dashboard() {
 
       if (!cliente) {
         setClienteNome(null);
-        setKpis({});
+        setRows([]);
         setLoading(false);
         return;
       }
 
       setClienteNome(cliente.nome_clinica || cliente.nome_cliente);
 
-      const { data: rows } = await supabase
+      const { data } = await supabase
         .from("dashboard_data")
-        .select("campo, valor, benchmark, mes, created_at")
+        .select("campo, valor, benchmark, mes")
         .eq("cliente_id", cliente.id)
-        .eq("tipo", "KPI")
-        .order("created_at", { ascending: false });
+        .eq("tipo", "PILAR")
+        .eq("mes", "Diagnóstico");
 
       if (!active) return;
-
-      // Mantém o registro mais recente por campo
-      const map: Record<string, KpiRow> = {};
-      (rows ?? []).forEach((r) => {
-        if (!map[r.campo]) {
-          map[r.campo] = {
-            campo: r.campo,
-            valor: r.valor,
-            benchmark: r.benchmark,
-            mes: r.mes,
-          };
-        }
-      });
-      setKpis(map);
+      setRows(data ?? []);
       setLoading(false);
     }
     load();
@@ -75,7 +63,27 @@ export default function Dashboard() {
     };
   }, [user]);
 
-  const hasAnyKpi = KPI_LABELS.some((k) => kpis[k]?.valor);
+  const byCampo = rows.reduce<Record<string, Row>>((acc, r) => {
+    acc[r.campo] = r;
+    return acc;
+  }, {});
+
+  const scoreTotal = byCampo["SCORE_TOTAL"];
+  const classif = byCampo["CLASSIFICACAO"];
+  const totalNum = Number(scoreTotal?.valor ?? 0);
+  const totalMax = Number(scoreTotal?.benchmark ?? 0);
+  const totalPct = totalMax > 0 ? Math.round((totalNum / totalMax) * 100) : 0;
+
+  const pilarRows = PILARES.map((p) => {
+    const r = byCampo[p.name];
+    if (!r) return null;
+    const v = Number(r.valor ?? 0);
+    const m = Number(r.benchmark ?? p.max);
+    const pct = m > 0 ? Math.round((v / m) * 100) : 0;
+    return { id: p.id, num: p.num, name: p.name, valor: v, max: m, pct };
+  }).filter((x): x is NonNullable<typeof x> => !!x);
+
+  const hasDiag = !!scoreTotal;
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -86,55 +94,17 @@ export default function Dashboard() {
         </h1>
         <p className="mt-2 font-body text-sm text-quase-preto/70">
           {role === "admin"
-            ? "Visão administrativa — KPIs do cliente vinculado ao seu usuário."
-            : "KPIs, pilares e insights da sua clínica em tempo real."}
+            ? "Visão administrativa — diagnóstico do cliente vinculado ao seu usuário."
+            : "Maturidade da sua clínica avaliada pelos 7 pilares do método Raiz."}
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {KPI_LABELS.map((label) => {
-          const kpi = kpis[label];
-          return (
-            <Card key={label} className="border-border/60 shadow-soft">
-              <CardHeader>
-                <CardTitle className="font-display text-xl text-verde-raiz">
-                  {label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <>
-                    <Skeleton className="h-10 w-24" />
-                    <Skeleton className="mt-2 h-3 w-32" />
-                  </>
-                ) : kpi?.valor ? (
-                  <>
-                    <div className="font-display text-4xl text-caramelo">
-                      {kpi.valor}
-                    </div>
-                    <div className="mt-1 font-body text-xs text-quase-preto/60">
-                      {kpi.benchmark
-                        ? `Benchmark: ${kpi.benchmark}`
-                        : kpi.mes
-                          ? `Referente a ${kpi.mes}`
-                          : "Atualizado"}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="font-display text-4xl text-quase-preto/30">
-                      —
-                    </div>
-                    <div className="mt-1 font-body text-xs text-quase-preto/60">
-                      Sem dados
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {loading && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      )}
 
       {!loading && !clienteNome && (
         <Card className="border-dashed border-border/60 bg-linho/40 shadow-none">
@@ -144,24 +114,112 @@ export default function Dashboard() {
             </div>
             <p className="max-w-md font-body text-sm text-quase-preto/70">
               Ainda não há uma clínica vinculada ao seu usuário. Assim que sua
-              consultora finalizar o onboarding, seus KPIs aparecerão por aqui.
+              consultora finalizar o onboarding, seus indicadores aparecerão aqui.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {!loading && clienteNome && !hasAnyKpi && (
+      {!loading && clienteNome && !hasDiag && (
         <Card className="border-dashed border-border/60 bg-linho/40 shadow-none">
-          <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <span className="eyebrow">Diagnóstico 360°</span>
             <div className="font-display text-2xl text-verde-raiz">
-              Coletando seus primeiros indicadores
+              Comece pelo Diagnóstico 360°
             </div>
             <p className="max-w-md font-body text-sm text-quase-preto/70">
-              Os KPIs de Faturamento, NPS e Ocupação aparecerão aqui assim que o
-              primeiro ciclo de dados for registrado.
+              Avalie os 7 pilares da clínica e gere automaticamente o painel de
+              maturidade, prioridades e plano recomendado.
             </p>
+            <Button asChild className="mt-2 bg-verde-raiz hover:bg-verde-raiz/90">
+              <Link to="/ferramentas/diagnostico">Iniciar Diagnóstico 360°</Link>
+            </Button>
           </CardContent>
         </Card>
+      )}
+
+      {!loading && hasDiag && (
+        <>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-border/60 shadow-soft">
+              <CardHeader>
+                <CardTitle className="font-display text-xl text-verde-raiz">
+                  Score de Maturidade
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-5xl text-caramelo">
+                    {totalNum}
+                  </span>
+                  <span className="font-body text-sm text-quase-preto/60">
+                    / {totalMax} pts
+                  </span>
+                </div>
+                <Progress value={totalPct} className="mt-4 h-3" />
+                <div className="mt-2 font-body text-xs text-quase-preto/60">
+                  {totalPct}% do potencial avaliado
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 shadow-soft">
+              <CardHeader>
+                <CardTitle className="font-display text-xl text-verde-raiz">
+                  Classificação
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="font-display text-3xl text-verde-raiz">
+                  {classif?.valor ?? "—"}
+                </div>
+                {classif?.benchmark && (
+                  <div className="mt-2 font-body text-sm text-quase-preto/70">
+                    Plano recomendado:{" "}
+                    <span className="font-medium text-caramelo">
+                      {classif.benchmark}
+                    </span>
+                  </div>
+                )}
+                <Button
+                  asChild
+                  variant="outline"
+                  className="mt-4 border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
+                >
+                  <Link to="/ferramentas/diagnostico">Refazer diagnóstico</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <h2 className="font-display text-2xl text-verde-raiz">
+              Pilares avaliados
+            </h2>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {pilarRows.map((p) => (
+                <Card key={p.id} className="border-border/60 shadow-soft">
+                  <CardContent className="py-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="font-display text-sm text-caramelo">
+                          {p.num}
+                        </span>
+                        <span className="font-body text-sm font-medium text-quase-preto">
+                          {p.name}
+                        </span>
+                      </div>
+                      <span className="font-body text-xs text-quase-preto/60">
+                        {p.valor}/{p.max}
+                      </span>
+                    </div>
+                    <Progress value={p.pct} className="mt-3 h-2" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
