@@ -1,7 +1,8 @@
 import type { PlanoKey } from "./data";
 
 export interface OrcamentoForm {
-  nome: string;
+  nomeCliente: string;
+  nomeClinica: string;
   especialidade: string;
   cidade: string;
   faturamento: string;
@@ -19,7 +20,8 @@ export interface OrcamentoForm {
 }
 
 export const initialForm = (): OrcamentoForm => ({
-  nome: "",
+  nomeCliente: "",
+  nomeClinica: "",
   especialidade: "",
   cidade: "",
   faturamento: "",
