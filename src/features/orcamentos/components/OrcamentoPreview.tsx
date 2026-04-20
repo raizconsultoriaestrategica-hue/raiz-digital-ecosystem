@@ -8,7 +8,9 @@ interface Props {
 
 export function OrcamentoPreview({ form }: Props) {
   const data = useMemo(() => {
-    const nome = form.nome || "Cliente";
+    const nomeCliente = form.nomeCliente || "Cliente";
+    const nomeClinica = form.nomeClinica || "";
+    const nome = nomeClinica || nomeCliente;
     const espec = form.especialidade;
     const cidade = form.cidade || "—";
     const fat = parseFloat(form.faturamento) || 0;

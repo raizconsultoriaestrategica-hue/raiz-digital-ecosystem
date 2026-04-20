@@ -73,14 +73,25 @@ export function OrcamentoSidebar(p: Props) {
       <hr className="border-white/10 my-5" />
       <div className={sectionCls}>Dados do Cliente</div>
 
-      <div className="mb-4">
-        <label className={labelCls}>Nome do cliente / clínica</label>
-        <input
-          className={inputCls}
-          placeholder="Ex: Dra. Anna Krause"
-          value={p.form.nome}
-          onChange={(e) => p.setField("nome", e.target.value)}
-        />
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div>
+          <label className={labelCls}>Nome do cliente</label>
+          <input
+            className={inputCls}
+            placeholder="Ex: Dra. Anna Krause"
+            value={p.form.nomeCliente}
+            onChange={(e) => p.setField("nomeCliente", e.target.value)}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Nome da clínica</label>
+          <input
+            className={inputCls}
+            placeholder="Ex: Clínica Krause Odontologia"
+            value={p.form.nomeClinica}
+            onChange={(e) => p.setField("nomeClinica", e.target.value)}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-2.5 mb-4">
         <div>
