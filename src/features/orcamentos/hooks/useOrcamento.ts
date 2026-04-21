@@ -103,6 +103,7 @@ export function useOrcamento() {
         if (row.campo === "fat" && row.valor) updates.faturamento = row.valor;
         else if (row.campo === "meta" && row.valor) updates.meta = row.valor;
         else if (row.campo === "dor" && row.valor) updates.dor = row.valor;
+        else if (row.campo === "especialidade" && row.valor) updates.especialidade = row.valor;
         return;
       }
       // tipo === PILAR
