@@ -79,6 +79,7 @@ type Cliente = {
   created_at: string | null;
   status: StatusCarteira | null;
   orcamento_inicial: number | null;
+  data_diagnostico: string | null;
   data_inicio_projeto: string | null;
   duracao_meses: number | null;
   valor_mensalidade: number | null;
