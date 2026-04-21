@@ -25,10 +25,10 @@ export type Database = {
           id: string
           nome_cliente: string
           nome_clinica: string | null
+          orcamento_inicial: number | null
           plano: string | null
           status: string | null
           user_id: string | null
-          valor_fechado: number | null
           valor_mensalidade: number | null
         }
         Insert: {
@@ -41,10 +41,10 @@ export type Database = {
           id?: string
           nome_cliente: string
           nome_clinica?: string | null
+          orcamento_inicial?: number | null
           plano?: string | null
           status?: string | null
           user_id?: string | null
-          valor_fechado?: number | null
           valor_mensalidade?: number | null
         }
         Update: {
@@ -57,10 +57,10 @@ export type Database = {
           id?: string
           nome_cliente?: string
           nome_clinica?: string | null
+          orcamento_inicial?: number | null
           plano?: string | null
           status?: string | null
           user_id?: string | null
-          valor_fechado?: number | null
           valor_mensalidade?: number | null
         }
         Relationships: []
