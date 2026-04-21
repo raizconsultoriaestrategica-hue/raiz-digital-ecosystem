@@ -238,12 +238,21 @@ export default function AdminDashboard() {
   };
 
   const openEdit = (c: Cliente) => {
+    // Auto-preenche data_diagnostico com a data do diagnóstico salvo, se ainda não definida
+    let dataDiag = c.data_diagnostico ?? "";
+    if (!dataDiag) {
+      const diag = linhas.find((l) => l.cliente.id === c.id)?.diag;
+      if (diag?.timestamp) {
+        dataDiag = new Date(diag.timestamp).toISOString().slice(0, 10);
+      }
+    }
     setEditState({
       cliente: c,
       status: (c.status as StatusCarteira) || "lead",
-      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
+      data_diagnostico: dataDiag,
       data_inicio_projeto: c.data_inicio_projeto ?? "",
       duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
+      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
       valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
     });
   };
