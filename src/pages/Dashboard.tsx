@@ -100,9 +100,7 @@ export default function Dashboard() {
           {clienteNome ? `Painel · ${clienteNome}` : "Seu painel Raiz"}
         </h1>
         <p className="mt-2 font-body text-sm text-quase-preto/70">
-          {role === "admin"
-            ? "Visão administrativa — diagnóstico do cliente vinculado ao seu usuário."
-            : "Maturidade da sua clínica avaliada pelos 7 pilares do método Raiz."}
+          Maturidade da sua clínica avaliada pelos 7 pilares do método Raiz.
         </p>
       </div>
 
