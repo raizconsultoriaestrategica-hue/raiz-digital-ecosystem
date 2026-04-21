@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, allow }: Props) {
-  const { session, role, loading } = useAuth();
+  const { session, role, primeiroAcesso, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -24,11 +24,15 @@ export default function ProtectedRoute({ children, allow }: Props) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  // Cliente em primeiro acesso → forçar troca de senha
+  if (role === "cliente" && primeiroAcesso === true && location.pathname !== "/trocar-senha") {
+    return <Navigate to="/trocar-senha" replace />;
+  }
+
   // Admin pode tudo
   if (role === "admin") return <>{children}</>;
 
   if (!role || !allow.includes(role)) {
-    // Cliente tentando entrar em /ferramentas → manda pro dashboard
     if (role === "cliente" && !allow.includes("cliente")) {
       return <Navigate to="/dashboard" replace />;
     }

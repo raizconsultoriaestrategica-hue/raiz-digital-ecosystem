@@ -28,6 +28,7 @@ export type Database = {
           nome_clinica: string | null
           orcamento_inicial: number | null
           plano: string | null
+          primeiro_acesso: boolean
           status: string | null
           user_id: string | null
           valor_mensalidade: number | null
@@ -45,6 +46,7 @@ export type Database = {
           nome_clinica?: string | null
           orcamento_inicial?: number | null
           plano?: string | null
+          primeiro_acesso?: boolean
           status?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
@@ -62,6 +64,7 @@ export type Database = {
           nome_clinica?: string | null
           orcamento_inicial?: number | null
           plano?: string | null
+          primeiro_acesso?: boolean
           status?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null

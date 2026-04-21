@@ -8,9 +8,11 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   role: AppRole | null;
+  primeiroAcesso: boolean | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  refreshPrimeiroAcesso: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -19,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [primeiroAcesso, setPrimeiroAcesso] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId: string): Promise<AppRole | null> => {
@@ -33,26 +36,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  const fetchPrimeiroAcesso = async (userId: string): Promise<boolean | null> => {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("primeiro_acesso")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error || !data) return null;
+    return !!data.primeiro_acesso;
+  };
+
+  const refreshPrimeiroAcesso = async () => {
+    if (!user) return;
+    const v = await fetchPrimeiroAcesso(user.id);
+    setPrimeiroAcesso(v);
+  };
+
   useEffect(() => {
-    // Listener PRIMEIRO (regra Lovable)
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        // Defer para evitar deadlock no callback
-        setTimeout(() => {
-          fetchRole(newSession.user.id).then(setRole);
+        setTimeout(async () => {
+          const r = await fetchRole(newSession.user.id);
+          setRole(r);
+          if (r === "cliente") {
+            const pa = await fetchPrimeiroAcesso(newSession.user.id);
+            setPrimeiroAcesso(pa);
+          } else {
+            setPrimeiroAcesso(false);
+          }
         }, 0);
       } else {
         setRole(null);
+        setPrimeiroAcesso(null);
       }
     });
 
-    // Depois: getSession existente
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) setRole(await fetchRole(s.user.id));
+      if (s?.user) {
+        const r = await fetchRole(s.user.id);
+        setRole(r);
+        if (r === "cliente") {
+          setPrimeiroAcesso(await fetchPrimeiroAcesso(s.user.id));
+        } else {
+          setPrimeiroAcesso(false);
+        }
+      }
       setLoading(false);
     });
 
@@ -67,10 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
+    setPrimeiroAcesso(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ session, user, role, primeiroAcesso, loading, signIn, signOut, refreshPrimeiroAcesso }}
+    >
       {children}
     </AuthContext.Provider>
   );
