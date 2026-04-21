@@ -1,15 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDiagnostico } from "@/features/diagnostico/hooks/useDiagnostico";
-import { IntroScreen } from "@/features/diagnostico/screens/IntroScreen";
 import { DadosScreen } from "@/features/diagnostico/screens/DadosScreen";
 import { DiagScreen } from "@/features/diagnostico/screens/DiagScreen";
 import { LoadingScreen } from "@/features/diagnostico/screens/LoadingScreen";
 import { ResultScreen } from "@/features/diagnostico/screens/ResultScreen";
-import { AdminScreen } from "@/features/diagnostico/screens/AdminScreen";
 
 export default function Diagnostico() {
   const dx = useDiagnostico();
-  const [adminOpen, setAdminOpen] = useState(false);
+  const [params] = useSearchParams();
+
+  // Inicia direto na seleção de cliente
+  useEffect(() => {
+    if (dx.state.step === "intro") dx.goTo("dados");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pré-seleção de cliente via ?cliente=ID (vindo do painel admin)
+  useEffect(() => {
+    const cid = params.get("cliente");
+    if (cid && cid !== dx.state.clienteId) dx.setClienteId(cid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
 
   // Loading → Result com pequeno delay (preserva UX original)
   useEffect(() => {
@@ -33,10 +45,7 @@ export default function Diagnostico() {
 
   return (
     <div className="-m-4 md:-m-6 lg:-m-8">
-      {dx.state.step === "intro" && (
-        <IntroScreen onStart={() => dx.goTo("dados")} onAdmin={() => setAdminOpen(true)} />
-      )}
-      {dx.state.step === "dados" && (
+      {(dx.state.step === "intro" || dx.state.step === "dados") && (
         <DadosScreen
           client={dx.state.client}
           selOpts={dx.state.selOpts}
@@ -44,7 +53,7 @@ export default function Diagnostico() {
           onClientField={dx.setClientField}
           onSel={dx.setSel}
           onClienteIdChange={(id) => dx.setClienteId(id)}
-          onBack={() => dx.goTo("intro")}
+          onBack={() => window.history.back()}
           onNext={() => dx.startDiag()}
         />
       )}
@@ -72,8 +81,6 @@ export default function Diagnostico() {
           onRestart={dx.reset}
         />
       )}
-
-      <AdminScreen open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   );
 }
