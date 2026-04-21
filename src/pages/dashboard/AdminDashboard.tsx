@@ -79,6 +79,7 @@ type Cliente = {
   created_at: string | null;
   status: StatusCarteira | null;
   orcamento_inicial: number | null;
+  data_diagnostico: string | null;
   data_inicio_projeto: string | null;
   duracao_meses: number | null;
   valor_mensalidade: number | null;
@@ -118,9 +119,10 @@ const formatBRL = (v: number | null | undefined) =>
 type EditState = {
   cliente: Cliente;
   status: StatusCarteira;
-  orcamento_inicial: string;
+  data_diagnostico: string;
   data_inicio_projeto: string;
   duracao_meses: string;
+  orcamento_inicial: string;
   valor_mensalidade: string;
 };
 
@@ -141,7 +143,7 @@ export default function AdminDashboard() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_inicio_projeto, duracao_meses, valor_mensalidade",
+            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_diagnostico, data_inicio_projeto, duracao_meses, valor_mensalidade",
           )
           .order("created_at", { ascending: false }),
         loadDiagnosticosFromSupabase(),
@@ -236,12 +238,21 @@ export default function AdminDashboard() {
   };
 
   const openEdit = (c: Cliente) => {
+    // Auto-preenche data_diagnostico com a data do diagnóstico salvo, se ainda não definida
+    let dataDiag = c.data_diagnostico ?? "";
+    if (!dataDiag) {
+      const diag = linhas.find((l) => l.cliente.id === c.id)?.diag;
+      if (diag?.timestamp) {
+        dataDiag = new Date(diag.timestamp).toISOString().slice(0, 10);
+      }
+    }
     setEditState({
       cliente: c,
       status: (c.status as StatusCarteira) || "lead",
-      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
+      data_diagnostico: dataDiag,
       data_inicio_projeto: c.data_inicio_projeto ?? "",
       duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
+      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
       valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
     });
   };
@@ -259,7 +270,11 @@ export default function AdminDashboard() {
         .update({
           status: editState.status,
           orcamento_inicial: num(editState.orcamento_inicial),
-          data_inicio_projeto: editState.data_inicio_projeto || null,
+          data_diagnostico: editState.data_diagnostico || null,
+          data_inicio_projeto:
+            editState.status === "projeto_ativo"
+              ? editState.data_inicio_projeto || null
+              : editState.data_inicio_projeto || null,
           duracao_meses:
             editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
           valor_mensalidade: num(editState.valor_mensalidade),
@@ -523,6 +538,45 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label>Data do diagnóstico</Label>
+                <Input
+                  type="date"
+                  value={editState.data_diagnostico}
+                  onChange={(e) =>
+                    setEditState({ ...editState, data_diagnostico: e.target.value })
+                  }
+                />
+              </div>
+
+              {editState.status === "projeto_ativo" && (
+                <div className="space-y-2">
+                  <Label>
+                    Data de início do projeto <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    required
+                    value={editState.data_inicio_projeto}
+                    onChange={(e) =>
+                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Duração (meses)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={editState.duracao_meses}
+                  onChange={(e) =>
+                    setEditState({ ...editState, duracao_meses: e.target.value })
+                  }
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Orçamento inicial (R$)</Label>
@@ -543,30 +597,6 @@ export default function AdminDashboard() {
                     value={editState.valor_mensalidade}
                     onChange={(e) =>
                       setEditState({ ...editState, valor_mensalidade: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Data início</Label>
-                  <Input
-                    type="date"
-                    value={editState.data_inicio_projeto}
-                    onChange={(e) =>
-                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Duração (meses)</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={editState.duracao_meses}
-                    onChange={(e) =>
-                      setEditState({ ...editState, duracao_meses: e.target.value })
                     }
                   />
                 </div>

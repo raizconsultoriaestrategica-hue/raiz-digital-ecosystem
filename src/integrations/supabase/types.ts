@@ -19,6 +19,7 @@ export type Database = {
           cidade: string | null
           consultor: string | null
           created_at: string | null
+          data_diagnostico: string | null
           data_inicio_projeto: string | null
           duracao_meses: number | null
           especialidade: string | null
@@ -35,6 +36,7 @@ export type Database = {
           cidade?: string | null
           consultor?: string | null
           created_at?: string | null
+          data_diagnostico?: string | null
           data_inicio_projeto?: string | null
           duracao_meses?: number | null
           especialidade?: string | null
@@ -51,6 +53,7 @@ export type Database = {
           cidade?: string | null
           consultor?: string | null
           created_at?: string | null
+          data_diagnostico?: string | null
           data_inicio_projeto?: string | null
           duracao_meses?: number | null
           especialidade?: string | null
