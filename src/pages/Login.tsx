@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TopProgress } from "@/components/ui/top-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -33,8 +34,14 @@ export default function Login() {
     else toast.success("Bem-vindo de volta.");
   };
 
+  // Mostra a barra dourada enquanto valida credenciais OU enquanto a sessão chega
+  // mas o role ainda não foi carregado (transição até o redirect).
+  const showProgress = submitting || (!!session && !role);
+
   return (
-    <div className="grid min-h-screen md:grid-cols-2">
+    <>
+      <TopProgress active={showProgress} />
+      <div className="grid min-h-screen md:grid-cols-2">
       <div className="relative hidden flex-col justify-between bg-gradient-raiz p-12 text-linho md:flex">
         <Link to="/" className="font-display text-3xl">
           Raiz<span className="text-dourado">.</span>
@@ -97,6 +104,7 @@ export default function Login() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

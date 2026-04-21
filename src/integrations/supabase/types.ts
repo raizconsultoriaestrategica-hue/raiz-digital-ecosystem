@@ -19,34 +19,49 @@ export type Database = {
           cidade: string | null
           consultor: string | null
           created_at: string | null
+          data_inicio_projeto: string | null
+          duracao_meses: number | null
           especialidade: string | null
           id: string
           nome_cliente: string
           nome_clinica: string | null
           plano: string | null
+          status: string | null
           user_id: string | null
+          valor_fechado: number | null
+          valor_mensalidade: number | null
         }
         Insert: {
           cidade?: string | null
           consultor?: string | null
           created_at?: string | null
+          data_inicio_projeto?: string | null
+          duracao_meses?: number | null
           especialidade?: string | null
           id?: string
           nome_cliente: string
           nome_clinica?: string | null
           plano?: string | null
+          status?: string | null
           user_id?: string | null
+          valor_fechado?: number | null
+          valor_mensalidade?: number | null
         }
         Update: {
           cidade?: string | null
           consultor?: string | null
           created_at?: string | null
+          data_inicio_projeto?: string | null
+          duracao_meses?: number | null
           especialidade?: string | null
           id?: string
           nome_cliente?: string
           nome_clinica?: string | null
           plano?: string | null
+          status?: string | null
           user_id?: string | null
+          valor_fechado?: number | null
+          valor_mensalidade?: number | null
         }
         Relationships: []
       }

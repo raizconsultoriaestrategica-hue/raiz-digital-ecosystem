@@ -5,6 +5,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,7 +46,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, FileText, Calculator, Trash2, Loader2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  FileText,
+  Calculator,
+  Trash2,
+  Briefcase,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -40,6 +63,13 @@ import {
 } from "@/features/diagnostico/persistence";
 import { generatePDF } from "@/features/diagnostico/pdf";
 
+type StatusCarteira =
+  | "lead"
+  | "diagnostico_feito"
+  | "proposta_enviada"
+  | "projeto_ativo"
+  | "encerrado";
+
 type Cliente = {
   id: string;
   nome_cliente: string;
@@ -47,11 +77,51 @@ type Cliente = {
   cidade: string | null;
   plano: string | null;
   created_at: string | null;
+  status: StatusCarteira | null;
+  valor_fechado: number | null;
+  data_inicio_projeto: string | null;
+  duracao_meses: number | null;
+  valor_mensalidade: number | null;
 };
 
 type LinhaPainel = {
   cliente: Cliente;
   diag: StoredDiagnostico | null;
+};
+
+const STATUS_LABEL: Record<StatusCarteira, string> = {
+  lead: "Lead",
+  diagnostico_feito: "Diagnóstico feito",
+  proposta_enviada: "Proposta enviada",
+  projeto_ativo: "Projeto ativo",
+  encerrado: "Encerrado",
+};
+
+// Badges com cores semânticas — uso classes Tailwind diretas para tons de paleta solicitada
+const STATUS_BADGE: Record<StatusCarteira, string> = {
+  lead: "bg-muted text-muted-foreground hover:bg-muted",
+  diagnostico_feito: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+  proposta_enviada: "bg-yellow-100 text-yellow-900 hover:bg-yellow-100",
+  projeto_ativo: "bg-verde-raiz/15 text-verde-raiz hover:bg-verde-raiz/20",
+  encerrado: "bg-destructive/15 text-destructive hover:bg-destructive/20",
+};
+
+const formatBRL = (v: number | null | undefined) =>
+  v == null
+    ? "—"
+    : new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }).format(v);
+
+type EditState = {
+  cliente: Cliente;
+  status: StatusCarteira;
+  valor_fechado: string;
+  data_inicio_projeto: string;
+  duracao_meses: string;
+  valor_mensalidade: string;
 };
 
 export default function AdminDashboard() {
@@ -61,6 +131,8 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; nome: string } | null>(null);
   const [confirmDeleteCliente, setConfirmDeleteCliente] = useState<{ id: string; nome: string } | null>(null);
+  const [editState, setEditState] = useState<EditState | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -68,7 +140,9 @@ export default function AdminDashboard() {
       const [{ data: clientes }, diagnosticos] = await Promise.all([
         supabase
           .from("clientes")
-          .select("id, nome_cliente, nome_clinica, cidade, plano, created_at")
+          .select(
+            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, valor_fechado, data_inicio_projeto, duracao_meses, valor_mensalidade",
+          )
           .order("created_at", { ascending: false }),
         loadDiagnosticosFromSupabase(),
       ]);
@@ -105,8 +179,23 @@ export default function AdminDashboard() {
     );
   }, [linhas, search]);
 
-  const total = linhas.length;
-  const comDiag = linhas.filter((l) => l.diag).length;
+  // ====== KPIs de carteira ======
+  const ativos = linhas.filter((l) => l.cliente.status === "projeto_ativo");
+  const comDiagStatus = linhas.filter(
+    (l) =>
+      l.cliente.status === "diagnostico_feito" ||
+      l.cliente.status === "proposta_enviada" ||
+      l.cliente.status === "projeto_ativo" ||
+      !!l.diag,
+  );
+  const mrr = ativos.reduce((sum, l) => sum + (Number(l.cliente.valor_mensalidade) || 0), 0);
+  const totalAtivos = ativos.length;
+  const taxaConversao =
+    comDiagStatus.length > 0 ? Math.round((totalAtivos / comDiagStatus.length) * 100) : 0;
+  const ticketMedio =
+    totalAtivos > 0
+      ? ativos.reduce((s, l) => s + (Number(l.cliente.valor_fechado) || 0), 0) / totalAtivos
+      : 0;
 
   const handleVerResultado = (l: LinhaPainel) => {
     if (!l.diag) return;
@@ -134,7 +223,6 @@ export default function AdminDashboard() {
   const handleDeletarCliente = async () => {
     if (!confirmDeleteCliente) return;
     try {
-      // Apaga dados do dashboard primeiro (sem FK cascade)
       await supabase.from("dashboard_data").delete().eq("cliente_id", confirmDeleteCliente.id);
       const { error } = await supabase.from("clientes").delete().eq("id", confirmDeleteCliente.id);
       if (error) throw error;
@@ -147,16 +235,58 @@ export default function AdminDashboard() {
     }
   };
 
+  const openEdit = (c: Cliente) => {
+    setEditState({
+      cliente: c,
+      status: (c.status as StatusCarteira) || "lead",
+      valor_fechado: c.valor_fechado != null ? String(c.valor_fechado) : "",
+      data_inicio_projeto: c.data_inicio_projeto ?? "",
+      duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
+      valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editState) return;
+    setSavingEdit(true);
+    try {
+      const num = (s: string) => {
+        const n = Number(String(s).replace(",", "."));
+        return Number.isFinite(n) && s !== "" ? n : null;
+      };
+      const { error } = await supabase
+        .from("clientes")
+        .update({
+          status: editState.status,
+          valor_fechado: num(editState.valor_fechado),
+          data_inicio_projeto: editState.data_inicio_projeto || null,
+          duracao_meses:
+            editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
+          valor_mensalidade: num(editState.valor_mensalidade),
+        })
+        .eq("id", editState.cliente.id);
+      if (error) throw error;
+      toast.success("Projeto atualizado");
+      setEditState(null);
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao atualizar";
+      toast.error(msg);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <span className="eyebrow">Visão administrativa</span>
           <h1 className="mt-2 font-display text-4xl text-verde-raiz md:text-5xl">
-            Gestão de clientes
+            Gestão de Clientes
           </h1>
           <p className="mt-2 font-body text-sm text-quase-preto/70">
-            Hub central da consultoria. Cadastre clientes, conduza diagnósticos e gere orçamentos.
+            Carteira completa: funil, MRR, projetos ativos e ticket médio.
           </p>
         </div>
         <Button asChild className="bg-verde-raiz hover:bg-verde-raiz/90">
@@ -171,30 +301,45 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
+          {/* ===== KPIs de Carteira ===== */}
+          <div className="grid gap-4 md:grid-cols-4">
             <Card className="border-border/60 shadow-soft">
               <CardContent className="py-5">
                 <div className="font-body text-xs uppercase tracking-wide text-quase-preto/60">
-                  Total de clientes
+                  MRR
                 </div>
-                <div className="mt-1 font-display text-3xl text-verde-raiz">{total}</div>
+                <div className="mt-1 font-display text-3xl text-caramelo">{formatBRL(mrr)}</div>
+                <div className="mt-1 font-body text-[11px] text-quase-preto/50">
+                  Receita mensal recorrente
+                </div>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-soft">
               <CardContent className="py-5">
                 <div className="font-body text-xs uppercase tracking-wide text-quase-preto/60">
-                  Com diagnóstico
+                  Projetos ativos
                 </div>
-                <div className="mt-1 font-display text-3xl text-caramelo">{comDiag}</div>
+                <div className="mt-1 font-display text-3xl text-verde-raiz">{totalAtivos}</div>
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-soft">
               <CardContent className="py-5">
                 <div className="font-body text-xs uppercase tracking-wide text-quase-preto/60">
-                  Pendentes
+                  Taxa de conversão
                 </div>
-                <div className="mt-1 font-display text-3xl text-quase-preto">
-                  {total - comDiag}
+                <div className="mt-1 font-display text-3xl text-verde-raiz">{taxaConversao}%</div>
+                <div className="mt-1 font-body text-[11px] text-quase-preto/50">
+                  Ativos / com diagnóstico
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60 shadow-soft">
+              <CardContent className="py-5">
+                <div className="font-body text-xs uppercase tracking-wide text-quase-preto/60">
+                  Ticket médio
+                </div>
+                <div className="mt-1 font-display text-3xl text-caramelo">
+                  {formatBRL(ticketMedio)}
                 </div>
               </CardContent>
             </Card>
@@ -208,11 +353,11 @@ export default function AdminDashboard() {
               className="max-w-sm"
             />
             <span className="text-xs text-quase-preto/50">
-              {filtradas.length} de {total}
+              {filtradas.length} de {linhas.length}
             </span>
           </div>
 
-          {total === 0 ? (
+          {linhas.length === 0 ? (
             <Card className="border-dashed border-border/60 bg-linho/40 shadow-none">
               <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
                 <div className="font-display text-2xl text-verde-raiz">
@@ -228,27 +373,32 @@ export default function AdminDashboard() {
             </Card>
           ) : (
             <Card className="border-border/60 shadow-soft">
-              <CardContent className="p-0">
+              <CardContent className="p-0 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Clínica</TableHead>
                       <TableHead>Cidade</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Classificação</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Score</TableHead>
+                      <TableHead>Valor fechado</TableHead>
+                      <TableHead>Mensalidade</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtradas.map((l) => {
                       const d = l.diag;
+                      const status = (l.cliente.status as StatusCarteira) || "lead";
                       return (
                         <TableRow key={l.cliente.id}>
                           <TableCell className="font-medium">{l.cliente.nome_cliente}</TableCell>
                           <TableCell>{l.cliente.nome_clinica ?? "—"}</TableCell>
                           <TableCell>{l.cliente.cidade ?? "—"}</TableCell>
+                          <TableCell>
+                            <Badge className={STATUS_BADGE[status]}>{STATUS_LABEL[status]}</Badge>
+                          </TableCell>
                           <TableCell>
                             {d ? (
                               <span className="font-display text-caramelo">
@@ -261,18 +411,8 @@ export default function AdminDashboard() {
                               <span className="text-quase-preto/40">—</span>
                             )}
                           </TableCell>
-                          <TableCell>{d?.classif?.label ?? "—"}</TableCell>
-                          <TableCell>
-                            {d ? (
-                              <Badge className="bg-verde-raiz/10 text-verde-raiz hover:bg-verde-raiz/15">
-                                Concluído
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="border-border/60 text-quase-preto/60">
-                                Pendente
-                              </Badge>
-                            )}
-                          </TableCell>
+                          <TableCell>{formatBRL(l.cliente.valor_fechado)}</TableCell>
+                          <TableCell>{formatBRL(l.cliente.valor_mensalidade)}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -281,6 +421,11 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-52">
+                                <DropdownMenuItem onClick={() => openEdit(l.cliente)}>
+                                  <Briefcase className="mr-2 h-4 w-4" />
+                                  Editar projeto
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   disabled={!d}
                                   onClick={() => handleVerResultado(l)}
@@ -344,6 +489,105 @@ export default function AdminDashboard() {
           )}
         </>
       )}
+
+      {/* ===== Modal: Editar projeto ===== */}
+      <Dialog open={!!editState} onOpenChange={(o) => !o && setEditState(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar projeto</DialogTitle>
+            <DialogDescription>
+              {editState?.cliente.nome_clinica || editState?.cliente.nome_cliente}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editState && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={editState.status}
+                  onValueChange={(v) =>
+                    setEditState({ ...editState, status: v as StatusCarteira })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {STATUS_LABEL[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Valor fechado (R$)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={editState.valor_fechado}
+                    onChange={(e) =>
+                      setEditState({ ...editState, valor_fechado: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mensalidade (R$)</Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    value={editState.valor_mensalidade}
+                    onChange={(e) =>
+                      setEditState({ ...editState, valor_mensalidade: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Data início</Label>
+                  <Input
+                    type="date"
+                    value={editState.data_inicio_projeto}
+                    onChange={(e) =>
+                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Duração (meses)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editState.duracao_meses}
+                    onChange={(e) =>
+                      setEditState({ ...editState, duracao_meses: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditState(null)} disabled={savingEdit}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={saveEdit}
+              disabled={savingEdit}
+              className="bg-verde-raiz hover:bg-verde-raiz/90"
+            >
+              {savingEdit ? "Salvando…" : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
