@@ -49,7 +49,7 @@ export function TopProgress({ active }: { active: boolean }) {
     >
       <div
         className={cn(
-          "h-full bg-dourado shadow-[0_0_8px_hsl(var(--dourado)/0.6)] transition-[width,opacity] duration-300 ease-out",
+          "h-full bg-dourado shadow-[0_0_8px_rgba(201,168,76,0.6)] transition-[width,opacity] duration-300 ease-out",
           progress >= 100 && "opacity-0",
         )}
         style={{ width: `${progress}%` }}
