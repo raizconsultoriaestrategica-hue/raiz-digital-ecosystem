@@ -538,6 +538,45 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label>Data do diagnóstico</Label>
+                <Input
+                  type="date"
+                  value={editState.data_diagnostico}
+                  onChange={(e) =>
+                    setEditState({ ...editState, data_diagnostico: e.target.value })
+                  }
+                />
+              </div>
+
+              {editState.status === "projeto_ativo" && (
+                <div className="space-y-2">
+                  <Label>
+                    Data de início do projeto <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    required
+                    value={editState.data_inicio_projeto}
+                    onChange={(e) =>
+                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Duração (meses)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={editState.duracao_meses}
+                  onChange={(e) =>
+                    setEditState({ ...editState, duracao_meses: e.target.value })
+                  }
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Orçamento inicial (R$)</Label>
@@ -558,30 +597,6 @@ export default function AdminDashboard() {
                     value={editState.valor_mensalidade}
                     onChange={(e) =>
                       setEditState({ ...editState, valor_mensalidade: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Data início</Label>
-                  <Input
-                    type="date"
-                    value={editState.data_inicio_projeto}
-                    onChange={(e) =>
-                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Duração (meses)</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={editState.duracao_meses}
-                    onChange={(e) =>
-                      setEditState({ ...editState, duracao_meses: e.target.value })
                     }
                   />
                 </div>
