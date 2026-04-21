@@ -52,20 +52,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPrimeiroAcesso(v);
   };
 
+  const hydrateUser = async (uid: string) => {
+    try {
+      const r = await fetchRole(uid);
+      setRole(r);
+      if (r === "cliente") {
+        const pa = await fetchPrimeiroAcesso(uid);
+        setPrimeiroAcesso(pa);
+      } else {
+        setPrimeiroAcesso(false);
+      }
+    } catch (e) {
+      console.error("[Auth] hydrateUser error", e);
+      setRole(null);
+      setPrimeiroAcesso(null);
+    }
+  };
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        setTimeout(async () => {
-          const r = await fetchRole(newSession.user.id);
-          setRole(r);
-          if (r === "cliente") {
-            const pa = await fetchPrimeiroAcesso(newSession.user.id);
-            setPrimeiroAcesso(pa);
-          } else {
-            setPrimeiroAcesso(false);
-          }
+        // Defer to avoid deadlocks inside the auth callback
+        setTimeout(() => {
+          hydrateUser(newSession.user.id);
         }, 0);
       } else {
         setRole(null);
@@ -73,20 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        const r = await fetchRole(s.user.id);
-        setRole(r);
-        if (r === "cliente") {
-          setPrimeiroAcesso(await fetchPrimeiroAcesso(s.user.id));
-        } else {
-          setPrimeiroAcesso(false);
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session: s } }) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        if (s?.user) {
+          await hydrateUser(s.user.id);
         }
-      }
-      setLoading(false);
-    });
+      })
+      .catch((e) => console.error("[Auth] getSession error", e))
+      .finally(() => setLoading(false));
 
     return () => sub.subscription.unsubscribe();
   }, []);

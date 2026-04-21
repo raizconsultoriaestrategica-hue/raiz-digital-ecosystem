@@ -46,10 +46,7 @@ export default function TrocarSenha() {
       toast.error(authErr.message);
       return;
     }
-    const { error: dbErr } = await supabase
-      .from("clientes")
-      .update({ primeiro_acesso: false })
-      .eq("user_id", user.id);
+    const { error: dbErr } = await supabase.rpc("marcar_primeiro_acesso_concluido" as never);
     if (dbErr) {
       setSubmitting(false);
       toast.error("Senha alterada, mas falhou ao atualizar perfil: " + dbErr.message);

@@ -29,9 +29,13 @@ export default function Login() {
     }
     setSubmitting(true);
     const { error } = await signIn(email, password);
-    setSubmitting(false);
-    if (error) toast.error(error);
-    else toast.success("Bem-vindo de volta.");
+    if (error) {
+      setSubmitting(false);
+      toast.error(error);
+      return;
+    }
+    toast.success("Bem-vindo de volta.");
+    // Mantém submitting=true até o useEffect detectar session+role e redirecionar.
   };
 
   // Mostra a barra dourada enquanto valida credenciais OU enquanto a sessão chega
