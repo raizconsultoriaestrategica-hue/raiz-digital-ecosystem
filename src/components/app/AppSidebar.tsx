@@ -21,7 +21,8 @@ export default function AppSidebar() {
   const { role, signOut, user } = useAuth();
   const navigate = useNavigate();
 
-  const clienteItems = [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }];
+  const dashboardLabel = role === "admin" ? "Gestão de Clientes" : "Dashboard";
+  const clienteItems = [{ title: dashboardLabel, url: "/dashboard", icon: LayoutDashboard }];
   const adminItems = [
     { title: "Ferramentas", url: "/ferramentas", icon: Wrench, end: true },
     { title: "Diagnóstico 360°", url: "/ferramentas/diagnostico", icon: Stethoscope },
