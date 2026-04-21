@@ -78,7 +78,7 @@ type Cliente = {
   plano: string | null;
   created_at: string | null;
   status: StatusCarteira | null;
-  valor_fechado: number | null;
+  orcamento_inicial: number | null;
   data_inicio_projeto: string | null;
   duracao_meses: number | null;
   valor_mensalidade: number | null;
@@ -118,7 +118,7 @@ const formatBRL = (v: number | null | undefined) =>
 type EditState = {
   cliente: Cliente;
   status: StatusCarteira;
-  valor_fechado: string;
+  orcamento_inicial: string;
   data_inicio_projeto: string;
   duracao_meses: string;
   valor_mensalidade: string;
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, valor_fechado, data_inicio_projeto, duracao_meses, valor_mensalidade",
+            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_inicio_projeto, duracao_meses, valor_mensalidade",
           )
           .order("created_at", { ascending: false }),
         loadDiagnosticosFromSupabase(),
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
     comDiagStatus.length > 0 ? Math.round((totalAtivos / comDiagStatus.length) * 100) : 0;
   const ticketMedio =
     totalAtivos > 0
-      ? ativos.reduce((s, l) => s + (Number(l.cliente.valor_fechado) || 0), 0) / totalAtivos
+      ? ativos.reduce((s, l) => s + (Number(l.cliente.orcamento_inicial) || 0), 0) / totalAtivos
       : 0;
 
   const handleVerResultado = (l: LinhaPainel) => {
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
     setEditState({
       cliente: c,
       status: (c.status as StatusCarteira) || "lead",
-      valor_fechado: c.valor_fechado != null ? String(c.valor_fechado) : "",
+      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
       data_inicio_projeto: c.data_inicio_projeto ?? "",
       duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
       valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
         .from("clientes")
         .update({
           status: editState.status,
-          valor_fechado: num(editState.valor_fechado),
+          orcamento_inicial: num(editState.orcamento_inicial),
           data_inicio_projeto: editState.data_inicio_projeto || null,
           duracao_meses:
             editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
                       <TableHead>Cidade</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Score</TableHead>
-                      <TableHead>Valor fechado</TableHead>
+                      <TableHead>Orç. inicial</TableHead>
                       <TableHead>Mensalidade</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
                               <span className="text-quase-preto/40">—</span>
                             )}
                           </TableCell>
-                          <TableCell>{formatBRL(l.cliente.valor_fechado)}</TableCell>
+                          <TableCell>{formatBRL(l.cliente.orcamento_inicial)}</TableCell>
                           <TableCell>{formatBRL(l.cliente.valor_mensalidade)}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
@@ -525,18 +525,18 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Valor fechado (R$)</Label>
+                  <Label>Orçamento inicial (R$)</Label>
                   <Input
                     type="number"
                     inputMode="decimal"
-                    value={editState.valor_fechado}
+                    value={editState.orcamento_inicial}
                     onChange={(e) =>
-                      setEditState({ ...editState, valor_fechado: e.target.value })
+                      setEditState({ ...editState, orcamento_inicial: e.target.value })
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Mensalidade (R$)</Label>
+                  <Label>Valor mensalidade (R$)</Label>
                   <Input
                     type="number"
                     inputMode="decimal"
