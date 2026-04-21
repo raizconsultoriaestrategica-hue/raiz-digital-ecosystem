@@ -81,6 +81,13 @@ export async function saveDiagnosticoToSupabase(
 
   const { error } = await supabase.from("dashboard_data").insert(rows);
   if (error) throw error;
+
+  // Também persiste configs (fat, meta, dor) para reuso por outras ferramentas (ex.: Orçamentos)
+  await saveClienteConfigToSupabase(clienteId, {
+    fat: snapshot.selOpts?.fat,
+    meta: snapshot.client?.meta,
+    dor: snapshot.client?.dor,
+  });
 }
 
 /**
