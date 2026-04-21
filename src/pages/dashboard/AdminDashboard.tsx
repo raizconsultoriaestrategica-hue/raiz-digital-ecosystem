@@ -270,7 +270,11 @@ export default function AdminDashboard() {
         .update({
           status: editState.status,
           orcamento_inicial: num(editState.orcamento_inicial),
-          data_inicio_projeto: editState.data_inicio_projeto || null,
+          data_diagnostico: editState.data_diagnostico || null,
+          data_inicio_projeto:
+            editState.status === "projeto_ativo"
+              ? editState.data_inicio_projeto || null
+              : editState.data_inicio_projeto || null,
           duracao_meses:
             editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
           valor_mensalidade: num(editState.valor_mensalidade),
