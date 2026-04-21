@@ -143,7 +143,7 @@ export default function AdminDashboard() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_inicio_projeto, duracao_meses, valor_mensalidade",
+            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_diagnostico, data_inicio_projeto, duracao_meses, valor_mensalidade",
           )
           .order("created_at", { ascending: false }),
         loadDiagnosticosFromSupabase(),
