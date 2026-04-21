@@ -119,9 +119,10 @@ const formatBRL = (v: number | null | undefined) =>
 type EditState = {
   cliente: Cliente;
   status: StatusCarteira;
-  orcamento_inicial: string;
+  data_diagnostico: string;
   data_inicio_projeto: string;
   duracao_meses: string;
+  orcamento_inicial: string;
   valor_mensalidade: string;
 };
 
