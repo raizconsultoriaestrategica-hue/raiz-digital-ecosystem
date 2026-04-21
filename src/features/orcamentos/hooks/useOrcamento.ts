@@ -63,20 +63,33 @@ export function useOrcamento() {
       }));
     }
 
-    // Buscar diagnóstico salvo + CONFIG (faturamento/meta/dor)
+    // Buscar diagnóstico salvo + CONFIG (faturamento/meta/dor) em duas queries
     setLoadingDiag(true);
-    const { data, error } = await supabase
-      .from("dashboard_data")
-      .select("campo, valor, benchmark, tipo, mes")
-      .eq("cliente_id", id)
-      .or("and(tipo.eq.PILAR,mes.eq.Diagnóstico),tipo.eq.CONFIG");
+    const [diagRes, cfgRes] = await Promise.all([
+      supabase
+        .from("dashboard_data")
+        .select("campo, valor, benchmark, tipo, mes")
+        .eq("cliente_id", id)
+        .eq("tipo", "PILAR")
+        .eq("mes", "Diagnóstico"),
+      supabase
+        .from("dashboard_data")
+        .select("campo, valor, benchmark, tipo, mes")
+        .eq("cliente_id", id)
+        .eq("tipo", "CONFIG"),
+    ]);
     setLoadingDiag(false);
 
-    if (error) {
-      toast.error("Erro ao buscar dados do cliente: " + error.message);
+    if (diagRes.error) {
+      toast.error("Erro ao buscar diagnóstico: " + diagRes.error.message);
       return;
     }
-    if (!data || data.length === 0) {
+    if (cfgRes.error) {
+      toast.error("Erro ao buscar contexto: " + cfgRes.error.message);
+      return;
+    }
+    const data = [...(diagRes.data || []), ...(cfgRes.data || [])];
+    if (data.length === 0) {
       toast.info("Nenhum diagnóstico ou contexto salvo para este cliente");
       return;
     }
