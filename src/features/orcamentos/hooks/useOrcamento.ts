@@ -100,8 +100,8 @@ export function useOrcamento() {
 
     data.forEach((row) => {
       if (row.tipo === "CONFIG") {
-        if (row.campo === "fat" && row.valor) updates.faturamento = row.valor;
-        else if (row.campo === "meta" && row.valor) updates.meta = row.valor;
+        if (row.campo === "fat" && row.valor) updates.faturamento = String(toNumeric(row.valor) ?? row.valor);
+        else if (row.campo === "meta" && row.valor) updates.meta = String(toNumeric(row.valor) ?? row.valor);
         else if (row.campo === "dor" && row.valor) updates.dor = row.valor;
         else if (row.campo === "especialidade" && row.valor) updates.especialidade = row.valor;
         return;
