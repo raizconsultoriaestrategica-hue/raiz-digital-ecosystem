@@ -85,10 +85,43 @@ export async function saveDiagnosticoToSupabase(
   // Também persiste configs (fat, meta, dor, especialidade) para reuso por outras ferramentas (ex.: Orçamentos)
   await saveClienteConfigToSupabase(clienteId, {
     fat: fatLabelToNumber(snapshot.selOpts?.fat),
-    meta: snapshot.client?.meta,
+    meta: parseMoneyToNumber(snapshot.client?.meta),
     dor: snapshot.client?.dor,
     especialidade: snapshot.client?.proc,
   });
+}
+
+/**
+ * Converte uma string monetária livre (ex.: "R$ 100.000,00", "100k", "100 mil")
+ * em um valor numérico em reais como string. Retorna undefined se vazio,
+ * ou a string original limpa quando não consegue interpretar.
+ */
+export function parseMoneyToNumber(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  let s = String(raw).trim().toLowerCase();
+  if (!s) return undefined;
+
+  // Detecta sufixos k / mil / m / mi / milhão
+  let multiplier = 1;
+  if (/(milh(ão|oes|ões)|\bmi\b|\bm\b)/.test(s)) multiplier = 1_000_000;
+  else if (/(mil|\bk\b)/.test(s)) multiplier = 1_000;
+
+  // Remove tudo exceto dígitos, vírgula e ponto
+  s = s.replace(/[^\d.,]/g, "");
+  if (!s) return undefined;
+
+  // Normaliza separadores: se tem vírgula e ponto, ponto é milhar; vírgula é decimal
+  if (s.includes(",") && s.includes(".")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(",")) {
+    // Só vírgula → decimal pt-BR
+    s = s.replace(",", ".");
+  }
+  // Se só tem ponto, mantemos como decimal padrão
+
+  const n = parseFloat(s);
+  if (isNaN(n)) return undefined;
+  return String(Math.round(n * multiplier));
 }
 
 /**

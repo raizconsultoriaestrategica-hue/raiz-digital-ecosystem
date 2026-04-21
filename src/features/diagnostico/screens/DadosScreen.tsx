@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
-import { saveClienteConfigToSupabase, fatLabelToNumber } from "../persistence";
+import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
   OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO,
 } from "../data";
@@ -31,7 +31,7 @@ export function DadosScreen({
       try {
         await saveClienteConfigToSupabase(clienteId, {
           fat: fatLabelToNumber(selOpts.fat),
-          meta: client.meta,
+          meta: parseMoneyToNumber(client.meta),
           dor: client.dor,
           especialidade: client.proc,
         });

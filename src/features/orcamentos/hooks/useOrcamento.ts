@@ -12,6 +12,17 @@ export interface ClienteOpt {
   especialidade: string | null;
 }
 
+function toNumeric(raw: string): number | null {
+  if (raw == null) return null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  s = s.replace(/[^\d.,-]/g, "");
+  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (s.includes(",")) s = s.replace(",", ".");
+  const n = parseFloat(s);
+  return isNaN(n) ? null : Math.round(n);
+}
+
 export function useOrcamento() {
   const [form, setForm] = useState<OrcamentoForm>(initialForm);
   const [clientes, setClientes] = useState<ClienteOpt[]>([]);
@@ -100,8 +111,8 @@ export function useOrcamento() {
 
     data.forEach((row) => {
       if (row.tipo === "CONFIG") {
-        if (row.campo === "fat" && row.valor) updates.faturamento = row.valor;
-        else if (row.campo === "meta" && row.valor) updates.meta = row.valor;
+        if (row.campo === "fat" && row.valor) updates.faturamento = String(toNumeric(row.valor) ?? row.valor);
+        else if (row.campo === "meta" && row.valor) updates.meta = String(toNumeric(row.valor) ?? row.valor);
         else if (row.campo === "dor" && row.valor) updates.dor = row.valor;
         else if (row.campo === "especialidade" && row.valor) updates.especialidade = row.valor;
         return;
