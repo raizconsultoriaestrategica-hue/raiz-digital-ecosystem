@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { PILARES } from "@/features/diagnostico/data";
+import AdminDashboard from "./dashboard/AdminDashboard";
 
 type Row = {
   campo: string;
@@ -22,6 +23,10 @@ export default function Dashboard() {
   const [rows, setRows] = useState<Row[]>([]);
 
   useEffect(() => {
+    if (role === "admin") {
+      setLoading(false);
+      return;
+    }
     let active = true;
     async function load() {
       if (!user) return;
@@ -61,7 +66,9 @@ export default function Dashboard() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, role]);
+
+  if (role === "admin") return <AdminDashboard />;
 
   const byCampo = rows.reduce<Record<string, Row>>((acc, r) => {
     acc[r.campo] = r;
