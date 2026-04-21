@@ -31,7 +31,7 @@ export function DadosScreen({
       try {
         await saveClienteConfigToSupabase(clienteId, {
           fat: fatLabelToNumber(selOpts.fat),
-          meta: client.meta,
+          meta: parseMoneyToNumber(client.meta),
           dor: client.dor,
           especialidade: client.proc,
         });
