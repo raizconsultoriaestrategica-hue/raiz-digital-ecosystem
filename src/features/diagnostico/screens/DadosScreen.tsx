@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
-import { saveClienteConfigToSupabase } from "../persistence";
+import { saveClienteConfigToSupabase, fatLabelToNumber } from "../persistence";
 import {
   OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO,
 } from "../data";
@@ -30,9 +30,10 @@ export function DadosScreen({
     if (clienteId) {
       try {
         await saveClienteConfigToSupabase(clienteId, {
-          fat: selOpts.fat,
+          fat: fatLabelToNumber(selOpts.fat),
           meta: client.meta,
           dor: client.dor,
+          especialidade: client.proc,
         });
       } catch (e: any) {
         toast.error("Não foi possível salvar dados do cliente: " + (e?.message ?? e));

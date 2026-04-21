@@ -82,25 +82,56 @@ export async function saveDiagnosticoToSupabase(
   const { error } = await supabase.from("dashboard_data").insert(rows);
   if (error) throw error;
 
-  // Também persiste configs (fat, meta, dor) para reuso por outras ferramentas (ex.: Orçamentos)
+  // Também persiste configs (fat, meta, dor, especialidade) para reuso por outras ferramentas (ex.: Orçamentos)
   await saveClienteConfigToSupabase(clienteId, {
-    fat: snapshot.selOpts?.fat,
+    fat: fatLabelToNumber(snapshot.selOpts?.fat),
     meta: snapshot.client?.meta,
     dor: snapshot.client?.dor,
+    especialidade: snapshot.client?.proc,
   });
 }
 
 /**
- * Salva os dados de contexto do cliente (faturamento, meta, dor) como tipo='CONFIG'
+ * Converte o label do select de faturamento (ex.: "R$ 20–50k") em valor médio numérico em reais.
+ * Mantém a string original se não corresponder a nenhuma faixa conhecida.
+ */
+export function fatLabelToNumber(label?: string): string | undefined {
+  if (!label) return undefined;
+  const trimmed = label.trim();
+  if (!trimmed || trimmed === "—") return undefined;
+  const map: Record<string, number> = {
+    "Até R$ 20k": 15000,
+    "R$ 20–50k": 35000,
+    "R$ 20-50k": 35000,
+    "R$ 20~50k": 35000,
+    "R$ 50–100k": 75000,
+    "R$ 50-100k": 75000,
+    "R$ 50~100k": 75000,
+    "R$ 100–200k": 150000,
+    "R$ 100-200k": 150000,
+    "R$ 100~200k": 150000,
+    "R$ 200k+": 250000,
+  };
+  if (map[trimmed] != null) return String(map[trimmed]);
+  // Já é numérico?
+  const onlyDigits = trimmed.replace(/[^\d]/g, "");
+  if (onlyDigits && /^\d+$/.test(onlyDigits)) return onlyDigits;
+  return trimmed;
+}
+
+/**
+ * Salva os dados de contexto do cliente como tipo='CONFIG' / mes='Diagnóstico'
  * em dashboard_data, para serem reaproveitados por outras ferramentas.
  */
 export async function saveClienteConfigToSupabase(
   clienteId: string,
-  config: { fat?: string; meta?: string; dor?: string },
+  config: { fat?: string; meta?: string; dor?: string; especialidade?: string },
 ) {
-  const entries = Object.entries(config).filter(([, v]) => v && v.trim().length > 0);
+  if (!clienteId) return;
+  const entries = Object.entries(config).filter(([, v]) => v && String(v).trim().length > 0);
   if (entries.length === 0) return;
 
+  // Remove versões antigas (com mes=NULL ou mes='Diagnóstico') para os mesmos campos
   await supabase
     .from("dashboard_data")
     .delete()
@@ -111,9 +142,9 @@ export async function saveClienteConfigToSupabase(
   const rows = entries.map(([campo, valor]) => ({
     cliente_id: clienteId,
     tipo: "CONFIG",
-    mes: null as string | null,
+    mes: "Diagnóstico" as string | null,
     campo,
-    valor: valor as string,
+    valor: String(valor),
     benchmark: null as string | null,
   }));
 
