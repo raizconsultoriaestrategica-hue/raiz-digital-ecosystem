@@ -12,6 +12,17 @@ export interface ClienteOpt {
   especialidade: string | null;
 }
 
+function toNumeric(raw: string): number | null {
+  if (raw == null) return null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  s = s.replace(/[^\d.,-]/g, "");
+  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (s.includes(",")) s = s.replace(",", ".");
+  const n = parseFloat(s);
+  return isNaN(n) ? null : Math.round(n);
+}
+
 export function useOrcamento() {
   const [form, setForm] = useState<OrcamentoForm>(initialForm);
   const [clientes, setClientes] = useState<ClienteOpt[]>([]);
