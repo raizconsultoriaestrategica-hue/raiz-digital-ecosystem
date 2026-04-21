@@ -1,0 +1,1 @@
+ALTER TABLE public.clientes RENAME COLUMN valor_fechado TO orcamento_inicial;
