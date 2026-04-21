@@ -28,7 +28,7 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [novo, setNovo] = useState({ nome_cliente: "", nome_clinica: "", cidade: "" });
+  const [novo, setNovo] = useState({ email: "", nome_cliente: "", nome_clinica: "", cidade: "" });
   const [saving, setSaving] = useState(false);
 
   const fetch = async () => {
@@ -49,27 +49,34 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
       toast.error("Informe o nome do cliente");
       return;
     }
+    if (!novo.email.trim() || !/^\S+@\S+\.\S+$/.test(novo.email.trim())) {
+      toast.error("Informe um email válido");
+      return;
+    }
     setSaving(true);
-    const { data, error } = await supabase
-      .from("clientes")
-      .insert({
+    const { data, error } = await supabase.functions.invoke("create-cliente", {
+      body: {
+        email: novo.email.trim(),
         nome_cliente: novo.nome_cliente.trim(),
         nome_clinica: novo.nome_clinica.trim() || null,
         cidade: novo.cidade.trim() || null,
-      })
-      .select("id, nome_cliente, nome_clinica, cidade")
-      .single();
+      },
+    });
     setSaving(false);
-    if (error) {
-      toast.error("Erro ao criar cliente: " + error.message);
+    if (error || (data as any)?.error) {
+      const msg = (data as any)?.error ?? error?.message ?? "Erro ao criar cliente";
+      toast.error(msg);
       return;
     }
-    if (data) {
-      toast.success("Cliente criado");
-      setClientes((prev) => [...prev, data].sort((a, b) => a.nome_cliente.localeCompare(b.nome_cliente)));
-      onChange(data.id, data);
+    const cliente = (data as any)?.cliente as ClienteRow | undefined;
+    const email = (data as any)?.email as string | undefined;
+    const senha = (data as any)?.senha_provisoria as string | undefined;
+    if (cliente) {
+      toast.success(`Cliente criado. Acesso: ${email} · Senha: ${senha}`, { duration: 8000 });
+      setClientes((prev) => [...prev, cliente].sort((a, b) => a.nome_cliente.localeCompare(b.nome_cliente)));
+      onChange(cliente.id, cliente);
       setOpen(false);
-      setNovo({ nome_cliente: "", nome_clinica: "", cidade: "" });
+      setNovo({ email: "", nome_cliente: "", nome_clinica: "", cidade: "" });
     }
   };
 
@@ -113,6 +120,18 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
               <DialogDescription>Cadastra um cliente que será vinculado ao diagnóstico.</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
+              <div>
+                <Label>Email de acesso *</Label>
+                <Input
+                  type="email"
+                  value={novo.email}
+                  onChange={(e) => setNovo({ ...novo, email: e.target.value })}
+                  placeholder="cliente@exemplo.com"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Senha provisória: <span className="font-mono">Raiz@2026</span>
+                </p>
+              </div>
               <div>
                 <Label>Nome do responsável *</Label>
                 <Input value={novo.nome_cliente} onChange={(e) => setNovo({ ...novo, nome_cliente: e.target.value })} />
