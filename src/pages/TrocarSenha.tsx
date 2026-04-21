@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FormEvent, useEffect, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,11 +9,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function TrocarSenha() {
-  const { user, refreshPrimeiroAcesso, signOut } = useAuth();
+  const { user, role, primeiroAcesso, refreshPrimeiroAcesso, signOut } = useAuth();
   const navigate = useNavigate();
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  if (role === "admin") return <Navigate to="/dashboard" replace />;
+  if (role === "cliente" && primeiroAcesso === false) return <Navigate to="/dashboard" replace />;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
