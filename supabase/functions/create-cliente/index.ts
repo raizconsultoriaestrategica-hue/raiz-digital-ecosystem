@@ -19,8 +19,21 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SERVICE_ROLE_KEY") ??
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ANON = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
-      Deno.env.get("SUPABASE_ANON_KEY")!;
+    const ANON = Deno.env.get("SUPABASE_ANON_KEY") ??
+      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+
+    console.log("create-cliente env check", {
+      hasSupabaseUrl: Boolean(SUPABASE_URL),
+      hasServiceRole: Boolean(SERVICE_ROLE),
+      hasAnon: Boolean(ANON),
+    });
+
+    if (!SUPABASE_URL || !SERVICE_ROLE || !ANON) {
+      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // 1) Validar que o chamador está autenticado e é admin
     const authHeader = req.headers.get("Authorization") ?? "";
