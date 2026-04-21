@@ -148,6 +148,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      marcar_primeiro_acesso_concluido: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "cliente"
