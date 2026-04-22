@@ -11,9 +11,9 @@ export default function NovaSenha() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sessionReady, setSessionReady] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [showNova, setShowNova] = useState(false);
@@ -24,7 +24,6 @@ export default function NovaSenha() {
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
       if (!mounted) return;
-
       if (event === "PASSWORD_RECOVERY") {
         setSessionReady(true);
         setLoading(false);
@@ -35,33 +34,35 @@ export default function NovaSenha() {
       .getSession()
       .then(({ data: { session } }) => {
         if (!mounted) return;
-
         if (session?.user) {
           setSessionReady(true);
-        }
-
-        setLoading(false);
-      })
-      .catch(() => {
-        if (mounted) {
           setLoading(false);
         }
+      })
+      .catch(() => {});
+
+    const timeoutId = window.setTimeout(() => {
+      if (!mounted) return;
+      setLoading((prev) => {
+        if (prev) {
+          setSessionReady(false);
+          return false;
+        }
+        return prev;
       });
+    }, 5000);
 
     return () => {
       mounted = false;
       subscription.subscription.unsubscribe();
+      window.clearTimeout(timeoutId);
     };
   }, []);
 
   useEffect(() => {
     if (!success) return;
-
-    const timeout = window.setTimeout(() => {
-      navigate("/login", { replace: true });
-    }, 2000);
-
-    return () => window.clearTimeout(timeout);
+    const t = window.setTimeout(() => navigate("/login", { replace: true }), 2000);
+    return () => window.clearTimeout(t);
   }, [navigate, success]);
 
   const onSubmit = async (e: FormEvent) => {
@@ -69,30 +70,27 @@ export default function NovaSenha() {
     setError("");
 
     if (novaSenha.length < 8) {
-      setError("A nova senha deve ter no mínimo 8 caracteres.");
+      setError("A senha deve ter pelo menos 8 caracteres.");
       return;
     }
-
     if (novaSenha !== confirmar) {
       setError("As senhas não coincidem.");
       return;
     }
 
     setSubmitting(true);
-
     const { error: updateError } = await supabase.auth.updateUser({ password: novaSenha });
 
-    setSubmitting(false);
-
     if (updateError) {
+      setSubmitting(false);
       setError(updateError.message);
       return;
     }
 
-    setSuccess(true);
     setSessionReady(false);
-
     await supabase.auth.signOut();
+    setSubmitting(false);
+    setSuccess(true);
   };
 
   return (
@@ -132,7 +130,6 @@ export default function NovaSenha() {
                 <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 font-body text-sm text-quase-preto/80">
                   Link inválido ou expirado.
                 </div>
-
                 <Button
                   onClick={() => navigate("/login")}
                   className="w-full bg-verde-raiz text-linho hover:bg-verde-musgo"
@@ -155,7 +152,6 @@ export default function NovaSenha() {
                 <form onSubmit={onSubmit} className="mt-10 space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="nova">Nova senha</Label>
-
                     <div className="relative">
                       <Input
                         id="nova"
@@ -167,10 +163,9 @@ export default function NovaSenha() {
                         placeholder="Mínimo 8 caracteres"
                         className="pr-10"
                       />
-
                       <button
                         type="button"
-                        onClick={() => setShowNova((state) => !state)}
+                        onClick={() => setShowNova((s) => !s)}
                         aria-label={showNova ? "Ocultar senha" : "Mostrar senha"}
                         className="absolute inset-y-0 right-0 flex items-center px-3 text-quase-preto/60 hover:text-quase-preto"
                       >
@@ -181,7 +176,6 @@ export default function NovaSenha() {
 
                   <div className="space-y-2">
                     <Label htmlFor="conf">Confirmar nova senha</Label>
-
                     <div className="relative">
                       <Input
                         id="conf"
@@ -193,10 +187,9 @@ export default function NovaSenha() {
                         placeholder="Repita a nova senha"
                         className="pr-10"
                       />
-
                       <button
                         type="button"
-                        onClick={() => setShowConf((state) => !state)}
+                        onClick={() => setShowConf((s) => !s)}
                         aria-label={showConf ? "Ocultar senha" : "Mostrar senha"}
                         className="absolute inset-y-0 right-0 flex items-center px-3 text-quase-preto/60 hover:text-quase-preto"
                       >
@@ -210,7 +203,7 @@ export default function NovaSenha() {
                     disabled={submitting}
                     className="w-full bg-verde-raiz text-linho hover:bg-verde-musgo"
                   >
-                    {submitting ? "Salvando..." : "Redefinir senha"}
+                    {submitting ? "Salvando..." : "Salvar nova senha"}
                   </Button>
 
                   {error && <p className="font-body text-xs text-destructive">{error}</p>}
