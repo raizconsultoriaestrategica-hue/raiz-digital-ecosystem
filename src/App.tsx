@@ -9,6 +9,7 @@ import SiteLayout from "@/components/site/SiteLayout";
 import AppLayout from "@/components/app/AppLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import NovaSenha from "./pages/NovaSenha";
 import TrocarSenha from "./pages/TrocarSenha";
 import Dashboard from "./pages/Dashboard";
 import Ferramentas from "./pages/Ferramentas";
@@ -33,6 +34,7 @@ const App = () => (
 
             {/* Auth */}
             <Route path="/login" element={<Login />} />
+            <Route path="/nova-senha" element={<NovaSenha />} />
 
             {/* Troca de senha obrigatória (cliente em primeiro acesso) */}
             <Route
