@@ -90,6 +90,9 @@ export default function NovaSenha() {
     }
 
     setSuccess(true);
+    setSessionReady(false);
+
+    await supabase.auth.signOut();
   };
 
   return (
