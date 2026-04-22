@@ -1,87 +1,115 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TopProgress } from "@/components/ui/top-progress";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export default function NovaSenha() {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  const [hasSession, setHasSession] = useState(false);
-
+  const [loading, setLoading] = useState(true);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [showNova, setShowNova] = useState(false);
   const [showConf, setShowConf] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [erroValidacao, setErroValidacao] = useState<string | null>(null);
-  const [erroApi, setErroApi] = useState<string | null>(null);
 
   useEffect(() => {
-    // Garante que o Supabase processou o hash do link (#access_token=...)
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setHasSession(!!session);
-      setChecking(false);
+    let mounted = true;
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
+      if (!mounted) return;
+
+      if (event === "PASSWORD_RECOVERY") {
+        setSessionReady(true);
+        setLoading(false);
+      }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      setHasSession(!!data.session);
-      setChecking(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+
+        if (session?.user) {
+          setSessionReady(true);
+        }
+
+        setLoading(false);
+      })
+      .catch(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
 
     return () => {
-      sub.subscription.unsubscribe();
+      mounted = false;
+      subscription.subscription.unsubscribe();
     };
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+
+    const timeout = window.setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [navigate, success]);
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErroValidacao(null);
-    setErroApi(null);
+    setError("");
 
     if (novaSenha.length < 8) {
-      setErroValidacao("A nova senha deve ter no mínimo 8 caracteres.");
+      setError("A nova senha deve ter no mínimo 8 caracteres.");
       return;
     }
+
     if (novaSenha !== confirmar) {
-      setErroValidacao("As senhas não coincidem.");
+      setError("As senhas não coincidem.");
       return;
     }
 
     setSubmitting(true);
-    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: novaSenha });
+
     setSubmitting(false);
 
-    if (error) {
-      setErroApi(error.message);
+    if (updateError) {
+      setError(updateError.message);
       return;
     }
 
-    toast.success("Senha redefinida com sucesso.");
-    setTimeout(() => navigate("/login", { replace: true }), 2000);
+    setSuccess(true);
   };
 
   return (
     <>
-      <TopProgress active={submitting || checking} />
+      <TopProgress active={loading || submitting} />
+
       <div className="grid min-h-screen md:grid-cols-2">
         <div className="relative hidden flex-col justify-between bg-gradient-raiz p-12 text-linho md:flex">
           <Link to="/" className="font-display text-3xl">
             Raiz<span className="text-dourado">.</span>
           </Link>
+
           <div>
             <p className="max-w-md font-display text-3xl italic leading-snug">
               "Toda clínica forte foi, antes, uma decisão clara."
             </p>
             <div className="mt-6 font-body text-sm text-linho/70">Manifesto Raiz</div>
           </div>
-          <div className="font-body text-xs text-linho/50">
-            © {new Date().getFullYear()} Raiz Consultoria
-          </div>
+
+          <div className="font-body text-xs text-linho/50">© {new Date().getFullYear()} Raiz Consultoria</div>
         </div>
 
         <div className="flex flex-col justify-center bg-off-white p-8 md:p-16">
@@ -92,19 +120,28 @@ export default function NovaSenha() {
 
             <h1 className="font-display text-4xl text-verde-raiz">Redefinir senha</h1>
 
-            {checking ? (
-              <p className="mt-6 font-body text-sm text-quase-preto/70">Validando link...</p>
-            ) : !hasSession ? (
+            {loading ? (
+              <div className="flex min-h-[240px] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-verde-raiz" aria-hidden="true" />
+              </div>
+            ) : !sessionReady ? (
               <div className="mt-10 space-y-6">
                 <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 font-body text-sm text-quase-preto/80">
                   Link inválido ou expirado.
                 </div>
+
                 <Button
                   onClick={() => navigate("/login")}
                   className="w-full bg-verde-raiz text-linho hover:bg-verde-musgo"
                 >
                   Voltar ao login
                 </Button>
+              </div>
+            ) : success ? (
+              <div className="mt-10 space-y-4">
+                <div className="rounded-md border border-verde-musgo/20 bg-verde-musgo/5 p-4 font-body text-sm text-quase-preto/80">
+                  Senha redefinida com sucesso. Você será redirecionado para o login em instantes.
+                </div>
               </div>
             ) : (
               <>
@@ -115,20 +152,22 @@ export default function NovaSenha() {
                 <form onSubmit={onSubmit} className="mt-10 space-y-5">
                   <div className="space-y-2">
                     <Label htmlFor="nova">Nova senha</Label>
+
                     <div className="relative">
                       <Input
                         id="nova"
                         type={showNova ? "text" : "password"}
-                        required
                         minLength={8}
+                        required
                         value={novaSenha}
                         onChange={(e) => setNovaSenha(e.target.value)}
                         placeholder="Mínimo 8 caracteres"
                         className="pr-10"
                       />
+
                       <button
                         type="button"
-                        onClick={() => setShowNova((s) => !s)}
+                        onClick={() => setShowNova((state) => !state)}
                         aria-label={showNova ? "Ocultar senha" : "Mostrar senha"}
                         className="absolute inset-y-0 right-0 flex items-center px-3 text-quase-preto/60 hover:text-quase-preto"
                       >
@@ -139,29 +178,28 @@ export default function NovaSenha() {
 
                   <div className="space-y-2">
                     <Label htmlFor="conf">Confirmar nova senha</Label>
+
                     <div className="relative">
                       <Input
                         id="conf"
                         type={showConf ? "text" : "password"}
-                        required
                         minLength={8}
+                        required
                         value={confirmar}
                         onChange={(e) => setConfirmar(e.target.value)}
                         placeholder="Repita a nova senha"
                         className="pr-10"
                       />
+
                       <button
                         type="button"
-                        onClick={() => setShowConf((s) => !s)}
+                        onClick={() => setShowConf((state) => !state)}
                         aria-label={showConf ? "Ocultar senha" : "Mostrar senha"}
                         className="absolute inset-y-0 right-0 flex items-center px-3 text-quase-preto/60 hover:text-quase-preto"
                       >
                         {showConf ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                    {erroValidacao && (
-                      <p className="font-body text-xs text-destructive">{erroValidacao}</p>
-                    )}
                   </div>
 
                   <Button
@@ -172,9 +210,7 @@ export default function NovaSenha() {
                     {submitting ? "Salvando..." : "Redefinir senha"}
                   </Button>
 
-                  {erroApi && (
-                    <p className="font-body text-xs text-destructive">{erroApi}</p>
-                  )}
+                  {error && <p className="font-body text-xs text-destructive">{error}</p>}
                 </form>
               </>
             )}
