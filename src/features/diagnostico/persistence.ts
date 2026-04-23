@@ -78,8 +78,29 @@ export async function saveDiagnosticoToSupabase(
   });
   rows.push({
     cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
-    campo: "ANALISE", valor: "", benchmark: null,
+    campo: "ANALISE", valor: snapshot.analise || "", benchmark: null,
   });
+  rows.push({
+    cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
+    campo: "RAMO", valor: ramo, benchmark: null,
+  });
+  if (snapshot.kpisIniciais) {
+    rows.push({
+      cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
+      campo: "KPIS_INICIAIS_JSON", valor: JSON.stringify(snapshot.kpisIniciais), benchmark: null,
+    });
+    // Também grava cada KPI individual como tipo='KPI' para o dashboard do cliente
+    KPI_INIT_FIELDS.forEach((f) => {
+      const v = snapshot.kpisIniciais?.[f.key];
+      if (!v) return;
+      const campo = ramo === "medico" && f.campoMed ? f.campoMed : f.campo;
+      const benchmark = ramo === "medico" ? f.benchmarkMed : f.benchmarkDent;
+      rows.push({
+        cliente_id: clienteId, tipo: "KPI", mes: "Inicial",
+        campo, valor: String(v), benchmark: benchmark ?? null,
+      });
+    });
+  }
 
   const { error } = await supabase.from("dashboard_data").insert(rows);
   if (error) throw error;
