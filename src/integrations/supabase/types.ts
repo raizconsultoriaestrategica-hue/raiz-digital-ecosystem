@@ -24,11 +24,16 @@ export type Database = {
           duracao_meses: number | null
           especialidade: string | null
           id: string
+          mes_referencia: string | null
+          meta_faturamento: number | null
+          modulos_ativos: string | null
           nome_cliente: string
           nome_clinica: string | null
           orcamento_inicial: number | null
+          pilares_foco: string | null
           plano: string | null
           primeiro_acesso: boolean
+          ramo: string | null
           status: string | null
           user_id: string | null
           valor_mensalidade: number | null
@@ -42,11 +47,16 @@ export type Database = {
           duracao_meses?: number | null
           especialidade?: string | null
           id?: string
+          mes_referencia?: string | null
+          meta_faturamento?: number | null
+          modulos_ativos?: string | null
           nome_cliente: string
           nome_clinica?: string | null
           orcamento_inicial?: number | null
+          pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
+          ramo?: string | null
           status?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
@@ -60,11 +70,16 @@ export type Database = {
           duracao_meses?: number | null
           especialidade?: string | null
           id?: string
+          mes_referencia?: string | null
+          meta_faturamento?: number | null
+          modulos_ativos?: string | null
           nome_cliente?: string
           nome_clinica?: string | null
           orcamento_inicial?: number | null
+          pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
+          ramo?: string | null
           status?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
@@ -109,6 +124,56 @@ export type Database = {
           {
             foreignKeyName: "dashboard_data_cliente_id_fkey"
             columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostics: {
+        Row: {
+          classif_label: string
+          client_data: Json
+          client_id: string | null
+          created_at: string | null
+          id: string
+          plano_name: string
+          ramo: string
+          scores: Json
+          total_max: number
+          total_pct: number
+          total_score: number
+        }
+        Insert: {
+          classif_label: string
+          client_data: Json
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          plano_name: string
+          ramo: string
+          scores: Json
+          total_max: number
+          total_pct: number
+          total_score: number
+        }
+        Update: {
+          classif_label?: string
+          client_data?: Json
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          plano_name?: string
+          ramo?: string
+          scores?: Json
+          total_max?: number
+          total_pct?: number
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostics_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
