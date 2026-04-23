@@ -115,6 +115,56 @@ export type Database = {
           },
         ]
       }
+      orcamentos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          created_by: string | null
+          file_name: string
+          id: string
+          plano: string
+          plano_nome: string | null
+          score: number | null
+          score_max: number | null
+          storage_path: string
+          valor: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          created_by?: string | null
+          file_name: string
+          id?: string
+          plano: string
+          plano_nome?: string | null
+          score?: number | null
+          score_max?: number | null
+          storage_path: string
+          valor?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          id?: string
+          plano?: string
+          plano_nome?: string | null
+          score?: number | null
+          score_max?: number | null
+          storage_path?: string
+          valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

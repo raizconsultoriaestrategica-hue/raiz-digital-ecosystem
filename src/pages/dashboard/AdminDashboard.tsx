@@ -53,6 +53,7 @@ import {
   Calculator,
   Trash2,
   Briefcase,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +63,7 @@ import {
   type StoredDiagnostico,
 } from "@/features/diagnostico/persistence";
 import { generatePDF } from "@/features/diagnostico/pdf";
+import { OrcamentosListDialog } from "./OrcamentosListDialog";
 
 type StatusCarteira =
   | "lead"
@@ -135,6 +137,7 @@ export default function AdminDashboard() {
   const [confirmDeleteCliente, setConfirmDeleteCliente] = useState<{ id: string; nome: string } | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [orcamentosOpen, setOrcamentosOpen] = useState<{ id: string; nome: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -464,6 +467,17 @@ export default function AdminDashboard() {
                                   <Calculator className="mr-2 h-4 w-4" />
                                   Gerar orçamento
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setOrcamentosOpen({
+                                      id: l.cliente.id,
+                                      nome: l.cliente.nome_clinica || l.cliente.nome_cliente,
+                                    })
+                                  }
+                                >
+                                  <FolderOpen className="mr-2 h-4 w-4" />
+                                  Orçamentos salvos
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {d && (
                                   <DropdownMenuItem
@@ -664,6 +678,12 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <OrcamentosListDialog
+        clienteId={orcamentosOpen?.id ?? null}
+        clienteNome={orcamentosOpen?.nome ?? ""}
+        onClose={() => setOrcamentosOpen(null)}
+      />
     </div>
   );
 }
