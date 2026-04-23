@@ -1,13 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import SiteLayout from "@/components/site/SiteLayout";
 import AppLayout from "@/components/app/AppLayout";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import NovaSenha from "./pages/NovaSenha";
 import TrocarSenha from "./pages/TrocarSenha";
@@ -19,6 +18,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function HomeRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <Home />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,10 +33,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Site público */}
-            <Route element={<SiteLayout />}>
-              <Route path="/" element={<Index />} />
-            </Route>
+            {/* Home pública */}
+            <Route path="/" element={<HomeRoute />} />
 
             {/* Auth */}
             <Route path="/login" element={<Login />} />
