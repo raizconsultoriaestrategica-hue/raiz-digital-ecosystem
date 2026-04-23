@@ -2,25 +2,29 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Save, RotateCcw } from "lucide-react";
+import { Download, Save, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   getClassif, getPlano, getScore, getSortedByPct, getStatus, getTotals,
 } from "../logic";
-import type { ClientData, ScoresMap, SelOpts } from "../types";
+import type { ClientData, Ramo, ScoresMap, SelOpts } from "../types";
 import { RadarPilares } from "../components/RadarPilares";
 import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
-import { saveDiagnosticoToSupabase } from "../persistence";
+import { saveDiagnosticoToSupabase, updateDiagnosticoNotasInSupabase } from "../persistence";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResultScreenProps {
   client: ClientData;
   selOpts: SelOpts;
   scores: ScoresMap;
+  ramo: Ramo;
   clienteId: string | null;
   notas: string;
+  analise: string;
   onNotasChange: (v: string) => void;
+  onAnaliseChange: (v: string) => void;
   onRestart: () => void;
 }
 
