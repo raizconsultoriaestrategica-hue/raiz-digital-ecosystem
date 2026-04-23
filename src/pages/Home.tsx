@@ -21,7 +21,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import patrickPortrait from "@/assets/patrick-portrait.jpg";
+import patrickEstrategico from "@/assets/patrick-estrategico.jpg";
+import patrickLifestyle from "@/assets/patrick-lifestyle.jpg";
 
 const WHATSAPP_URL = "https://wa.me/5544999993334";
 
