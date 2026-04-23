@@ -1,7 +1,10 @@
-import { Printer, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Printer, RotateCcw, Save } from "lucide-react";
+import { toast } from "sonner";
 import { PILARES, MODULOS_ALL, PLANOS } from "../data";
 import type { OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
+import { saveOrcamento } from "../storage";
 
 interface Props {
   form: OrcamentoForm;
@@ -27,12 +30,30 @@ const sectionCls =
   "text-[11px] font-bold text-dourado/80 uppercase tracking-[0.1em] mb-2.5";
 
 export function OrcamentoSidebar(p: Props) {
+  const [saving, setSaving] = useState(false);
   // Agrupar módulos por pilar (mantém ordem)
   const grouped: Record<string, typeof MODULOS_ALL> = {};
   MODULOS_ALL.forEach((m) => {
     if (!grouped[m.pilar]) grouped[m.pilar] = [];
     grouped[m.pilar].push(m);
   });
+
+  const handleSave = async () => {
+    if (!p.clienteId) {
+      toast.error("Selecione um cliente vinculado para salvar.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveOrcamento(p.form, p.clienteId);
+      toast.success("Orçamento salvo na Gestão de Clientes");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao salvar orçamento";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <aside
@@ -285,6 +306,15 @@ export function OrcamentoSidebar(p: Props) {
       >
         <Printer className="w-4 h-4" />
         Imprimir / Gerar PDF
+      </button>
+      <button
+        onClick={handleSave}
+        disabled={saving || !p.clienteId}
+        className="w-full bg-white/10 hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed border border-white/20 text-white font-bold text-[13px] rounded-lg py-2.5 mt-2 flex items-center justify-center gap-2 transition-colors"
+        title={!p.clienteId ? "Selecione um cliente vinculado para salvar" : "Salvar PDF na Gestão de Clientes"}
+      >
+        <Save className="w-4 h-4" />
+        {saving ? "Salvando…" : "Salvar na Gestão de Clientes"}
       </button>
       <button
         onClick={p.reset}
