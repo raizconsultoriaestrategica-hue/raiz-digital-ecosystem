@@ -271,13 +271,17 @@ function reconstructSnapshot(
   if (totalMax === 0) return null;
   const totalPct = totalScore / totalMax;
 
+  const ramo: Ramo = (map.get("RAMO")?.valor as Ramo) || "dentista";
+  const pilaresList = getPilaresByRamo(ramo);
+  const planosList = getPlanosByRamo(ramo);
+
   const classif =
     CLASSIFS.find((c) => totalPct < c.max) ?? CLASSIFS[CLASSIFS.length - 1];
-  const plano = PLANOS.find((pl) => pl.trigger(totalPct)) ?? PLANOS[PLANOS.length - 1];
+  const plano = planosList.find((pl) => pl.trigger(totalPct)) ?? planosList[planosList.length - 1];
 
   // Sorted ids por pct (do menor para o maior)
   const pctById = new Map<string, number>();
-  PILARES.forEach((p) => {
+  pilaresList.forEach((p) => {
     const arr = scores[p.id] || [];
     let t = 0, m = 0;
     p.questions.forEach((_q, i) => {
@@ -293,12 +297,20 @@ function reconstructSnapshot(
   const created = map.get("SCORE_TOTAL")?.created_at || rows[0]?.created_at;
   const timestamp = created ? new Date(created).getTime() : Date.now();
 
+  let kpisIniciais: KpisIniciaisData | undefined;
+  const kjson = map.get("KPIS_INICIAIS_JSON")?.valor;
+  if (kjson) {
+    try { kpisIniciais = JSON.parse(kjson); } catch { /* noop */ }
+  }
+
   return {
     client, selOpts, scores,
     totalScore, totalMax, totalPct,
     classif, plano, sortedIds,
     notas: map.get("NOTAS")?.valor || "",
     analise: map.get("ANALISE")?.valor || "",
+    ramo,
+    kpisIniciais,
     timestamp,
     cliente_id: cliente.id,
     clienteNomeClinica: cliente.nome_clinica,
