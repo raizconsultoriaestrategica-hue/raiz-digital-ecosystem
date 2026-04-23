@@ -7,7 +7,7 @@ import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
 import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
-  OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO,
+  OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO_DENT,
 } from "../data";
 import type { ClientData, SelOpts } from "../types";
 
@@ -96,7 +96,7 @@ export function DadosScreen({
           </div>
 
           <SelectGroup label="Faturamento atual" group="fat" value={selOpts.fat} options={OPT_FAT} onChange={onSel} />
-          <SelectGroup label="Tipo de operação" group="tipo" value={selOpts.tipo} options={OPT_TIPO} onChange={onSel} />
+          <SelectGroup label="Tipo de operação" group="tipo" value={selOpts.tipo} options={OPT_TIPO_DENT} onChange={onSel} />
           <SelectGroup label="Equipe" group="func" value={selOpts.func} options={OPT_FUNC} onChange={onSel} />
           <SelectGroup label="Ticket médio" group="ticket" value={selOpts.ticket} options={OPT_TICKET} onChange={onSel} />
           <SelectGroup label="Cadeiras / consultórios" group="cadeiras" value={selOpts.cadeiras} options={OPT_CADEIRAS} onChange={onSel} cols={4} />
