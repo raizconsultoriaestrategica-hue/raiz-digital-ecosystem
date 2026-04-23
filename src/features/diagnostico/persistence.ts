@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { PILARES, PLANOS, CLASSIFS } from "./data";
-import type { ClientData, DiagnosticoSnapshot, ScoresMap, SelOpts } from "./types";
+import { CLASSIFS, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS } from "./data";
+import type { ClientData, DiagnosticoSnapshot, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "./types";
 
 /**
  * Persiste o diagnóstico em dashboard_data:
@@ -13,13 +13,19 @@ export async function saveDiagnosticoToSupabase(
   clienteId: string,
   snapshot: DiagnosticoSnapshot,
 ) {
-  // Limpa diagnóstico anterior do mesmo cliente (mes = 'Diagnóstico')
+  // Limpa diagnóstico anterior do mesmo cliente
   await supabase
     .from("dashboard_data")
     .delete()
     .eq("cliente_id", clienteId)
     .eq("tipo", "PILAR")
     .eq("mes", "Diagnóstico");
+  await supabase
+    .from("dashboard_data")
+    .delete()
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "KPI")
+    .eq("mes", "Inicial");
 
   const rows: Array<{
     cliente_id: string;
@@ -30,7 +36,9 @@ export async function saveDiagnosticoToSupabase(
     benchmark: string | null;
   }> = [];
 
-  PILARES.forEach((p) => {
+  const ramo: Ramo = snapshot.ramo || "dentista";
+  const pilaresList = getPilaresByRamo(ramo);
+  pilaresList.forEach((p) => {
     const arr = snapshot.scores[p.id] || [];
     let total = 0;
     let max = 0;
@@ -76,8 +84,29 @@ export async function saveDiagnosticoToSupabase(
   });
   rows.push({
     cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
-    campo: "ANALISE", valor: "", benchmark: null,
+    campo: "ANALISE", valor: snapshot.analise || "", benchmark: null,
   });
+  rows.push({
+    cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
+    campo: "RAMO", valor: ramo, benchmark: null,
+  });
+  if (snapshot.kpisIniciais) {
+    rows.push({
+      cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
+      campo: "KPIS_INICIAIS_JSON", valor: JSON.stringify(snapshot.kpisIniciais), benchmark: null,
+    });
+    // Também grava cada KPI individual como tipo='KPI' para o dashboard do cliente
+    KPI_INIT_FIELDS.forEach((f) => {
+      const v = snapshot.kpisIniciais?.[f.key];
+      if (!v) return;
+      const campo = ramo === "medico" && f.campoMed ? f.campoMed : f.campo;
+      const benchmark = ramo === "medico" ? f.benchmarkMed : f.benchmarkDent;
+      rows.push({
+        cliente_id: clienteId, tipo: "KPI", mes: "Inicial",
+        campo, valor: String(v), benchmark: benchmark ?? null,
+      });
+    });
+  }
 
   const { error } = await supabase.from("dashboard_data").insert(rows);
   if (error) throw error;
@@ -242,13 +271,17 @@ function reconstructSnapshot(
   if (totalMax === 0) return null;
   const totalPct = totalScore / totalMax;
 
+  const ramo: Ramo = (map.get("RAMO")?.valor as Ramo) || "dentista";
+  const pilaresList = getPilaresByRamo(ramo);
+  const planosList = getPlanosByRamo(ramo);
+
   const classif =
     CLASSIFS.find((c) => totalPct < c.max) ?? CLASSIFS[CLASSIFS.length - 1];
-  const plano = PLANOS.find((pl) => pl.trigger(totalPct)) ?? PLANOS[PLANOS.length - 1];
+  const plano = planosList.find((pl) => pl.trigger(totalPct)) ?? planosList[planosList.length - 1];
 
   // Sorted ids por pct (do menor para o maior)
   const pctById = new Map<string, number>();
-  PILARES.forEach((p) => {
+  pilaresList.forEach((p) => {
     const arr = scores[p.id] || [];
     let t = 0, m = 0;
     p.questions.forEach((_q, i) => {
@@ -264,12 +297,20 @@ function reconstructSnapshot(
   const created = map.get("SCORE_TOTAL")?.created_at || rows[0]?.created_at;
   const timestamp = created ? new Date(created).getTime() : Date.now();
 
+  let kpisIniciais: KpisIniciaisData | undefined;
+  const kjson = map.get("KPIS_INICIAIS_JSON")?.valor;
+  if (kjson) {
+    try { kpisIniciais = JSON.parse(kjson); } catch { /* noop */ }
+  }
+
   return {
     client, selOpts, scores,
     totalScore, totalMax, totalPct,
     classif, plano, sortedIds,
     notas: map.get("NOTAS")?.valor || "",
     analise: map.get("ANALISE")?.valor || "",
+    ramo,
+    kpisIniciais,
     timestamp,
     cliente_id: cliente.id,
     clienteNomeClinica: cliente.nome_clinica,

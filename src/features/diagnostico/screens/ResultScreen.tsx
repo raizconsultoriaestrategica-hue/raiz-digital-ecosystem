@@ -2,25 +2,29 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Save, RotateCcw } from "lucide-react";
+import { Download, Save, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   getClassif, getPlano, getScore, getSortedByPct, getStatus, getTotals,
 } from "../logic";
-import type { ClientData, ScoresMap, SelOpts } from "../types";
+import type { ClientData, Ramo, ScoresMap, SelOpts } from "../types";
 import { RadarPilares } from "../components/RadarPilares";
 import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
-import { saveDiagnosticoToSupabase } from "../persistence";
+import { saveDiagnosticoToSupabase, updateDiagnosticoNotasInSupabase } from "../persistence";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResultScreenProps {
   client: ClientData;
   selOpts: SelOpts;
   scores: ScoresMap;
+  ramo: Ramo;
   clienteId: string | null;
   notas: string;
+  analise: string;
   onNotasChange: (v: string) => void;
+  onAnaliseChange: (v: string) => void;
   onRestart: () => void;
 }
 
@@ -40,24 +44,26 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export function ResultScreen({
-  client, selOpts, scores, clienteId, notas, onNotasChange, onRestart,
+  client, selOpts, scores, ramo, clienteId, notas, analise,
+  onNotasChange, onAnaliseChange, onRestart,
 }: ResultScreenProps) {
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const computed = useMemo(() => {
-    const totals = getTotals(scores, selOpts);
+    const totals = getTotals(scores, selOpts, ramo);
     const classif = getClassif(totals.totalPct);
-    const plano = getPlano(totals.totalPct);
-    const sorted = getSortedByPct(scores, selOpts);
+    const plano = getPlano(totals.totalPct, ramo);
+    const sorted = getSortedByPct(scores, selOpts, ramo);
     return { ...totals, classif, plano, sorted };
-  }, [scores, selOpts]);
+  }, [scores, selOpts, ramo]);
 
   const { totalScore, totalMax, totalPct, classif, plano, sorted } = computed;
   const dor = client.dor || "não informada";
   const meta = client.meta || "não informada";
-  const criticos = sorted.filter((p) => getScore(scores, p.id).pct < 0.35);
+  const criticos = sorted.filter((p) => getScore(scores, p.id, ramo).pct < 0.35);
   const atencao = sorted.filter((p) => {
-    const pct = getScore(scores, p.id).pct;
+    const pct = getScore(scores, p.id, ramo).pct;
     return pct >= 0.35 && pct < 0.55;
   });
 
@@ -66,9 +72,47 @@ export function ResultScreen({
     totalScore, totalMax, totalPct, classif, plano,
     sortedIds: sorted.map((p) => p.id),
     notas,
+    analise,
+    ramo,
     timestamp: Date.now(),
     cliente_id: clienteId,
   });
+
+  const handleAnalisar = async () => {
+    setAnalyzing(true);
+    try {
+      const pilares = sorted.map((p) => {
+        const s = getScore(scores, p.id, ramo);
+        return { name: p.name, pct: s.pct, total: s.total, max: s.max };
+      });
+      const { data, error } = await supabase.functions.invoke("diagnostico-analise", {
+        body: {
+          clientName: client.name,
+          ramo,
+          classifLabel: classif.label,
+          planoName: plano.name,
+          totalPct,
+          dor: client.dor,
+          meta: client.meta,
+          objetivo: client.objetivo,
+          pilares,
+        },
+      });
+      if (error) throw error;
+      const a = (data as { analise?: string; error?: string })?.analise;
+      if (!a) throw new Error((data as { error?: string })?.error || "Sem análise");
+      onAnaliseChange(a);
+      if (clienteId) {
+        try { await updateDiagnosticoNotasInSupabase(clienteId, notas, a); } catch { /* noop */ }
+      }
+      toast.success("Análise gerada com IA.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Falha ao gerar análise";
+      toast.error(msg);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!clienteId) {
@@ -133,55 +177,76 @@ export function ResultScreen({
 
           <TabsContent value="visao" className="mt-6 space-y-5">
             <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-verde-musgo" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-verde-musgo">
-                  Análise estratégica
-                </span>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-verde-musgo" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-verde-musgo">
+                    Análise estratégica {analise ? "(IA)" : ""}
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAnalisar}
+                  disabled={analyzing}
+                  className="h-8 gap-1.5 border-dourado/40 text-verde-raiz hover:bg-dourado/10"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {analyzing ? "Gerando…" : analise ? "Regenerar" : "Gerar com IA"}
+                </Button>
               </div>
-              <div className="space-y-2.5 text-sm leading-relaxed text-quase-preto">
-                {criticos.length > 0 ? (
-                  <>
+              {analise ? (
+                <div className="space-y-2.5 whitespace-pre-wrap text-sm leading-relaxed text-quase-preto">
+                  {analise}
+                </div>
+              ) : (
+                <div className="space-y-2.5 text-sm leading-relaxed text-quase-preto">
+                  {criticos.length > 0 ? (
+                    <>
+                      <p>
+                        Com base no diagnóstico de <strong>{client.name}</strong>, identificamos{" "}
+                        <strong>{criticos.length} pilar(es) crítico(s)</strong> que explicam diretamente a dor relatada:{" "}
+                        <em>"{dor}"</em>.
+                      </p>
+                      <p>
+                        Os gargalos mais urgentes estão em{" "}
+                        <strong>
+                          {criticos.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}
+                        </strong>
+                        . Sem estruturar essas áreas primeiro, qualquer investimento em marketing vai escorrer pelo ralo.
+                      </p>
+                    </>
+                  ) : (
                     <p>
-                      Com base no diagnóstico de <strong>{client.name}</strong>, identificamos{" "}
-                      <strong>{criticos.length} pilar(es) crítico(s)</strong> que explicam diretamente a dor relatada:{" "}
-                      <em>"{dor}"</em>.
+                      A clínica de <strong>{client.name}</strong> já tem uma base funcionando. O diagnóstico mostra
+                      maturidade acima da média nos pilares fundamentais.
                     </p>
+                  )}
+                  {atencao.length > 0 && (
                     <p>
-                      Os gargalos mais urgentes estão em{" "}
+                      Em segundo nível,{" "}
                       <strong>
-                        {criticos.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}
-                      </strong>
-                      . Sem estruturar essas áreas primeiro, qualquer investimento em marketing vai escorrer pelo ralo.
+                        {atencao.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}
+                      </strong>{" "}
+                      precisam de atenção — não são emergências, mas estão limitando o crescimento.
                     </p>
-                  </>
-                ) : (
+                  )}
                   <p>
-                    A clínica de <strong>{client.name}</strong> já tem uma base funcionando. O diagnóstico mostra
-                    maturidade acima da média nos pilares fundamentais.
+                    Para alcançar a meta de <strong>{meta}</strong>, o caminho mais direto passa por estruturar processos
+                    de atendimento e conversão <em>antes</em> de escalar o investimento em captação.
                   </p>
-                )}
-                {atencao.length > 0 && (
-                  <p>
-                    Em segundo nível,{" "}
-                    <strong>
-                      {atencao.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}
-                    </strong>{" "}
-                    precisam de atenção — não são emergências, mas estão limitando o crescimento.
+                  <p className="text-xs text-quase-preto/55">
+                    Clique em "Gerar com IA" para uma análise personalizada com base nos dados deste diagnóstico.
                   </p>
-                )}
-                <p>
-                  Para alcançar a meta de <strong>{meta}</strong>, o caminho mais direto passa por estruturar processos
-                  de atendimento e conversão <em>antes</em> de escalar o investimento em captação.
-                </p>
-              </div>
+                </div>
+              )}
             </div>
 
             <div>
               <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-quase-preto/60">Prioridades</div>
               <div className="space-y-2.5">
                 {sorted.slice(0, 4).map((p, i) => {
-                  const pct = getScore(scores, p.id).pct;
+                  const pct = getScore(scores, p.id, ramo).pct;
                   const borders = ["border-l-destructive", "border-l-caramelo", "border-l-dourado", "border-l-dourado"];
                   const insights = [
                     "Maior oportunidade imediata de impacto no faturamento. Ação urgente.",
@@ -211,7 +276,7 @@ export function ResultScreen({
           <TabsContent value="pilares" className="mt-6 space-y-5">
             <div className="grid gap-2.5 md:grid-cols-2">
               {sorted.map((p) => {
-                const { total, max, pct } = getScore(scores, p.id);
+                const { total, max, pct } = getScore(scores, p.id, ramo);
                 const st = getStatus(pct);
                 return (
                   <div key={p.id} className="rounded-xl border border-border bg-card p-3.5">
@@ -242,7 +307,7 @@ export function ResultScreen({
               </div>
               <RadarPilares
                 pilares={sorted}
-                pcts={sorted.map((p) => getScore(scores, p.id).pct)}
+                pcts={sorted.map((p) => getScore(scores, p.id, ramo).pct)}
                 clientName={client.name}
               />
             </div>
