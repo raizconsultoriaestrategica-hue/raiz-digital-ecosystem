@@ -22,6 +22,33 @@ export default function NovaSenha() {
   useEffect(() => {
     let mounted = true;
 
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ data, error }) => {
+          if (!mounted) return;
+          if (error || !data.session) {
+            setSessionReady(false);
+            setLoading(false);
+          } else {
+            setSessionReady(true);
+            setLoading(false);
+          }
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setSessionReady(false);
+          setLoading(false);
+        });
+
+      return () => {
+        mounted = false;
+      };
+    }
+
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
       if (!mounted) return;
       if (event === "PASSWORD_RECOVERY") {
