@@ -124,7 +124,11 @@ export function useOrcamento() {
       } else if (row.campo === "CLASSIFICACAO") {
         // ignora — derivamos do score
       } else {
-        const pilar = PILARES.find((p) => p.name === row.campo || p.name.startsWith(row.campo));
+        // Match por ID (p01..p07) primeiro; fallback por nome (retrocompat)
+        const pilar =
+          PILARES.find((p) => p.id === row.campo) ??
+          PILARES.find((p) => p.name === row.campo) ??
+          PILARES.find((p) => row.campo && p.name.startsWith(row.campo));
         if (pilar && row.valor && row.benchmark) {
           const v = parseFloat(row.valor);
           const b = parseFloat(row.benchmark);

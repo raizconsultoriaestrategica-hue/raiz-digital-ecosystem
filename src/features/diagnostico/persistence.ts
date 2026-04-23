@@ -49,6 +49,16 @@ export async function saveDiagnosticoToSupabase(
       max += 3;
     });
     if (max === 0) return; // Pilar inteiramente pulado
+    // Grava por ID (p01..p07) — fonte de verdade
+    rows.push({
+      cliente_id: clienteId,
+      tipo: "PILAR",
+      mes: "Diagnóstico",
+      campo: p.id,
+      valor: String(total),
+      benchmark: String(max),
+    });
+    // Mantém também por nome (retrocompat com leitores antigos do Dashboard)
     rows.push({
       cliente_id: clienteId,
       tipo: "PILAR",
