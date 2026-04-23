@@ -2,30 +2,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
 import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
-  OPT_CADEIRAS, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET, OPT_TIPO_DENT,
+  OPT_CADEIRAS, OPT_CONVENIO, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET,
+  OPT_TIPO_DENT, OPT_TIPO_MED, ESPECIALIDADES_DENT, ESPECIALIDADES_MED, KPI_INIT_FIELDS,
 } from "../data";
-import type { ClientData, SelOpts } from "../types";
+import type { ClientData, KpisIniciaisData, Ramo, SelOpts } from "../types";
 
 interface DadosScreenProps {
   client: ClientData;
   selOpts: SelOpts;
+  ramo: Ramo;
+  kpisIniciais: KpisIniciaisData;
   clienteId: string | null;
   onClientField: (key: keyof ClientData, value: string) => void;
   onSel: (group: string, value: string) => void;
+  onRamoChange: (ramo: Ramo) => void;
+  onKpiChange: (key: keyof KpisIniciaisData, value: string) => void;
   onClienteIdChange: (id: string | null, c?: { nome_cliente: string; cidade: string | null }) => void;
   onBack: () => void;
   onNext: () => void;
 }
 
 export function DadosScreen({
-  client, selOpts, clienteId, onClientField, onSel, onClienteIdChange, onBack, onNext,
+  client, selOpts, ramo, kpisIniciais, clienteId,
+  onClientField, onSel, onRamoChange, onKpiChange, onClienteIdChange, onBack, onNext,
 }: DadosScreenProps) {
   const canProceed = client.name.trim().length > 0;
+  const isMed = ramo === "medico";
+  const tipoOptions = isMed ? OPT_TIPO_MED : OPT_TIPO_DENT;
+  const especialidades = isMed ? ESPECIALIDADES_MED : ESPECIALIDADES_DENT;
+
   const handleNext = async () => {
     if (clienteId) {
       try {
@@ -33,14 +47,16 @@ export function DadosScreen({
           fat: fatLabelToNumber(selOpts.fat),
           meta: parseMoneyToNumber(client.meta),
           dor: client.dor,
-          especialidade: client.proc,
+          especialidade: client.especialidade || client.proc,
         });
-      } catch (e: any) {
-        toast.error("Não foi possível salvar dados do cliente: " + (e?.message ?? e));
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error("Não foi possível salvar dados do cliente: " + msg);
       }
     }
     onNext();
   };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background pb-32">
       <div className="mx-auto max-w-2xl px-5 pt-8 md:px-8">
@@ -49,6 +65,26 @@ export function DadosScreen({
         <p className="mt-1 text-sm text-quase-preto/60">Para personalizar o diagnóstico e o plano recomendado.</p>
 
         <div className="mt-6 space-y-5">
+          {/* Ramo de atuação */}
+          <div>
+            <Label className="mb-2 block">Ramo de atuação *</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["dentista", "medico"] as Ramo[]).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => onRamoChange(r)}
+                  className={cn(
+                    "rounded-lg border-[1.5px] border-border bg-card px-3 py-3 text-sm font-medium text-quase-preto/70 transition-all hover:border-verde-musgo hover:text-verde-raiz",
+                    ramo === r && "border-verde-musgo bg-verde-menta font-semibold text-verde-raiz",
+                  )}
+                >
+                  {r === "dentista" ? "🦷 Odontologia" : "🩺 Saúde / Medicina"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <ClienteSelector
             value={clienteId}
             onChange={(id, c) => {
@@ -63,7 +99,7 @@ export function DadosScreen({
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label>Nome do cliente *</Label>
-              <Input value={client.name} onChange={(e) => onClientField("name", e.target.value)} placeholder="Dr. João Silva" />
+              <Input value={client.name} onChange={(e) => onClientField("name", e.target.value)} placeholder={isMed ? "Dr. João Silva" : "Dr. João Silva"} />
             </div>
             <div>
               <Label>Cidade / UF</Label>
@@ -73,13 +109,31 @@ export function DadosScreen({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label>Especialidade / procedimento principal</Label>
-              <Input value={client.proc} onChange={(e) => onClientField("proc", e.target.value)} placeholder="Ex.: Implantes" />
+              <Label>Especialidade principal</Label>
+              <Select
+                value={client.especialidade || ""}
+                onValueChange={(v) => {
+                  onClientField("especialidade", v);
+                  if (!client.proc) onClientField("proc", v);
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                <SelectContent>
+                  {especialidades.map((e) => (
+                    <SelectItem key={e} value={e}>{e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label>Data da reunião</Label>
-              <Input type="date" value={client.data} onChange={(e) => onClientField("data", e.target.value)} />
+              <Label>Procedimento ou foco</Label>
+              <Input value={client.proc} onChange={(e) => onClientField("proc", e.target.value)} placeholder={isMed ? "Ex.: Consulta + procedimentos" : "Ex.: Implantes"} />
             </div>
+          </div>
+
+          <div>
+            <Label>Data da reunião</Label>
+            <Input type="date" value={client.data} onChange={(e) => onClientField("data", e.target.value)} />
           </div>
 
           <div>
@@ -96,12 +150,54 @@ export function DadosScreen({
           </div>
 
           <SelectGroup label="Faturamento atual" group="fat" value={selOpts.fat} options={OPT_FAT} onChange={onSel} />
-          <SelectGroup label="Tipo de operação" group="tipo" value={selOpts.tipo} options={OPT_TIPO_DENT} onChange={onSel} />
+          <SelectGroup label="Tipo de operação" group="tipo" value={selOpts.tipo} options={tipoOptions} onChange={onSel} />
           <SelectGroup label="Equipe" group="func" value={selOpts.func} options={OPT_FUNC} onChange={onSel} />
           <SelectGroup label="Ticket médio" group="ticket" value={selOpts.ticket} options={OPT_TICKET} onChange={onSel} />
-          <SelectGroup label="Cadeiras / consultórios" group="cadeiras" value={selOpts.cadeiras} options={OPT_CADEIRAS} onChange={onSel} cols={4} />
+          {!isMed && (
+            <SelectGroup label="Cadeiras / consultórios" group="cadeiras" value={selOpts.cadeiras} options={OPT_CADEIRAS} onChange={onSel} cols={4} />
+          )}
           <SelectGroup label="Tempo de operação" group="tempo" value={selOpts.tempo} options={OPT_TEMPO} onChange={onSel} />
           <SelectGroup label="Pacientes ativos / mês" group="pacientes" value={selOpts.pacientes} options={OPT_PACIENTES} onChange={onSel} />
+          {isMed && (
+            <SelectGroup label="% de receita por convênio" group="convenio" value={selOpts.convenio} options={OPT_CONVENIO} onChange={onSel} />
+          )}
+
+          {/* KPIs Iniciais */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-dourado">KPIs iniciais (opcional)</div>
+            <h3 className="mt-1 font-display text-lg font-semibold text-quase-preto">Indicadores-base</h3>
+            <p className="mt-1 text-xs text-quase-preto/60">
+              Os valores informados aqui alimentarão o Dashboard do cliente como ponto de partida.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {KPI_INIT_FIELDS.map((f) => {
+                const label = isMed && f.labelMedico ? f.labelMedico : f.label;
+                const benchmark = isMed ? f.benchmarkMed : f.benchmarkDent;
+                return (
+                  <div key={f.key}>
+                    <Label className="text-xs">{label}</Label>
+                    <Input
+                      value={kpisIniciais[f.key] || ""}
+                      onChange={(e) => onKpiChange(f.key, e.target.value)}
+                      placeholder={
+                        f.type === "money"
+                          ? "Ex.: 50000"
+                          : benchmark
+                            ? `Ex.: ${benchmark}`
+                            : "Ex.: 60"
+                      }
+                      inputMode="decimal"
+                    />
+                    {benchmark && (
+                      <p className="mt-1 text-[10px] text-quase-preto/50">
+                        Benchmark Raiz: {benchmark}{f.type === "percent" ? "%" : ""}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
