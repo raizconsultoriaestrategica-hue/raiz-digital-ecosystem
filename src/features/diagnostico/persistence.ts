@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { PILARES, PLANOS, CLASSIFS } from "./data";
-import type { ClientData, DiagnosticoSnapshot, ScoresMap, SelOpts } from "./types";
+import { CLASSIFS, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS } from "./data";
+import type { ClientData, DiagnosticoSnapshot, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "./types";
 
 /**
  * Persiste o diagnóstico em dashboard_data:
@@ -30,7 +30,9 @@ export async function saveDiagnosticoToSupabase(
     benchmark: string | null;
   }> = [];
 
-  PILARES.forEach((p) => {
+  const ramo: Ramo = snapshot.ramo || "dentista";
+  const pilaresList = getPilaresByRamo(ramo);
+  pilaresList.forEach((p) => {
     const arr = snapshot.scores[p.id] || [];
     let total = 0;
     let max = 0;
