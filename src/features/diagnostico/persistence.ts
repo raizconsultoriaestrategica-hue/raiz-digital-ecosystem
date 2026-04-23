@@ -13,13 +13,19 @@ export async function saveDiagnosticoToSupabase(
   clienteId: string,
   snapshot: DiagnosticoSnapshot,
 ) {
-  // Limpa diagnóstico anterior do mesmo cliente (mes = 'Diagnóstico')
+  // Limpa diagnóstico anterior do mesmo cliente
   await supabase
     .from("dashboard_data")
     .delete()
     .eq("cliente_id", clienteId)
     .eq("tipo", "PILAR")
     .eq("mes", "Diagnóstico");
+  await supabase
+    .from("dashboard_data")
+    .delete()
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "KPI")
+    .eq("mes", "Inicial");
 
   const rows: Array<{
     cliente_id: string;
