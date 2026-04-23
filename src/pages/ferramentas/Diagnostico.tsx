@@ -49,9 +49,13 @@ export default function Diagnostico() {
         <DadosScreen
           client={dx.state.client}
           selOpts={dx.state.selOpts}
+          ramo={dx.state.ramo}
+          kpisIniciais={dx.state.kpisIniciais}
           clienteId={dx.state.clienteId}
           onClientField={dx.setClientField}
           onSel={dx.setSel}
+          onRamoChange={dx.setRamo}
+          onKpiChange={dx.setKpi}
           onClienteIdChange={(id) => dx.setClienteId(id)}
           onBack={() => window.history.back()}
           onNext={() => dx.startDiag()}
