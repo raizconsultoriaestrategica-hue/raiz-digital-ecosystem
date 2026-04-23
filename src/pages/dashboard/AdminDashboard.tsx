@@ -677,6 +677,8 @@ export default function AdminDashboard() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
+
       <OrcamentosListDialog
         clienteId={orcamentosOpen?.id ?? null}
         clienteNome={orcamentosOpen?.nome ?? ""}
