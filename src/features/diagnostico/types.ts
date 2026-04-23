@@ -33,6 +33,8 @@ export interface Classif {
 export type ScoreValue = number | "SKIP" | null;
 export type ScoresMap = Record<string, ScoreValue[]>;
 
+export type Ramo = "dentista" | "medico";
+
 export interface ClientData {
   name: string;
   cidade: string;
@@ -48,6 +50,10 @@ export interface ClientData {
   cadeiras: string;
   tempo: string;
   pacientes: string;
+  /** Especialidade selecionada via dropdown (ramo dependente) */
+  especialidade?: string;
+  /** % de receita por convênio (apenas ramo médico) */
+  convenio?: string;
 }
 
 export interface SelOpts {
@@ -59,6 +65,16 @@ export interface SelOpts {
   tempo?: string;
   pacientes?: string;
   [k: string]: string | undefined;
+}
+
+export interface KpisIniciaisData {
+  fat?: string;
+  meta_fat?: string;
+  conversao?: string;
+  ticket?: string;
+  ocupacao?: string;
+  noshow?: string;
+  margem?: string;
 }
 
 export interface DiagnosticoSnapshot {
@@ -74,4 +90,7 @@ export interface DiagnosticoSnapshot {
   notas?: string;
   timestamp: number;
   cliente_id?: string | null;
+  ramo?: Ramo;
+  kpisIniciais?: KpisIniciaisData;
+  analise?: string;
 }
