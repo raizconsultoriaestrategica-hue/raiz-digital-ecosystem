@@ -242,7 +242,7 @@ function Hero() {
             <div className="relative">
               <div className="relative aspect-[3/4] w-64 overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial md:w-80">
                 <img
-                  src={patrickPortrait}
+                  src={patrickEstrategico}
                   alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
                   width={768}
                   height={1024}
@@ -512,7 +512,7 @@ function Founder() {
           <Reveal className="lg:col-span-5" delay={120}>
             <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-dourado/30 shadow-editorial">
               <img
-                src={patrickPortrait}
+                src={patrickLifestyle}
                 alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
                 width={768}
                 height={1024}
