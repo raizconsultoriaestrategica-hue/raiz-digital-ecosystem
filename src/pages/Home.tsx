@@ -21,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import patrickPortrait from "@/assets/patrick-portrait.jpg";
 
 const WHATSAPP_URL = "https://wa.me/5544999993334";
 
@@ -89,9 +90,9 @@ const NAO_VOCE = [
 ];
 
 const PLANOS = [
-  { nome: "PLANO RAIZ", preco: "R$ 2.500–R$ 3.500/mês", contrato: "Contrato trimestral mínimo", sub: "Para clínicas em estruturação (R$15k–R$30k/mês)", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","2 reuniões mensais","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Quero o Plano Raiz", destaque: false },
-  { nome: "PLANO CRESCIMENTO", preco: "R$ 3.500–R$ 5.000/mês", contrato: "Contrato semestral", sub: "Para clínicas em aceleração (R$30k–R$60k/mês)", itens: ["Tudo do Plano Raiz + 4 reuniões + visita presencial trimestral","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Quero o Plano Crescimento", destaque: true },
-  { nome: "PLANO EXPANSÃO", preco: "R$ 5.000–R$ 7.500/mês", contrato: "Contrato anual", sub: "Para clínicas prontas para escalar (acima de R$60k/mês)", itens: ["Tudo do Plano Crescimento + Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz","Consultoria presencial sob demanda"], cta: "Quero o Plano Expansão", destaque: false },
+  { nome: "PLANO RAIZ", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas em estruturação (R$15k–R$30k/mês)", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","2 reuniões mensais","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz", destaque: false },
+  { nome: "PLANO CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas em aceleração (R$30k–R$60k/mês)", itens: ["Tudo do Plano Raiz + 4 reuniões + visita presencial trimestral","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Crescimento", destaque: true },
+  { nome: "PLANO EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas prontas para escalar (acima de R$60k/mês)", itens: ["Tudo do Plano Crescimento + Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz","Consultoria presencial sob demanda"], cta: "Falar sobre o Plano Expansão", destaque: false },
 ];
 
 const FAQ = [
@@ -238,15 +239,21 @@ function Hero() {
           {/* Coluna direita 40% */}
           <div className="flex justify-center lg:col-span-2 lg:justify-end">
             <div className="relative">
-              <div
-                className="relative flex h-72 w-72 items-center justify-center rounded-full border-4 border-dourado shadow-editorial md:h-96 md:w-96"
-                style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, #3D1F0D 100%)" }}
-              >
-                <span className="font-display leading-none text-dourado" style={{ fontSize: "clamp(5rem, 10vw, 8rem)" }}>
-                  P
-                </span>
+              <div className="relative aspect-[3/4] w-64 overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial md:w-80">
+                <img
+                  src={patrickPortrait}
+                  alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
+                  width={768}
+                  height={1024}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-quase-preto/70 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="font-display text-xl text-linho">Patrick Ferreira</div>
+                  <div className="font-body text-xs uppercase tracking-[0.18em] text-dourado">Fundador & Estrategista</div>
+                </div>
               </div>
-              <span className="absolute bottom-4 -left-2 rounded-full bg-dourado px-4 py-2 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz shadow-lg md:-left-6">
+              <span className="absolute -bottom-3 -left-3 rounded-full bg-dourado px-4 py-2 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz shadow-lg">
                 14+ anos
               </span>
             </div>
@@ -502,17 +509,16 @@ function Founder() {
           </Reveal>
 
           <Reveal className="lg:col-span-5" delay={120}>
-            <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-dourado/30 shadow-editorial">
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, #3D1F0D 100%)" }}
+            <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-dourado/30 shadow-editorial">
+              <img
+                src={patrickPortrait}
+                alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
+                width={768}
+                height={1024}
+                loading="lazy"
+                className="h-full w-full object-cover"
               />
-              <div className="relative flex h-full w-full items-center justify-center">
-                <span className="font-display leading-none text-dourado" style={{ fontSize: "clamp(8rem, 20vw, 14rem)" }}>
-                  P
-                </span>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-quase-preto/80 to-transparent p-5">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-quase-preto/85 via-quase-preto/30 to-transparent p-6">
                 <span className="rounded-full bg-dourado px-4 py-1.5 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz">
                   Fundador & Estrategista
                 </span>
