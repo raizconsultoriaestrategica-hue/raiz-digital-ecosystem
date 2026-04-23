@@ -79,9 +79,12 @@ export default function Diagnostico() {
           client={dx.state.client}
           selOpts={dx.state.selOpts}
           scores={dx.state.scores}
+          ramo={dx.state.ramo}
           clienteId={dx.state.clienteId}
           notas={dx.state.notas}
+          analise={dx.state.analise}
           onNotasChange={dx.setNotas}
+          onAnaliseChange={dx.setAnalise}
           onRestart={dx.reset}
         />
       )}
