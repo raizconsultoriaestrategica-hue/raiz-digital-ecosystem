@@ -1,29 +1,41 @@
-import { CLASSIFS, PILARES, PLANOS } from "./data";
-import type { Classif, Pilar, Plano, ScoresMap, SelOpts } from "./types";
+import { CLASSIFS, PILARES, PILARES_MEDICO, PLANOS, PLANOS_MEDICO } from "./data";
+import type { Classif, Pilar, Plano, Ramo, ScoresMap, SelOpts } from "./types";
 
 export function isAutonomo(sel: SelOpts): boolean {
-  return sel.tipo === "Dentista Autônomo" || sel.func === "Nenhum (só eu)";
+  return (
+    sel.tipo === "Dentista Autônomo" ||
+    sel.tipo === "Médico Autônomo" ||
+    sel.func === "Nenhum (só eu)"
+  );
 }
 
 export function shouldSkipExpansao(sel: SelOpts): boolean {
   return (
     sel.tipo === "Dentista Autônomo" ||
+    sel.tipo === "Médico Autônomo" ||
     sel.func === "Nenhum (só eu)" ||
+    sel.func === "1 funcionário" ||
     sel.func === "1–2 funcionários"
   );
 }
 
-export function getActivePilares(sel: SelOpts): Pilar[] {
-  return shouldSkipExpansao(sel) ? PILARES.filter((p) => p.id !== "p07") : PILARES;
+export function getPilaresByRamo(ramo: Ramo = "dentista"): Pilar[] {
+  return ramo === "medico" ? PILARES_MEDICO : PILARES;
+}
+
+export function getActivePilares(sel: SelOpts, ramo: Ramo = "dentista"): Pilar[] {
+  const base = getPilaresByRamo(ramo);
+  return shouldSkipExpansao(sel) ? base.filter((p) => p.id !== "p07") : base;
 }
 
 export function getActiveQuestions(pilar: Pilar, sel: SelOpts) {
   return pilar.questions.filter((q) => !q.onlyWithTeam || !isAutonomo(sel));
 }
 
-export function initScores(sel: SelOpts): ScoresMap {
+export function initScores(sel: SelOpts, ramo: Ramo = "dentista"): ScoresMap {
+  const base = getPilaresByRamo(ramo);
   const scores: ScoresMap = {};
-  PILARES.forEach((p) => {
+  base.forEach((p) => {
     const skipPilar = p.id === "p07" && shouldSkipExpansao(sel);
     scores[p.id] = p.questions.map((q) =>
       skipPilar || (q.onlyWithTeam && isAutonomo(sel)) ? "SKIP" : null,
@@ -38,8 +50,9 @@ export interface PilarScore {
   pct: number;
 }
 
-export function getScore(scores: ScoresMap, pid: string): PilarScore {
-  const p = PILARES.find((x) => x.id === pid);
+export function getScore(scores: ScoresMap, pid: string, ramo: Ramo = "dentista"): PilarScore {
+  const base = getPilaresByRamo(ramo);
+  const p = base.find((x) => x.id === pid);
   if (!p) return { total: 0, max: 0, pct: 0 };
   let total = 0;
   let max = 0;
@@ -52,10 +65,10 @@ export function getScore(scores: ScoresMap, pid: string): PilarScore {
   return { total, max, pct: max > 0 ? total / max : 0 };
 }
 
-export function getTotals(scores: ScoresMap, sel: SelOpts) {
-  const active = getActivePilares(sel);
-  const totalMax = active.reduce((a, p) => a + getScore(scores, p.id).max, 0);
-  const totalScore = active.reduce((a, p) => a + getScore(scores, p.id).total, 0);
+export function getTotals(scores: ScoresMap, sel: SelOpts, ramo: Ramo = "dentista") {
+  const active = getActivePilares(sel, ramo);
+  const totalMax = active.reduce((a, p) => a + getScore(scores, p.id, ramo).max, 0);
+  const totalScore = active.reduce((a, p) => a + getScore(scores, p.id, ramo).total, 0);
   const totalPct = totalMax > 0 ? totalScore / totalMax : 0;
   return { totalScore, totalMax, totalPct };
 }
@@ -64,8 +77,9 @@ export function getClassif(pct: number): Classif {
   return CLASSIFS.find((c) => pct < c.max) ?? CLASSIFS[CLASSIFS.length - 1];
 }
 
-export function getPlano(pct: number): Plano {
-  return PLANOS.find((pl) => pl.trigger(pct)) ?? PLANOS[PLANOS.length - 1];
+export function getPlano(pct: number, ramo: Ramo = "dentista"): Plano {
+  const planos = ramo === "medico" ? PLANOS_MEDICO : PLANOS;
+  return planos.find((pl) => pl.trigger(pct)) ?? planos[planos.length - 1];
 }
 
 export type StatusKey = "critico" | "atencao" | "regular" | "bom" | "otimo";
@@ -78,9 +92,9 @@ export function getStatus(pct: number): { label: string; cls: StatusKey } {
   return { label: "Ótimo", cls: "otimo" };
 }
 
-export function getSortedByPct(scores: ScoresMap, sel: SelOpts): Pilar[] {
-  return [...getActivePilares(sel)].sort(
-    (a, b) => getScore(scores, a.id).pct - getScore(scores, b.id).pct,
+export function getSortedByPct(scores: ScoresMap, sel: SelOpts, ramo: Ramo = "dentista"): Pilar[] {
+  return [...getActivePilares(sel, ramo)].sort(
+    (a, b) => getScore(scores, a.id, ramo).pct - getScore(scores, b.id, ramo).pct,
   );
 }
 
