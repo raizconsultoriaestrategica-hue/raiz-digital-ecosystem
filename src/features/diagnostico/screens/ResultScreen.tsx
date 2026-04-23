@@ -44,24 +44,26 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export function ResultScreen({
-  client, selOpts, scores, clienteId, notas, onNotasChange, onRestart,
+  client, selOpts, scores, ramo, clienteId, notas, analise,
+  onNotasChange, onAnaliseChange, onRestart,
 }: ResultScreenProps) {
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const computed = useMemo(() => {
-    const totals = getTotals(scores, selOpts);
+    const totals = getTotals(scores, selOpts, ramo);
     const classif = getClassif(totals.totalPct);
-    const plano = getPlano(totals.totalPct);
-    const sorted = getSortedByPct(scores, selOpts);
+    const plano = getPlano(totals.totalPct, ramo);
+    const sorted = getSortedByPct(scores, selOpts, ramo);
     return { ...totals, classif, plano, sorted };
-  }, [scores, selOpts]);
+  }, [scores, selOpts, ramo]);
 
   const { totalScore, totalMax, totalPct, classif, plano, sorted } = computed;
   const dor = client.dor || "não informada";
   const meta = client.meta || "não informada";
-  const criticos = sorted.filter((p) => getScore(scores, p.id).pct < 0.35);
+  const criticos = sorted.filter((p) => getScore(scores, p.id, ramo).pct < 0.35);
   const atencao = sorted.filter((p) => {
-    const pct = getScore(scores, p.id).pct;
+    const pct = getScore(scores, p.id, ramo).pct;
     return pct >= 0.35 && pct < 0.55;
   });
 
@@ -70,9 +72,47 @@ export function ResultScreen({
     totalScore, totalMax, totalPct, classif, plano,
     sortedIds: sorted.map((p) => p.id),
     notas,
+    analise,
+    ramo,
     timestamp: Date.now(),
     cliente_id: clienteId,
   });
+
+  const handleAnalisar = async () => {
+    setAnalyzing(true);
+    try {
+      const pilares = sorted.map((p) => {
+        const s = getScore(scores, p.id, ramo);
+        return { name: p.name, pct: s.pct, total: s.total, max: s.max };
+      });
+      const { data, error } = await supabase.functions.invoke("diagnostico-analise", {
+        body: {
+          clientName: client.name,
+          ramo,
+          classifLabel: classif.label,
+          planoName: plano.name,
+          totalPct,
+          dor: client.dor,
+          meta: client.meta,
+          objetivo: client.objetivo,
+          pilares,
+        },
+      });
+      if (error) throw error;
+      const a = (data as { analise?: string; error?: string })?.analise;
+      if (!a) throw new Error((data as { error?: string })?.error || "Sem análise");
+      onAnaliseChange(a);
+      if (clienteId) {
+        try { await updateDiagnosticoNotasInSupabase(clienteId, notas, a); } catch { /* noop */ }
+      }
+      toast.success("Análise gerada com IA.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Falha ao gerar análise";
+      toast.error(msg);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!clienteId) {
