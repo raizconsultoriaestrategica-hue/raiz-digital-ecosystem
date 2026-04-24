@@ -55,11 +55,55 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
   return pdf.output("blob");
 }
 
+export interface ModuloSelecionado {
+  id: string;   // UUID da tabela modulos
+  fase: number; // 1 | 2 | 3
+}
+
+/**
+ * Distribui módulos por mês de execução baseado na fase:
+ * - Fase 1 → meses 1 e 2 (split ~meio a meio)
+ * - Fase 2 → mês 3
+ * - Fase 3 → mês 4 em diante (1 por mês)
+ */
+function distribuirMesesExecucao(
+  modulos: ModuloSelecionado[]
+): Array<ModuloSelecionado & { mes_execucao: number }> {
+  const f1 = modulos.filter((m) => m.fase === 1);
+  const f2 = modulos.filter((m) => m.fase === 2);
+  const f3 = modulos.filter((m) => m.fase === 3);
+
+  const result: Array<ModuloSelecionado & { mes_execucao: number }> = [];
+
+  // Fase 1 → divide entre mês 1 e mês 2
+  const meio = Math.ceil(f1.length / 2);
+  f1.forEach((m, i) => {
+    result.push({ ...m, mes_execucao: i < meio ? 1 : 2 });
+  });
+
+  // Fase 2 → todos no mês 3
+  f2.forEach((m) => {
+    result.push({ ...m, mes_execucao: 3 });
+  });
+
+  // Fase 3 → 1 por mês a partir do mês 4
+  f3.forEach((m, i) => {
+    result.push({ ...m, mes_execucao: 4 + i });
+  });
+
+  return result;
+}
+
 /**
  * Salva o orçamento atual no Supabase Storage + tabela orcamentos.
+ * Em seguida cria os registros em cliente_modulos e ativa o projeto.
  * Requer cliente vinculado.
  */
-export async function saveOrcamento(form: OrcamentoForm, clienteId: string) {
+export async function saveOrcamento(
+  form: OrcamentoForm,
+  clienteId: string,
+  modulosSelecionados: ModuloSelecionado[] = []
+) {
   if (!clienteId) throw new Error("Selecione um cliente vinculado antes de salvar.");
 
   const blob = await generateOrcamentoPDFBlob();
@@ -82,24 +126,68 @@ export async function saveOrcamento(form: OrcamentoForm, clienteId: string) {
 
   const { data: userRes } = await supabase.auth.getUser();
 
-  const { error: insErr } = await supabase.from("orcamentos").insert({
-    cliente_id: clienteId,
-    plano: form.plano,
-    plano_nome: planoInfo?.name ?? null,
-    valor: form.valorFinal ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}` : (planoInfo?.valor ?? null),
-    score: form.score ? Number(form.score) : null,
-    score_max: form.scoreMax ? Number(form.scoreMax) : null,
-    storage_path: storagePath,
-    file_name: fileName,
-    created_by: userRes.user?.id ?? null,
-  });
-  if (insErr) {
+  // Passo C — Insert do orçamento (retornando id)
+  const { data: orcInserted, error: insErr } = await supabase
+    .from("orcamentos")
+    .insert({
+      cliente_id: clienteId,
+      plano: form.plano,
+      plano_nome: planoInfo?.name ?? null,
+      valor: form.valorFinal
+        ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}`
+        : (planoInfo?.valor ?? null),
+      score: form.score ? Number(form.score) : null,
+      score_max: form.scoreMax ? Number(form.scoreMax) : null,
+      storage_path: storagePath,
+      file_name: fileName,
+      created_by: userRes.user?.id ?? null,
+    })
+    .select("id")
+    .single();
+  if (insErr || !orcInserted) {
     // rollback do arquivo
     await supabase.storage.from("orcamentos").remove([storagePath]);
-    throw insErr;
+    throw insErr ?? new Error("Falha ao inserir orçamento.");
   }
 
-  return { fileName, storagePath };
+  const orcamentoId = orcInserted.id;
+
+  // Passo D — Inserir módulos contratados em cliente_modulos
+  if (modulosSelecionados.length > 0) {
+    const distribuidos = distribuirMesesExecucao(modulosSelecionados);
+    const rows = distribuidos.map((m) => ({
+      cliente_id: clienteId,
+      modulo_id: m.id,
+      orcamento_id: orcamentoId,
+      mes_execucao: m.mes_execucao,
+      status: "pendente",
+    }));
+
+    // upsert com ignoreDuplicates para respeitar UNIQUE(cliente_id, modulo_id)
+    const { error: cmErr } = await supabase
+      .from("cliente_modulos")
+      .upsert(rows, {
+        onConflict: "cliente_id,modulo_id",
+        ignoreDuplicates: true,
+      });
+    if (cmErr) {
+      console.error("Falha ao inserir cliente_modulos:", cmErr);
+      // não fazemos rollback do orçamento — apenas avisamos via throw
+      throw cmErr;
+    }
+  }
+
+  // Passo E — Ativar projeto do cliente
+  const { error: updErr } = await supabase
+    .from("clientes")
+    .update({ status: "projeto_ativo" })
+    .eq("id", clienteId);
+  if (updErr) {
+    console.error("Falha ao ativar projeto do cliente:", updErr);
+    throw updErr;
+  }
+
+  return { fileName, storagePath, orcamentoId };
 }
 
 export async function listOrcamentosByCliente(clienteId: string): Promise<OrcamentoSalvo[]> {
