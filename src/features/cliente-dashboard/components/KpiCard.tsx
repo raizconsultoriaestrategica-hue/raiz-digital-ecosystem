@@ -18,15 +18,21 @@ export default function KpiCard({ kpi }: { kpi: KpiItem }) {
           {kpi.label}
         </div>
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="font-display text-[36px] leading-none text-verde-raiz">
-            {fmtKpiValue(kpi.valor, kpi.unidade)}
+          <span
+            className={`font-display leading-none text-verde-raiz ${
+              kpi.valorTexto ? "text-[22px]" : "text-[36px]"
+            }`}
+          >
+            {kpi.valorTexto ?? fmtKpiValue(kpi.valor, kpi.unidade)}
           </span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
           <span className="text-quase-preto/60">
-            {kpi.noCompare || kpi.benchmark === null
-              ? "Sem benchmark"
-              : `Meta ${fmtKpiValue(kpi.benchmark, kpi.unidade)}`}
+            {kpi.benchmarkTexto
+              ? kpi.benchmarkTexto
+              : kpi.noCompare || kpi.benchmark === null
+                ? "Sem benchmark"
+                : `Meta ${fmtKpiValue(kpi.benchmark, kpi.unidade)}`}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.pill}`}>
             {kpi.statusLabel}
