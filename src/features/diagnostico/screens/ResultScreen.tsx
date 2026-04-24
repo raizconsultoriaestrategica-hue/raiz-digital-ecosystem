@@ -108,8 +108,12 @@ export function ResultScreen({
       const a = (data as { analise?: string; error?: string })?.analise;
       if (!a) throw new Error((data as { error?: string })?.error || "Sem análise");
       onAnaliseChange(a);
+      // Auto-preenche notas: concatena se já houver conteúdo
+      const trimmedNotas = (notas || "").trim();
+      const novasNotas = trimmedNotas ? `${notas}\n\n${a}` : a;
+      onNotasChange(novasNotas);
       if (clienteId) {
-        try { await updateDiagnosticoNotasInSupabase(clienteId, notas, a); } catch { /* noop */ }
+        try { await updateDiagnosticoNotasInSupabase(clienteId, novasNotas, a); } catch { /* noop */ }
       }
       toast.success("Análise gerada com IA.");
     } catch (e: unknown) {
