@@ -213,8 +213,8 @@ function Hero() {
               Consultoria Estratégica para Odontologia
             </span>
             <h1
-              className="mt-8 max-w-[18ch] font-display font-medium leading-[1.05] text-linho"
-              style={{ fontSize: "clamp(2.25rem, 4.8vw, 3.25rem)" }}
+              className="mt-8 font-display font-medium leading-[1.1] text-linho"
+              style={{ fontSize: "clamp(1.75rem, 3.6vw, 2.75rem)" }}
             >
               Sua agenda está cheia.<br />
               Seu faturamento está travado.<br />
