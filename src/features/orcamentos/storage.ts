@@ -103,7 +103,12 @@ export async function saveOrcamento(
   form: OrcamentoForm,
   clienteId: string,
   modulosSelecionados: ModuloSelecionado[] = []
-) {
+): Promise<{
+  orcamentoId: string;
+  fileName: string | null;
+  storagePath: string | null;
+  pdfFailed: boolean;
+}> {
   try {
     if (!clienteId) throw new Error("Selecione um cliente vinculado antes de salvar.");
 
@@ -112,9 +117,6 @@ export async function saveOrcamento(
       modulosRecebidos: modulosSelecionados.length,
       amostra: modulosSelecionados.slice(0, 3),
     });
-
-    const blob = await generateOrcamentoPDFBlob();
-    console.log("[saveOrcamento] PDF gerado", blob.size);
 
     const planoInfo = PLANOS[form.plano];
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
@@ -127,14 +129,31 @@ export async function saveOrcamento(
     const fileName = `orcamento-${safeNome}-${ts}.pdf`;
     const storagePath = `${clienteId}/${fileName}`;
 
-    const { error: upErr } = await supabase.storage
-      .from("orcamentos")
-      .upload(storagePath, blob, { contentType: "application/pdf", upsert: false });
-    if (upErr) throw upErr;
-    console.log("[saveOrcamento] upload ok", storagePath);
+    // === PDF + Upload (best-effort, não bloqueia o salvamento) ===
+    let pdfFailed = false;
+    let savedFileName: string | null = null;
+    let savedStoragePath: string | null = null;
+
+    try {
+      const blob = await generateOrcamentoPDFBlob();
+      console.log("[saveOrcamento] PDF gerado", blob.size);
+
+      const { error: upErr } = await supabase.storage
+        .from("orcamentos")
+        .upload(storagePath, blob, { contentType: "application/pdf", upsert: false });
+      if (upErr) throw upErr;
+
+      console.log("[saveOrcamento] upload ok", storagePath);
+      savedFileName = fileName;
+      savedStoragePath = storagePath;
+    } catch (pdfErr) {
+      pdfFailed = true;
+      console.warn("[saveOrcamento] PDF/upload falhou — prosseguindo sem PDF", pdfErr);
+    }
 
     const { data: userRes } = await supabase.auth.getUser();
 
+    // === Passo C — Insert do orçamento (com ou sem PDF) ===
     const { data: orcInserted, error: insErr } = await supabase
       .from("orcamentos")
       .insert({
@@ -146,20 +165,24 @@ export async function saveOrcamento(
           : (planoInfo?.valor ?? null),
         score: form.score ? Number(form.score) : null,
         score_max: form.scoreMax ? Number(form.scoreMax) : null,
-        storage_path: storagePath,
-        file_name: fileName,
+        storage_path: savedStoragePath,
+        file_name: savedFileName,
         created_by: userRes.user?.id ?? null,
       })
       .select("id")
       .single();
     if (insErr || !orcInserted) {
-      await supabase.storage.from("orcamentos").remove([storagePath]);
+      // se o PDF foi enviado mas o insert falhou, limpa o arquivo órfão
+      if (savedStoragePath) {
+        await supabase.storage.from("orcamentos").remove([savedStoragePath]);
+      }
       throw insErr ?? new Error("Falha ao inserir orçamento.");
     }
     console.log("[saveOrcamento] orcamento inserido", orcInserted);
 
     const orcamentoId = orcInserted.id;
 
+    // === Passo D — cliente_modulos ===
     if (modulosSelecionados.length > 0) {
       const distribuidos = distribuirMesesExecucao(modulosSelecionados);
       const rows = distribuidos.map((m) => ({
@@ -185,6 +208,7 @@ export async function saveOrcamento(
       console.log("[saveOrcamento] nenhum módulo selecionado");
     }
 
+    // === Passo E — ativar projeto ===
     const { data: updData, error: updErr } = await supabase
       .from("clientes")
       .update({ status: "projeto_ativo" })
@@ -193,7 +217,12 @@ export async function saveOrcamento(
     if (updErr) throw updErr;
     console.log("[saveOrcamento] cliente atualizado", updData);
 
-    return { fileName, storagePath, orcamentoId };
+    return {
+      orcamentoId,
+      fileName: savedFileName,
+      storagePath: savedStoragePath,
+      pdfFailed,
+    };
   } catch (error) {
     console.error("[saveOrcamento] ERRO", error);
     throw error;
