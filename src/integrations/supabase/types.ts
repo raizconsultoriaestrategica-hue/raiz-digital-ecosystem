@@ -285,39 +285,39 @@ export type Database = {
           cliente_id: string
           created_at: string
           created_by: string | null
-          file_name: string
+          file_name: string | null
           id: string
           plano: string
           plano_nome: string | null
           score: number | null
           score_max: number | null
-          storage_path: string
+          storage_path: string | null
           valor: string | null
         }
         Insert: {
           cliente_id: string
           created_at?: string
           created_by?: string | null
-          file_name: string
+          file_name?: string | null
           id?: string
           plano: string
           plano_nome?: string | null
           score?: number | null
           score_max?: number | null
-          storage_path: string
+          storage_path?: string | null
           valor?: string | null
         }
         Update: {
           cliente_id?: string
           created_at?: string
           created_by?: string | null
-          file_name?: string
+          file_name?: string | null
           id?: string
           plano?: string
           plano_nome?: string | null
           score?: number | null
           score_max?: number | null
-          storage_path?: string
+          storage_path?: string | null
           valor?: string | null
         }
         Relationships: [
