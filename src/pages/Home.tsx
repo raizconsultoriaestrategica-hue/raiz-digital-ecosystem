@@ -206,7 +206,7 @@ function Hero() {
       }}
     >
       <div className="container mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-5">
+        <div className="grid items-stretch gap-12 lg:grid-cols-5">
           {/* Coluna esquerda 60% */}
           <div className="lg:col-span-3">
             <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
