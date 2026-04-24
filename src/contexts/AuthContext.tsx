@@ -73,6 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      if (_event === "PASSWORD_RECOVERY") {
+        if (!window.location.pathname.startsWith("/nova-senha")) {
+          window.location.replace("/nova-senha");
+        }
+        return;
+      }
       if (newSession?.user) {
         // Defer to avoid deadlocks inside the auth callback
         setTimeout(() => {
