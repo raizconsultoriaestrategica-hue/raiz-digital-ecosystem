@@ -209,6 +209,16 @@ export function ResultScreen({
         if (insErr) throw insErr;
       }
 
+      // Atualiza pilares_foco na tabela clientes: 4 pilares com menor pontuação
+      const pilaresFoco = sorted.slice(0, 4).map((p) => p.name);
+      if (pilaresFoco.length > 0) {
+        const { error: updErr } = await supabase
+          .from("clientes")
+          .update({ pilares_foco: pilaresFoco.join(", ") })
+          .eq("id", clienteId);
+        if (updErr) throw updErr;
+      }
+
       toast.success("Dashboard criado com sucesso!");
       setTimeout(() => navigate("/ferramentas"), 2000);
     } catch (e: unknown) {
