@@ -241,8 +241,8 @@ function Hero() {
 
           {/* Coluna direita 40% */}
           <div className="flex justify-center lg:col-span-2 lg:justify-end">
-            <div className="relative">
-              <div className="relative aspect-[3/4] w-64 overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial md:w-80">
+            <div className="relative h-full w-full max-w-md">
+              <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial">
                 <img
                   src={patrickEstrategico}
                   alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
