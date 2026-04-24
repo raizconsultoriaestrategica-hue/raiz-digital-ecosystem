@@ -1,12 +1,13 @@
 import { useMemo } from "react";
-import { PILARES, PLANOS, MODULOS_ALL, fmtMoney, getBarColor, classifFor } from "../data";
-import type { OrcamentoForm } from "../types";
+import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor } from "../data";
+import { calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
 
 interface Props {
   form: OrcamentoForm;
+  modulosDb: ModuloDb[];
 }
 
-export function OrcamentoPreview({ form }: Props) {
+export function OrcamentoPreview({ form, modulosDb }: Props) {
   const data = useMemo(() => {
     const nomeCliente = form.nomeCliente || "Cliente";
     const nomeClinica = form.nomeClinica || "";
