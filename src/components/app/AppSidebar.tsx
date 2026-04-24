@@ -1,5 +1,6 @@
 import { LayoutDashboard, Wrench, Stethoscope, Calculator, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BrandLogo from "@/components/brand/BrandLogo";
 import {
   Sidebar,
   SidebarContent,
@@ -38,8 +39,8 @@ export default function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="bg-sidebar text-sidebar-foreground">
         <div className="px-4 pt-6">
-          <div className="font-display text-2xl text-linho">
-            Raiz<span className="text-dourado">.</span>
+          <div className={collapsed ? "flex justify-center" : ""}>
+            <BrandLogo onDark className={collapsed ? "h-6" : "h-7"} />
           </div>
           {!collapsed && (
             <div className="mt-1 font-body text-[11px] uppercase tracking-widest text-linho/60">

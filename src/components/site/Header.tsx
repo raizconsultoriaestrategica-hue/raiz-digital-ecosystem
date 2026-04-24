@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
+import BrandLogo from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -38,8 +39,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-off-white/85 backdrop-blur supports-[backdrop-filter]:bg-off-white/70">
       <div className="container-editorial flex h-16 items-center justify-between">
-        <Link to="/" className="font-display text-2xl font-semibold text-verde-raiz">
-          Raiz<span className="text-dourado">.</span>
+        <Link to="/" className="inline-block">
+          <BrandLogo className="h-8" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
