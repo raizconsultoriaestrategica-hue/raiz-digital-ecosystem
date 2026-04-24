@@ -76,8 +76,16 @@ export function OrcamentoSidebar(p: Props) {
     }
     setSaving(true);
     try {
-      await saveOrcamento(p.form, p.clienteId);
-      toast.success("Orçamento salvo na Gestão de Clientes");
+      // Mapear códigos selecionados → { id, fase } usando modulosDb
+      const modulosParaSalvar = selecionados
+        .map((codigo) => {
+          const m = p.modulosDb.find((x) => x.codigo === codigo);
+          return m ? { id: m.id, fase: m.fase } : null;
+        })
+        .filter((x): x is { id: string; fase: number } => x !== null);
+
+      await saveOrcamento(p.form, p.clienteId, modulosParaSalvar);
+      toast.success("Orçamento salvo e projeto ativado na Gestão de Clientes");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao salvar orçamento";
       toast.error(msg);
