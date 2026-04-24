@@ -95,13 +95,12 @@ function calcImpacts(kpis: KpiItem[], faturamento: number): GapImpact[] {
 }
 
 export default function RoiCard({ kpis, faturamentoBase }: Props) {
-  if (!faturamentoBase || faturamentoBase <= 0) return null;
-  const impacts = calcImpacts(kpis, faturamentoBase);
-  if (impacts.length === 0) return null;
-
+  const hasFaturamento = !!(faturamentoBase && faturamentoBase > 0);
+  const impacts = hasFaturamento ? calcImpacts(kpis, faturamentoBase as number) : [];
   const totalImpacto = impacts.reduce((s, i) => s + i.impactoRS, 0);
-  const faturamentoPotencial = faturamentoBase + totalImpacto;
+  const faturamentoPotencial = hasFaturamento ? (faturamentoBase as number) + totalImpacto : 0;
   const anual = totalImpacto * 12;
+  const showEmptyState = !hasFaturamento || impacts.length === 0;
 
   const fmtVal = (v: number, u: string) => {
     if (u === "R$") return fmtBRL(v, { compact: true });
