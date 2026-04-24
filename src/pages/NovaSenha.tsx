@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TopProgress } from "@/components/ui/top-progress";
 import { supabase } from "@/lib/supabase";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 export default function NovaSenha() {
   const navigate = useNavigate();
@@ -126,8 +127,8 @@ export default function NovaSenha() {
 
       <div className="grid min-h-screen md:grid-cols-2">
         <div className="relative hidden flex-col justify-between bg-gradient-raiz p-12 text-linho md:flex">
-          <Link to="/" className="font-display text-3xl">
-            Raiz<span className="text-dourado">.</span>
+          <Link to="/" className="inline-block">
+            <BrandLogo onDark className="h-10" />
           </Link>
 
           <div>
@@ -142,8 +143,8 @@ export default function NovaSenha() {
 
         <div className="flex flex-col justify-center bg-off-white p-8 md:p-16">
           <div className="mx-auto w-full max-w-sm">
-            <Link to="/" className="mb-8 inline-block font-display text-2xl text-verde-raiz md:hidden">
-              Raiz<span className="text-dourado">.</span>
+            <Link to="/" className="mb-8 inline-block md:hidden">
+              <BrandLogo className="h-8" />
             </Link>
 
             <h1 className="font-display text-4xl text-verde-raiz">Redefinir senha</h1>
