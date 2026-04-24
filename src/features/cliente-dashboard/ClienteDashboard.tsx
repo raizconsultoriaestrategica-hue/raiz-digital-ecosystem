@@ -13,6 +13,7 @@ import ChartsRow from "./components/ChartsRow";
 import ModulesGrid from "./components/ModulesGrid";
 import InsightsCard from "./components/InsightsCard";
 import PresentationMode from "./components/PresentationMode";
+import BrandLogo from "@/components/brand/BrandLogo";
 import {
   avgModuloPct, groupRows, parseConfig, parseInsight, parseKpis,
   parseModulos, parsePilares,
@@ -115,9 +116,7 @@ export default function ClienteDashboard() {
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-verde-raiz">
-        <span className="font-display text-4xl text-linho">
-          Raiz<span className="text-dourado">.</span>
-        </span>
+        <BrandLogo onDark className="h-10" />
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-dourado/20 border-t-dourado" />
         <p className="text-sm text-linho/70">Carregando dashboard...</p>
       </div>

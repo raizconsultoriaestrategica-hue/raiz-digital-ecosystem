@@ -7,6 +7,7 @@ import { TopProgress } from "@/components/ui/top-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 export default function TrocarSenha() {
   const { user, role, primeiroAcesso, refreshPrimeiroAcesso, signOut } = useAuth();
@@ -69,9 +70,7 @@ export default function TrocarSenha() {
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-raiz p-6">
         <div className="w-full max-w-md rounded-lg bg-off-white p-8 shadow-2xl md:p-10">
           <div className="mb-6">
-            <div className="font-display text-2xl text-verde-raiz">
-              Raiz<span className="text-dourado">.</span>
-            </div>
+            <BrandLogo className="h-8" />
             <h1 className="mt-4 font-display text-3xl text-verde-raiz">Defina sua nova senha</h1>
             <p className="mt-2 font-body text-sm text-quase-preto/70">
               Por segurança, troque a senha provisória antes de continuar.

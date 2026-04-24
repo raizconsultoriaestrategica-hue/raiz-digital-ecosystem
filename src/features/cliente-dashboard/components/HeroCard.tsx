@@ -1,5 +1,6 @@
 import { fmtDate } from "../logic";
 import type { ClienteCfg } from "../types";
+import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface Props {
   cfg: ClienteCfg;
@@ -24,8 +25,9 @@ export default function HeroCard({ cfg, avgPct }: Props) {
       : "Consultoria Estratégica em Odontologia";
 
   return (
-    <section className="rounded-xl bg-verde-raiz px-6 py-7 shadow-editorial sm:px-9 sm:py-8">
-      <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+    <section className="relative overflow-hidden rounded-xl bg-verde-raiz px-6 py-7 shadow-editorial sm:px-9 sm:py-8">
+      <BrandSymbolBg size={320} opacity={0.06} position="center" white />
+      <div className="relative z-10 grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-dourado">
             {eyebrow}
