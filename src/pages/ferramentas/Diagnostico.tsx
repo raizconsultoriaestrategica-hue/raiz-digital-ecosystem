@@ -1,37 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { useDiagnostico } from "@/features/diagnostico/hooks/useDiagnostico";
+import { IntroScreen } from "@/features/diagnostico/screens/IntroScreen";
 import { DadosScreen } from "@/features/diagnostico/screens/DadosScreen";
 import { DiagScreen } from "@/features/diagnostico/screens/DiagScreen";
 import { LoadingScreen } from "@/features/diagnostico/screens/LoadingScreen";
 import { ResultScreen } from "@/features/diagnostico/screens/ResultScreen";
-import { RepositorioDiagnosticos } from "@/features/diagnostico/screens/RepositorioDiagnosticos";
-import { cn } from "@/lib/utils";
-
-type Tab = "novo" | "repo";
 
 export default function Diagnostico() {
   const dx = useDiagnostico();
-  const [params, setParams] = useSearchParams();
-  const tab: Tab = params.get("tab") === "repo" ? "repo" : "novo";
+  const [params] = useSearchParams();
 
-  // Inicia direto na seleção de cliente
-  useEffect(() => {
-    if (tab === "novo" && dx.state.step === "intro") dx.goTo("dados");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
-
-  // Pré-seleção de cliente via ?cliente=ID (vindo do painel admin)
+  // Pré-seleção de cliente via ?cliente=ID (vindo do painel admin) — vai direto para "dados"
   useEffect(() => {
     const cid = params.get("cliente");
-    if (cid && cid !== dx.state.clienteId) dx.setClienteId(cid);
+    if (cid && cid !== dx.state.clienteId) {
+      dx.setClienteId(cid);
+      if (dx.state.step === "intro") dx.goTo("dados");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // Loading → Result com pequeno delay (preserva UX original)
+  // Loading → Result com pequeno delay (UX)
   useEffect(() => {
     if (dx.state.step !== "loading") return;
-    const t = setTimeout(() => dx.goTo("result"), 1600);
+    const t = setTimeout(() => dx.goTo("result"), 1800);
     return () => clearTimeout(t);
   }, [dx.state.step, dx]);
 
@@ -48,34 +42,22 @@ export default function Diagnostico() {
     else dx.goTo("dados");
   };
 
-  const setTab = (t: Tab) => {
-    const next = new URLSearchParams(params);
-    if (t === "novo") next.delete("tab");
-    else next.set("tab", "repo");
-    setParams(next, { replace: true });
-  };
-
+  // Quebrar fora do padding do AppLayout para experiência full-screen
   return (
-    <div className="-m-4 md:-m-6 lg:-m-8">
-      {/* Sub-header com tabs (escondido durante o fluxo do diagnóstico) */}
-      {(tab === "repo" || dx.state.step === "dados" || dx.state.step === "intro") && (
-        <div className="border-b border-border bg-card px-5 py-3 md:px-8">
-          <div className="mx-auto flex max-w-5xl gap-1.5">
-            <TabBtn active={tab === "novo"} onClick={() => setTab("novo")}>
-              Novo diagnóstico
-            </TabBtn>
-            <TabBtn active={tab === "repo"} onClick={() => setTab("repo")}>
-              Repositório
-            </TabBtn>
-          </div>
-        </div>
-      )}
+    <div className="-m-6 md:-m-10">
+      <AnimatePresence mode="wait">
+        {dx.state.step === "intro" && (
+          <SlideStage key="intro">
+            <IntroScreen
+              ramo={dx.state.ramo}
+              onRamoChange={dx.setRamo}
+              onStart={() => dx.goTo("dados")}
+            />
+          </SlideStage>
+        )}
 
-      {tab === "repo" ? (
-        <RepositorioDiagnosticos />
-      ) : (
-        <>
-          {(dx.state.step === "intro" || dx.state.step === "dados") && (
+        {dx.state.step === "dados" && (
+          <SlideStage key="dados">
             <DadosScreen
               client={dx.state.client}
               selOpts={dx.state.selOpts}
@@ -87,11 +69,14 @@ export default function Diagnostico() {
               onRamoChange={dx.setRamo}
               onKpiChange={dx.setKpi}
               onClienteIdChange={(id) => dx.setClienteId(id)}
-              onBack={() => window.history.back()}
+              onBack={() => dx.goTo("intro")}
               onNext={() => dx.startDiag()}
             />
-          )}
-          {dx.state.step === "diag" && (
+          </SlideStage>
+        )}
+
+        {dx.state.step === "diag" && (
+          <SlideStage key="diag">
             <DiagScreen
               activePilares={dx.activePilares}
               currentPilar={dx.state.currentPilar}
@@ -102,9 +87,17 @@ export default function Diagnostico() {
               onNext={handleNextPilar}
               onFillNullWithZero={dx.fillNullWithZero}
             />
-          )}
-          {dx.state.step === "loading" && <LoadingScreen />}
-          {dx.state.step === "result" && (
+          </SlideStage>
+        )}
+
+        {dx.state.step === "loading" && (
+          <SlideStage key="loading">
+            <LoadingScreen />
+          </SlideStage>
+        )}
+
+        {dx.state.step === "result" && (
+          <SlideStage key="result">
             <ResultScreen
               client={dx.state.client}
               selOpts={dx.state.selOpts}
@@ -117,28 +110,22 @@ export default function Diagnostico() {
               onAnaliseChange={dx.setAnalise}
               onRestart={dx.reset}
             />
-          )}
-        </>
-      )}
+          </SlideStage>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function TabBtn({
-  active, onClick, children,
-}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function SlideStage({ children }: { children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-3.5 py-1.5 text-sm font-medium transition-all",
-        active
-          ? "bg-verde-raiz text-linho"
-          : "text-quase-preto/65 hover:bg-muted hover:text-quase-preto",
-      )}
+    <motion.div
+      initial={{ x: 40, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -40, opacity: 0 }}
+      transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
     >
       {children}
-    </button>
+    </motion.div>
   );
 }
