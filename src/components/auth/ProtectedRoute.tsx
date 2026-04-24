@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 interface Props {
   children: ReactNode;
@@ -15,7 +16,7 @@ export default function ProtectedRoute({ children, allow }: Props) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="font-display text-2xl text-verde-raiz">Raiz<span className="text-dourado">.</span></div>
+        <BrandLogo className="h-8" />
       </div>
     );
   }
