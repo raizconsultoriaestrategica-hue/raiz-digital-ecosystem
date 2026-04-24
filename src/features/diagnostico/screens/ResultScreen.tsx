@@ -49,8 +49,10 @@ const STATUS_PILL: Record<string, string> = {
 
 export function ResultScreen({
   client, selOpts, scores, ramo, clienteId, notas, analise,
+  kpisIniciais, activePilares,
   onNotasChange, onAnaliseChange, onRestart,
 }: ResultScreenProps) {
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
