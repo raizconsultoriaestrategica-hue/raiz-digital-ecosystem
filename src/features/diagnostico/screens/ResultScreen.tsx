@@ -14,6 +14,7 @@ import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
 import { saveDiagnosticoToSupabase, updateDiagnosticoNotasInSupabase } from "../persistence";
 import { supabase } from "@/integrations/supabase/client";
+import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface ResultScreenProps {
   client: ClientData;
@@ -139,8 +140,9 @@ export function ResultScreen({
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
-      <div className="bg-verde-raiz px-6 py-7 md:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-start gap-6 md:flex-row md:items-center">
+      <div className="relative overflow-hidden bg-verde-raiz px-6 py-7 md:px-8">
+        <BrandSymbolBg size={260} opacity={0.07} position="center" white />
+        <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-start gap-6 md:flex-row md:items-center">
           <div className="relative h-28 w-28 flex-shrink-0">
             <svg viewBox="0 0 110 110" className="-rotate-90">
               <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(245,237,212,0.15)" strokeWidth="8" />

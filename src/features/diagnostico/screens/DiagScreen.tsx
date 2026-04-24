@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScoreButtons } from "../components/ScoreButtons";
 import { countUnanswered, fillUnansweredWithZero, getActiveQuestions, isAutonomo } from "../logic";
 import type { Pilar, ScoresMap, SelOpts } from "../types";
+import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface DiagScreenProps {
   activePilares: Pilar[];
@@ -38,8 +39,9 @@ export function DiagScreen({
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background pb-28">
-      <header className="bg-verde-raiz px-6 py-5 md:px-8">
-        <div className="mx-auto max-w-3xl">
+      <header className="relative overflow-hidden bg-verde-raiz px-6 py-5 md:px-8">
+        <BrandSymbolBg size={300} opacity={0.06} position="center" white />
+        <div className="relative z-10 mx-auto max-w-3xl">
           <div className="flex items-start justify-between">
             <span className="text-[11px] uppercase tracking-wider text-linho/50">
               Pilar {p.num} de {activePilares.length}
