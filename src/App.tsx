@@ -15,6 +15,7 @@ import Ferramentas from "./pages/Ferramentas";
 import Diagnostico from "./pages/ferramentas/Diagnostico";
 import Orcamentos from "./pages/ferramentas/Orcamentos";
 import NotFound from "./pages/NotFound";
+import GestaoCliente from "./pages/consultor/GestaoCliente";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/ferramentas" element={<Ferramentas />} />
               <Route path="/ferramentas/diagnostico" element={<Diagnostico />} />
               <Route path="/ferramentas/orcamentos" element={<Orcamentos />} />
+              <Route path="/consultor/clientes/:id" element={<GestaoCliente />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
