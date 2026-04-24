@@ -34,6 +34,7 @@ export default function ChartsRow({ pilares, kpis }: Props) {
             </p>
           )}
           {pilares.map((p) => {
+            const MAX = 100;
             const ini = p.inicial ?? 0;
             const atu = p.atual ?? ini;
             const delta = p.delta;
@@ -41,6 +42,11 @@ export default function ChartsRow({ pilares, kpis }: Props) {
               delta === null ? "text-quase-preto/40"
                 : delta > 0 ? "text-[#1F6B2E]"
                 : delta < 0 ? "text-[#A2271B]" : "text-quase-preto/50";
+            // Cor da barra atual com base nas zonas: 0-40 vermelho, 41-70 amarelo, 71-100 verde
+            const barColor =
+              atu <= 40 ? "bg-[#A2271B]"
+                : atu <= 70 ? "bg-[#C9A84C]"
+                : "bg-[#2D5016]";
             return (
               <div key={p.key}>
                 <div className="flex items-center justify-between text-xs">
@@ -55,9 +61,21 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                     )}
                   </span>
                 </div>
-                <div className="relative mt-1.5 h-2 w-full overflow-hidden rounded-full bg-linho">
-                  <div className="absolute inset-y-0 left-0 bg-verde-musgo/40" style={{ width: `${ini}%` }} />
-                  <div className="absolute inset-y-0 left-0 bg-verde-raiz" style={{ width: `${atu}%` }} />
+                <div className="mt-0.5 text-[10px] text-quase-preto/55">
+                  Score: {atu} / máximo {MAX}
+                </div>
+                <div className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-linho">
+                  {/* Barra do score inicial (sombra leve) */}
+                  <div className="absolute inset-y-0 left-0 bg-verde-musgo/30" style={{ width: `${ini}%` }} />
+                  {/* Barra do score atual com cor por zona */}
+                  <div className={`absolute inset-y-0 left-0 ${barColor}`} style={{ width: `${atu}%` }} />
+                  {/* Marcador de meta mínima em 70% */}
+                  <div
+                    className="absolute inset-y-0 border-l-2 border-dashed border-quase-preto/60"
+                    style={{ left: "70%" }}
+                    title="Meta mínima (70%)"
+                    aria-label="Meta mínima 70%"
+                  />
                 </div>
               </div>
             );
