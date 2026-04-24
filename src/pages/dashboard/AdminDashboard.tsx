@@ -236,22 +236,29 @@ export default function AdminDashboard() {
         .maybeSingle();
       const userId = cli?.user_id ?? null;
 
+      // 1) Tentar apagar do auth.users via edge function — se falhar, avisa e segue
+      let authOk = true;
+      if (userId) {
+        const { data: authRes, error: authErr } = await supabase.functions.invoke(
+          "delete-user",
+          { body: { user_id: userId } },
+        );
+        const errMsg = authErr?.message ?? (authRes as { error?: string } | null)?.error;
+        if (errMsg) {
+          authOk = false;
+          toast.warning("Falha ao apagar usuário do Auth: " + errMsg);
+        }
+      }
+
+      // 2) Apagar dados e registro do cliente
       await supabase.from("dashboard_data").delete().eq("cliente_id", confirmDeleteCliente.id);
       const { error } = await supabase.from("clientes").delete().eq("id", confirmDeleteCliente.id);
       if (error) throw error;
 
-      // Tentar apagar usuário do Auth — se falhar, apenas avisa
-      if (userId) {
-        const { error: authErr } = await supabase.functions.invoke("delete-cliente-auth", {
-          body: { user_id: userId },
-        });
-        if (authErr) {
-          toast.warning("Cliente removido, mas falhou ao apagar usuário do Auth: " + authErr.message);
-        } else {
-          toast.success("Cliente e usuário removidos");
-        }
+      if (authOk) {
+        toast.success("Cliente removido completamente");
       } else {
-        toast.success("Cliente removido");
+        toast.success("Cliente removido (Auth pendente)");
       }
 
       setConfirmDeleteCliente(null);
