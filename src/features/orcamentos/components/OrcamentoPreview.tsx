@@ -29,7 +29,14 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       return { ...p, pct };
     });
 
-    const selectedMods = MODULOS_ALL.filter((m) => form.modulos[m.id]);
+    const selectedMods = modulosDb.filter((m) => form.modulos[m.codigo]);
+    const valorCalculado = calcValorModulos(
+      selectedMods.map((m) => m.codigo),
+      modulosDb
+    );
+    const valorFinalNum = parseFloat(form.valorFinal);
+    const valorFinal =
+      !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
 
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
@@ -58,8 +65,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
+      valorCalculado, valorFinal,
     };
-  }, [form]);
+  }, [form, modulosDb]);
 
   return (
     <div className="orc-doc-wrap flex-1 px-4 md:px-8 py-6 md:py-10 overflow-y-auto flex justify-center bg-[#E8E4E0]">
