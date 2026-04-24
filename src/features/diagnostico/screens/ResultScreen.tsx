@@ -450,7 +450,7 @@ export function ResultScreen({
                 <Download className="mr-2 h-4 w-4" /> Exportar PDF
               </Button>
               <Button onClick={handleSave} disabled={saving || !clienteId} className="bg-dourado text-verde-raiz hover:bg-dourado/90">
-                <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar no Supabase"}
+                <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar e Criar Dashboard"}
               </Button>
               <Button variant="outline" onClick={onRestart}>
                 <RotateCcw className="mr-2 h-4 w-4" /> Novo diagnóstico
