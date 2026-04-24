@@ -56,11 +56,9 @@ const STATUS_BADGE: Record<ModuloContratado["status"], string> = {
 
 function getMesLabel(mes: number, dataInicio: string | null): string {
   if (!dataInicio) return `Mês ${mes}`;
-  // Parse como data local (sem deslocamento de timezone)
-  const base = dataInicio.includes("T") ? dataInicio : `${dataInicio}T00:00:00`;
-  const d = new Date(base);
-  d.setMonth(d.getMonth() + mes - 1);
-  return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const [ano, month, dia] = dataInicio.split('-').map(Number);
+  const d = new Date(ano, month - 1 + (mes - 1), 1);
+  return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
 export default function CronogramaModulos({ clienteId, dataInicioProj }: Props) {
