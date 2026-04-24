@@ -31,6 +31,7 @@ export const KPI_CATALOG: KpiMeta[] = [
   { key: "taxa_no_show",       label: "Taxa de No-Show",     unidade: "%", higher: false, grupo: "atendimento" },
   { key: "taxa_followup",      label: "Taxa de Follow-up",   unidade: "%", higher: true,  grupo: "atendimento" },
   { key: "tempo_resposta_min", label: "Tempo de Resposta",   unidade: "min", higher: false, grupo: "atendimento" },
+  { key: "tempo_resposta_lead", label: "Tempo de Resposta Lead", unidade: "", higher: true, grupo: "atendimento" },
 
   // Financeiro
   { key: "faturamento_bruto",  label: "Faturamento Bruto",   unidade: "R$", higher: true, noCompare: true, grupo: "financeiro" },
