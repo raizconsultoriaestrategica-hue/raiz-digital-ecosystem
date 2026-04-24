@@ -440,7 +440,14 @@ export default function AdminDashboard() {
                       const status = (l.cliente.status as StatusCarteira) || "lead";
                       return (
                         <TableRow key={l.cliente.id}>
-                          <TableCell className="font-medium">{l.cliente.nome_cliente}</TableCell>
+                          <TableCell className="font-medium">
+                            <Link
+                              to={`/consultor/clientes/${l.cliente.id}`}
+                              className="text-verde-raiz hover:text-dourado hover:underline"
+                            >
+                              {l.cliente.nome_cliente}
+                            </Link>
+                          </TableCell>
                           <TableCell>{l.cliente.nome_clinica ?? "—"}</TableCell>
                           <TableCell>{l.cliente.cidade ?? "—"}</TableCell>
                           <TableCell>
@@ -468,6 +475,12 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-52">
+                                <DropdownMenuItem
+                                  onClick={() => navigate(`/consultor/clientes/${l.cliente.id}`)}
+                                >
+                                  <Briefcase className="mr-2 h-4 w-4" />
+                                  Gerir cliente
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openEdit(l.cliente)}>
                                   <Briefcase className="mr-2 h-4 w-4" />
                                   Editar projeto
