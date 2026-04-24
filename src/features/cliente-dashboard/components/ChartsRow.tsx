@@ -96,9 +96,13 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                     backgroundColor: chartKpis.map((k) => {
                       const bench = k.benchmark as number;
                       const val = k.valor as number;
-                      if (!bench || !val) return "#4A7C5F";
-                      const meets = k.higher ? val >= bench : val <= bench;
-                      return meets ? "#4A7C5F" : "#A2271B";
+                      if (!bench || !val) return "#A2271B";
+                      const pct = k.higher
+                        ? (val / bench) * 100
+                        : (bench / val) * 100;
+                      if (pct >= 85) return "#2D5016";
+                      if (pct >= 60) return "#C9A84C";
+                      return "#A2271B";
                     }),
                     borderRadius: 4,
                   },
