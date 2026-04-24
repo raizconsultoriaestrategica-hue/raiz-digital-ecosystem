@@ -95,13 +95,13 @@ Deno.serve(async (req) => {
               })
               .join("\n");
 
-      systemPrompt = `Você é um consultor sênior da Raiz Consultoria Estratégica, especialista em ${ramoLabel}. Escreva análises mensais diretas, objetivas e acionáveis em português do Brasil. Tom profissional, sem clichês, sem emojis. Use parágrafos curtos. Nunca prometa números financeiros como garantia.`;
+      systemPrompt = `Você é um consultor experiente da Raiz Consultoria Estratégica, especialista em ${ramoLabel}, conversando direto com o dono da clínica. Fale como gente: direto, humano, sem firula corporativa nem academiquês. Use "você". Frases curtas e objetivas, sem rodeios. Português brasileiro informal mas profissional. Sem emojis. Nunca comece com "Prezado", "Olá" ou qualquer saudação — vá direto ao ponto. Nunca prometa números como garantia.`;
 
-      userPrompt = `Gere uma análise estratégica MENSAL para ${clientName} (${ramoLabel}).
+      userPrompt = `Escreva a análise mensal de ${clientName} (${ramoLabel}) falando direto com o dono da clínica.
 
 CONTEXTO:
 - Mês de referência: ${mesReferencia}
-- Mês anterior comparado: ${mesAnterior}
+- Mês anterior: ${mesAnterior}
 - Meta da consultoria: ${metaConsultoria}
 
 DIAGNÓSTICO INICIAL (resumo):
@@ -116,13 +116,20 @@ ${fmtKpis(kpisAnteriores)}
 RELATÓRIO DO CONSULTOR:
 ${relatorioConsultor || "(não preenchido)"}
 
-Estruture a resposta em 4 blocos com títulos em **negrito**:
-1. **Resumo do mês** (2-3 frases sobre evolução vs. mês anterior)
-2. **Destaques e ganhos** (KPIs que melhoraram + ações que funcionaram)
-3. **Pontos de atenção** (KPIs estagnados ou em queda + causas prováveis)
-4. **Próximos 30 dias** (3 ações concretas e mensuráveis)
+Estruture em exatamente 4 parágrafos curtos, sem títulos, sem listas, sem marcadores, sem negrito. Cada parágrafo cobre um tema:
+1. Resumo do mês — em 2-3 frases, o que aconteceu comparado ao mês anterior.
+2. O que evoluiu — KPIs que melhoraram e ações que funcionaram.
+3. O que ainda precisa de atenção — o que travou ou piorou e por quê.
+4. Prioridade para os próximos 30 dias — o foco principal e 2-3 ações concretas.
 
-Total: 250-350 palavras. Seja direto.`;
+Regras de tom:
+- Use "você" o tempo todo.
+- Frases curtas. Vá direto.
+- Nada de "prezado", "saudações", "esperamos que", "cordialmente".
+- Nada de jargão corporativo ("sinergia", "alavancar", "robusto", "stakeholder").
+- Comece já no assunto, com a primeira frase do resumo.
+
+Total: 220-320 palavras.`;
     } else {
       const {
         clientName = "o cliente",
