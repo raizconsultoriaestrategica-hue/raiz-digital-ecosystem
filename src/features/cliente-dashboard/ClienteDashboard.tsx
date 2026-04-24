@@ -41,6 +41,7 @@ export default function ClienteDashboard() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [presentation, setPresentation] = useState(false);
+  const [tempoRespostaScore, setTempoRespostaScore] = useState<number | null>(null);
 
   // Carga
   useEffect(() => {
@@ -62,13 +63,31 @@ export default function ClienteDashboard() {
       if (!c) { setCliente(null); setRows([]); setLoading(false); return; }
       setCliente(c);
 
-      const { data } = await supabase
-        .from("dashboard_data")
-        .select("tipo, campo, valor, benchmark, mes, updated_at")
-        .eq("cliente_id", c.id);
+      const [{ data: dashData }, { data: diagData }] = await Promise.all([
+        supabase
+          .from("dashboard_data")
+          .select("tipo, campo, valor, benchmark, mes, updated_at")
+          .eq("cliente_id", c.id),
+        supabase
+          .from("diagnostics")
+          .select("scores")
+          .eq("client_id", c.id)
+          .order("created_at", { ascending: false })
+          .limit(1),
+      ]);
 
       if (!active) return;
-      setRows((data as DashboardRow[]) ?? []);
+      setRows((dashData as DashboardRow[]) ?? []);
+
+      // Extrai score da 1ª pergunta do Pilar 03 (tempo de resposta a leads)
+      const scores = (diagData?.[0]?.scores ?? null) as Record<string, unknown> | null;
+      const p03 = scores?.p03;
+      if (Array.isArray(p03) && typeof p03[0] === "number") {
+        setTempoRespostaScore(p03[0] as number);
+      } else {
+        setTempoRespostaScore(null);
+      }
+
       setLoading(false);
     }
     load();
