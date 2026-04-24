@@ -84,8 +84,12 @@ export function OrcamentoSidebar(p: Props) {
         })
         .filter((x): x is { id: string; fase: number } => x !== null);
 
-      await saveOrcamento(p.form, p.clienteId, modulosParaSalvar);
-      toast.success("Orçamento salvo e projeto ativado na Gestão de Clientes");
+      const result = await saveOrcamento(p.form, p.clienteId, modulosParaSalvar);
+      if (result.pdfFailed) {
+        toast.success("Dados salvos com sucesso. PDF não pôde ser gerado.");
+      } else {
+        toast.success("Orçamento salvo e projeto ativado na Gestão de Clientes");
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao salvar orçamento";
       toast.error(msg);
