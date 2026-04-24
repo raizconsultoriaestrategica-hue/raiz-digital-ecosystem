@@ -228,10 +228,32 @@ export default function AdminDashboard() {
   const handleDeletarCliente = async () => {
     if (!confirmDeleteCliente) return;
     try {
+      // Buscar user_id vinculado antes de apagar
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("user_id")
+        .eq("id", confirmDeleteCliente.id)
+        .maybeSingle();
+      const userId = cli?.user_id ?? null;
+
       await supabase.from("dashboard_data").delete().eq("cliente_id", confirmDeleteCliente.id);
       const { error } = await supabase.from("clientes").delete().eq("id", confirmDeleteCliente.id);
       if (error) throw error;
-      toast.success("Cliente removido");
+
+      // Tentar apagar usuário do Auth — se falhar, apenas avisa
+      if (userId) {
+        const { error: authErr } = await supabase.functions.invoke("delete-cliente-auth", {
+          body: { user_id: userId },
+        });
+        if (authErr) {
+          toast.warning("Cliente removido, mas falhou ao apagar usuário do Auth: " + authErr.message);
+        } else {
+          toast.success("Cliente e usuário removidos");
+        }
+      } else {
+        toast.success("Cliente removido");
+      }
+
       setConfirmDeleteCliente(null);
       load();
     } catch (e) {
@@ -663,8 +685,8 @@ export default function AdminDashboard() {
             <AlertDialogTitle>Apagar cliente?</AlertDialogTitle>
             <AlertDialogDescription>
               <strong>{confirmDeleteCliente?.nome}</strong> e todos os dados associados (diagnóstico,
-              configurações) serão removidos permanentemente. O usuário em auth.users precisa ser
-              removido manualmente, se desejado.
+              configurações) serão removidos permanentemente, incluindo o login do usuário no
+              sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
