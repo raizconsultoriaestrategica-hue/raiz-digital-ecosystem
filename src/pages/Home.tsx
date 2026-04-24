@@ -264,12 +264,6 @@ function Hero() {
             </div>
           </div>
 
-          {/* Linha "Vagas limitadas" — abaixo, ocupa coluna esquerda */}
-          <div className="lg:col-span-3 lg:row-start-2">
-            <div className="inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
-              ⏰ Vagas limitadas para Abril/2026: apenas 4 vagas disponíveis neste ciclo.
-            </div>
-          </div>
         </div>
       </div>
     </section>
