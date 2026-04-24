@@ -213,10 +213,11 @@ function Hero() {
               Consultoria Estratégica para Odontologia
             </span>
             <h1
-              className="mt-8 font-display font-medium leading-[1.05] text-linho"
-              style={{ fontSize: "clamp(2.25rem, 5.5vw, 4.5rem)" }}
+              className="mt-8 max-w-[18ch] font-display font-medium leading-[1.05] text-linho"
+              style={{ fontSize: "clamp(2.25rem, 4.8vw, 3.25rem)" }}
             >
-              Sua agenda está cheia. Seu faturamento está travado.{" "}
+              Sua agenda está cheia.<br />
+              Seu faturamento está travado.<br />
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
