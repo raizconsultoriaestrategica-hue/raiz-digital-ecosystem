@@ -118,10 +118,11 @@ export function useOrcamento() {
       // 3. Faturamento bruto mais recente em dashboard_data
       supabase
         .from("dashboard_data")
-        .select("valor, created_at")
+        .select("valor, created_at, updated_at")
         .eq("cliente_id", id)
         .eq("campo", "faturamento_bruto")
         .order("created_at", { ascending: false })
+        .order("updated_at", { ascending: false })
         .limit(1),
     ]);
 
