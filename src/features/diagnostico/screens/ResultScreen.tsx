@@ -8,12 +8,13 @@ import { cn } from "@/lib/utils";
 import {
   getClassif, getPlano, getScore, getSortedByPct, getStatus, getTotals,
 } from "../logic";
-import type { ClientData, Ramo, ScoresMap, SelOpts } from "../types";
+import type { ClientData, KpisIniciaisData, Pilar, Ramo, ScoresMap, SelOpts } from "../types";
 import { RadarPilares } from "../components/RadarPilares";
 import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
 import { saveDiagnosticoToSupabase, updateDiagnosticoNotasInSupabase } from "../persistence";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface ResultScreenProps {
@@ -24,6 +25,8 @@ interface ResultScreenProps {
   clienteId: string | null;
   notas: string;
   analise: string;
+  kpisIniciais: KpisIniciaisData;
+  activePilares: Pilar[];
   onNotasChange: (v: string) => void;
   onAnaliseChange: (v: string) => void;
   onRestart: () => void;
@@ -46,8 +49,10 @@ const STATUS_PILL: Record<string, string> = {
 
 export function ResultScreen({
   client, selOpts, scores, ramo, clienteId, notas, analise,
+  kpisIniciais, activePilares,
   onNotasChange, onAnaliseChange, onRestart,
 }: ResultScreenProps) {
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -103,8 +108,12 @@ export function ResultScreen({
       const a = (data as { analise?: string; error?: string })?.analise;
       if (!a) throw new Error((data as { error?: string })?.error || "Sem análise");
       onAnaliseChange(a);
+      // Auto-preenche notas: concatena se já houver conteúdo
+      const trimmedNotas = (notas || "").trim();
+      const novasNotas = trimmedNotas ? `${notas}\n\n${a}` : a;
+      onNotasChange(novasNotas);
       if (clienteId) {
-        try { await updateDiagnosticoNotasInSupabase(clienteId, notas, a); } catch { /* noop */ }
+        try { await updateDiagnosticoNotasInSupabase(clienteId, novasNotas, a); } catch { /* noop */ }
       }
       toast.success("Análise gerada com IA.");
     } catch (e: unknown) {
@@ -124,7 +133,84 @@ export function ResultScreen({
     try {
       const snap = buildSnapshot();
       await saveDiagnosticoToSupabase(clienteId, snap);
-      toast.success("Diagnóstico salvo no Supabase e disponível no painel admin.");
+
+      // Insert em lote no dashboard_data: CONFIG + PILAR (Inicial) + KPI (mes atual) + INSIGHT
+      const now = new Date();
+      const mesAtual = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+
+      type Row = {
+        cliente_id: string; tipo: string; mes: string | null;
+        campo: string; valor: string | null; benchmark: string | null;
+      };
+      const rows: Row[] = [];
+
+      const configEntries: Array<[string, string | undefined]> = [
+        ["cliente_nome", client.name],
+        ["especialidade", client.especialidade || client.proc],
+        ["cidade", client.cidade],
+        ["orcamento_inicial", kpisIniciais.fat],
+        ["meta_faturamento", kpisIniciais.meta_fat || client.meta],
+        ["ramo", ramo],
+        ["inicio_consultoria", mesAtual],
+        ["mes_referencia", mesAtual],
+      ];
+      configEntries.forEach(([campo, valor]) => {
+        if (valor && String(valor).trim()) {
+          rows.push({ cliente_id: clienteId, tipo: "CONFIG", mes: null, campo, valor: String(valor), benchmark: null });
+        }
+      });
+
+      // PILAR (Inicial): score 0-100 por pilar
+      activePilares.forEach((p) => {
+        const { pct } = getScore(scores, p.id, ramo);
+        rows.push({
+          cliente_id: clienteId, tipo: "PILAR", mes: "Inicial",
+          campo: p.id, valor: String(Math.round(pct * 100)), benchmark: "100",
+        });
+      });
+
+      // KPI (mes atual)
+      const kpiEntries: Array<[string, string | undefined, string]> = [
+        ["taxa_conversao", kpisIniciais.conversao, "55"],
+        ["ticket_medio_rs", kpisIniciais.ticket, "2000"],
+        ["ocupacao_cadeiras", kpisIniciais.ocupacao, "75"],
+        ["taxa_no_show", kpisIniciais.noshow, "10"],
+        ["margem_liquida", kpisIniciais.margem, "20"],
+        ["faturamento_bruto", kpisIniciais.fat, ""],
+      ];
+      kpiEntries.forEach(([campo, valor, benchmark]) => {
+        if (valor && String(valor).trim()) {
+          rows.push({ cliente_id: clienteId, tipo: "KPI", mes: mesAtual, campo, valor: String(valor), benchmark });
+        }
+      });
+
+      // INSIGHT: análise estratégica da IA
+      if (analise && analise.trim()) {
+        rows.push({
+          cliente_id: clienteId, tipo: "INSIGHT", mes: mesAtual,
+          campo: "analise_estrategica", valor: analise, benchmark: null,
+        });
+      }
+
+      if (rows.length > 0) {
+        // Limpa versões anteriores dos mesmos campos para evitar duplicação
+        await supabase.from("dashboard_data").delete()
+          .eq("cliente_id", clienteId).eq("tipo", "CONFIG")
+          .in("campo", configEntries.map(([k]) => k));
+        await supabase.from("dashboard_data").delete()
+          .eq("cliente_id", clienteId).eq("tipo", "PILAR").eq("mes", "Inicial");
+        await supabase.from("dashboard_data").delete()
+          .eq("cliente_id", clienteId).eq("tipo", "KPI").eq("mes", mesAtual);
+        await supabase.from("dashboard_data").delete()
+          .eq("cliente_id", clienteId).eq("tipo", "INSIGHT").eq("mes", mesAtual)
+          .eq("campo", "analise_estrategica");
+
+        const { error: insErr } = await supabase.from("dashboard_data").insert(rows);
+        if (insErr) throw insErr;
+      }
+
+      toast.success("Dashboard criado com sucesso!");
+      setTimeout(() => navigate("/ferramentas"), 2000);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Falha ao salvar";
       toast.error(msg);
@@ -364,7 +450,7 @@ export function ResultScreen({
                 <Download className="mr-2 h-4 w-4" /> Exportar PDF
               </Button>
               <Button onClick={handleSave} disabled={saving || !clienteId} className="bg-dourado text-verde-raiz hover:bg-dourado/90">
-                <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar no Supabase"}
+                <Save className="mr-2 h-4 w-4" /> {saving ? "Salvando…" : "Salvar e Criar Dashboard"}
               </Button>
               <Button variant="outline" onClick={onRestart}>
                 <RotateCcw className="mr-2 h-4 w-4" /> Novo diagnóstico
