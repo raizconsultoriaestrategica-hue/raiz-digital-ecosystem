@@ -14,6 +14,7 @@ import ModulesGrid from "./components/ModulesGrid";
 import InsightsCard from "./components/InsightsCard";
 import PresentationMode from "./components/PresentationMode";
 import BrandLogo from "@/components/brand/BrandLogo";
+import CronogramaModulos from "@/components/CronogramaModulos";
 import {
   avgModuloPct, groupRows, parseConfig, parseInsight, parseKpis,
   parseModulos, parsePilares,
