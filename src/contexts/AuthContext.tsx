@@ -74,10 +74,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (_event === "PASSWORD_RECOVERY") {
-        if (!window.location.pathname.startsWith("/nova-senha")) {
+        // Só redireciona se realmente veio de um link de recovery (URL contém code/type=recovery)
+        const search = window.location.search;
+        const hash = window.location.hash;
+        const isRecoveryLink =
+          /[?&]code=/.test(search) ||
+          /type=recovery/.test(search) ||
+          /type=recovery/.test(hash);
+        if (isRecoveryLink && !window.location.pathname.startsWith("/nova-senha")) {
           window.location.replace("/nova-senha");
+          return;
         }
-        return;
+        // Caso contrário, ignora o evento e segue o fluxo normal
       }
       if (newSession?.user) {
         // Defer to avoid deadlocks inside the auth callback
