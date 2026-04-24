@@ -1,6 +1,6 @@
 // Cria um cliente completo: auth.users + user_roles + clientes
 // Requer que o chamador seja admin.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,9 +17,8 @@ Deno.serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE = Deno.env.get("SERVICE_ROLE_KEY");
-    const ANON = Deno.env.get("SUPABASE_ANON_KEY") ??
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     console.log("create-cliente env check", {
       hasSupabaseUrl: Boolean(SUPABASE_URL),
@@ -28,10 +27,13 @@ Deno.serve(async (req) => {
     });
 
     if (!SUPABASE_URL || !ANON || !SERVICE_ROLE) {
-      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Configuração do servidor incompleta" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // 1) Validar que o chamador está autenticado e é admin
@@ -71,6 +73,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Admin client direto, sem fallback
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -134,6 +137,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
+    console.error("create-cliente error:", e);
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
