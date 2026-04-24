@@ -86,9 +86,9 @@ function distribuirMesesExecucao(
     result.push({ ...m, mes_execucao: 3 });
   });
 
-  // Fase 3 → 1 por mês a partir do mês 4
+  // Fase 3 → 1 por mês a partir do mês 4 (clamp em 12 — constraint do banco)
   f3.forEach((m, i) => {
-    result.push({ ...m, mes_execucao: 4 + i });
+    result.push({ ...m, mes_execucao: Math.min(4 + i, 12) });
   });
 
   return result;
