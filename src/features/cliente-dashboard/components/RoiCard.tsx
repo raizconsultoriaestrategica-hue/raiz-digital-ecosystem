@@ -95,13 +95,12 @@ function calcImpacts(kpis: KpiItem[], faturamento: number): GapImpact[] {
 }
 
 export default function RoiCard({ kpis, faturamentoBase }: Props) {
-  if (!faturamentoBase || faturamentoBase <= 0) return null;
-  const impacts = calcImpacts(kpis, faturamentoBase);
-  if (impacts.length === 0) return null;
-
+  const hasFaturamento = !!(faturamentoBase && faturamentoBase > 0);
+  const impacts = hasFaturamento ? calcImpacts(kpis, faturamentoBase as number) : [];
   const totalImpacto = impacts.reduce((s, i) => s + i.impactoRS, 0);
-  const faturamentoPotencial = faturamentoBase + totalImpacto;
+  const faturamentoPotencial = hasFaturamento ? (faturamentoBase as number) + totalImpacto : 0;
   const anual = totalImpacto * 12;
+  const showEmptyState = !hasFaturamento || impacts.length === 0;
 
   const fmtVal = (v: number, u: string) => {
     if (u === "R$") return fmtBRL(v, { compact: true });
@@ -125,57 +124,80 @@ export default function RoiCard({ kpis, faturamentoBase }: Props) {
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-dourado/80">
             Potencial Adicional Estimado
           </div>
-          <div className="mt-1 font-display text-2xl leading-none text-dourado sm:text-3xl">
-            {fmtBRL(totalImpacto, { compact: true })}
-            <span className="ml-1 text-xs font-normal text-linho/60">/mês</span>
-          </div>
-          <div className="mt-1 text-[10px] uppercase tracking-wider text-linho/55">
-            ≈ {fmtBRL(anual, { compact: true })} / ano
-          </div>
+          {showEmptyState ? (
+            <div className="mt-1 font-display text-2xl leading-none text-linho/40 sm:text-3xl">
+              —
+            </div>
+          ) : (
+            <>
+              <div className="mt-1 font-display text-2xl leading-none text-dourado sm:text-3xl">
+                {fmtBRL(totalImpacto, { compact: true })}
+                <span className="ml-1 text-xs font-normal text-linho/60">/mês</span>
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-wider text-linho/55">
+                ≈ {fmtBRL(anual, { compact: true })} / ano
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Frase central */}
-      <p className="mt-5 text-base leading-relaxed text-linho/85 sm:text-lg">
-        Ao atingir os benchmarks nos {impacts.length} principais gaps, o faturamento potencial
-        salta de{" "}
-        <span className="font-display font-semibold text-linho">{fmtBRL(faturamentoBase)}</span>{" "}
-        para{" "}
-        <span className="font-display font-semibold text-dourado">{fmtBRL(faturamentoPotencial)}</span>
-        <span className="text-linho/60">/mês</span>.
-      </p>
+      {showEmptyState ? (
+        <div className="mt-6 rounded-lg border border-dashed border-linho/20 bg-linho/5 p-6 text-center">
+          <p className="text-sm text-linho/75">
+            {!hasFaturamento
+              ? "Insira o faturamento atual para visualizar o potencial estimado."
+              : "Cadastre os KPIs de Conversão, Ticket Médio e Ocupação para visualizar o potencial estimado."}
+          </p>
+          <p className="mt-2 text-[11px] text-linho/45">
+            O cálculo cruza os dados atuais do cliente com os benchmarks de mercado para projetar o impacto financeiro.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Frase central */}
+          <p className="mt-5 text-base leading-relaxed text-linho/85 sm:text-lg">
+            Ao atingir os benchmarks nos {impacts.length} principais gaps, o faturamento potencial
+            salta de{" "}
+            <span className="font-display font-semibold text-linho">{fmtBRL(faturamentoBase)}</span>{" "}
+            para{" "}
+            <span className="font-display font-semibold text-dourado">{fmtBRL(faturamentoPotencial)}</span>
+            <span className="text-linho/60">/mês</span>.
+          </p>
 
-      {/* Lista dos gaps */}
-      <div className="mt-5 space-y-2.5">
-        {impacts.map((g, i) => (
-          <div
-            key={g.key}
-            className="flex items-center justify-between gap-3 rounded-lg border border-linho/10 bg-linho/5 px-4 py-3"
-          >
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-dourado/20 text-[11px] font-bold text-dourado">
-                {i + 1}
-              </span>
-              <div>
-                <div className="text-sm font-semibold text-linho">{g.label}</div>
-                <div className="mt-0.5 text-[11px] text-linho/60">
-                  Atual <span className="text-linho/85">{fmtVal(g.atual, g.unidade)}</span>
-                  <span className="mx-1.5 text-linho/30">→</span>
-                  Benchmark <span className="text-linho/85">{fmtVal(g.benchmark, g.unidade)}</span>
-                  <span className="ml-2 text-linho/45">· {g.descricao}</span>
+          {/* Lista dos gaps */}
+          <div className="mt-5 space-y-2.5">
+            {impacts.map((g, i) => (
+              <div
+                key={g.key}
+                className="flex items-center justify-between gap-3 rounded-lg border border-linho/10 bg-linho/5 px-4 py-3"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-dourado/20 text-[11px] font-bold text-dourado">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div className="text-sm font-semibold text-linho">{g.label}</div>
+                    <div className="mt-0.5 text-[11px] text-linho/60">
+                      Atual <span className="text-linho/85">{fmtVal(g.atual, g.unidade)}</span>
+                      <span className="mx-1.5 text-linho/30">→</span>
+                      Benchmark <span className="text-linho/85">{fmtVal(g.benchmark, g.unidade)}</span>
+                      <span className="ml-2 text-linho/45">· {g.descricao}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-[10px] uppercase tracking-wider text-linho/45">Impacto</div>
+                  <div className="font-display text-lg text-dourado">
+                    +{fmtBRL(g.impactoRS, { compact: true })}
+                    <span className="ml-1 text-[10px] font-normal text-linho/55">/mês</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex-shrink-0 text-right">
-              <div className="text-[10px] uppercase tracking-wider text-linho/45">Impacto</div>
-              <div className="font-display text-lg text-dourado">
-                +{fmtBRL(g.impactoRS, { compact: true })}
-                <span className="ml-1 text-[10px] font-normal text-linho/55">/mês</span>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {/* Rodapé */}
       <p className="mt-5 border-t border-linho/10 pt-4 text-[11px] leading-relaxed text-linho/45">
