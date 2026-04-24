@@ -117,11 +117,10 @@ export function computeStatus(
   return { status: "crit", statusLabel: "⚠ Abaixo", pct: Math.max(4, Math.round((benchmark / valor) * 100)) };
 }
 
-/** PILARES: separa Inicial e atual. campo = pilar_key (p01..p07 ou nome). */
+/** PILARES: separa Inicial e atual. campo = pilar_key (p01..p07 ou nome).
+ *  valor = total bruto do pilar; benchmark = max bruto do pilar. */
 export function parsePilares(rows: DashboardRow[]): PilarScore[] {
-  // Estrutura nova: tipo='PILAR', mes='Inicial' ou 'Abr/26' etc.; valor=0-100
-  // Tolerância: se vier do diagnóstico antigo (mes='Diagnóstico'), tratamos como inicial.
-  const byKey = new Map<string, { inicial: number | null; atual: number | null; label: string; ordem: number }>();
+  const byKey = new Map<string, { inicial: number | null; atual: number | null; max: number; ordem: number }>();
   let i = 0;
   rows.forEach((r) => {
     const campo = r.campo;
@@ -131,10 +130,13 @@ export function parsePilares(rows: DashboardRow[]): PilarScore[] {
     const isInicial = (r.mes || "").toLowerCase() === "inicial" || (r.mes || "").toLowerCase() === "diagnóstico";
     const v = num(r.valor);
     if (v === null) return;
+    const m = num(r.benchmark);
 
-    const cur = byKey.get(campo) || { inicial: null, atual: null, label: campo, ordem: i++ };
+    const cur = byKey.get(campo) || { inicial: null, atual: null, max: 0, ordem: i++ };
     if (isInicial) cur.inicial = v;
     else cur.atual = v;
+    // benchmark mais alto vence (max do pilar deve ser estável; protege contra valores antigos = 100)
+    if (m !== null && m > cur.max) cur.max = m;
     byKey.set(campo, cur);
   });
 
@@ -142,8 +144,16 @@ export function parsePilares(rows: DashboardRow[]): PilarScore[] {
   let n = 1;
   byKey.forEach((v, key) => {
     const num2 = String(n++).padStart(2, "0");
+    const max = v.max > 0 ? v.max : 100; // fallback se nenhum benchmark salvo
     const delta = v.inicial !== null && v.atual !== null ? v.atual - v.inicial : null;
-    arr.push({ key, label: humanizePilar(key), num: num2, inicial: v.inicial, atual: v.atual, delta });
+    const pctInicial = v.inicial !== null && max > 0 ? Math.round((v.inicial / max) * 100) : null;
+    const pctAtual = v.atual !== null && max > 0 ? Math.round((v.atual / max) * 100) : null;
+    const pctDelta = pctInicial !== null && pctAtual !== null ? pctAtual - pctInicial : null;
+    arr.push({
+      key, label: humanizePilar(key), num: num2,
+      inicial: v.inicial, atual: v.atual, delta, max,
+      pctInicial, pctAtual, pctDelta,
+    });
   });
   return arr;
 }

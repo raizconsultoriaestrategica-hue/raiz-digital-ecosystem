@@ -29,9 +29,13 @@ export interface PilarScore {
   key: string;        // p01..p07 ou nome
   label: string;      // nome amigável
   num: string;        // "01".."07"
-  inicial: number | null;
-  atual: number | null;
-  delta: number | null;
+  inicial: number | null;       // total inicial (escala bruta)
+  atual: number | null;         // total atual (escala bruta)
+  delta: number | null;         // diferença em pontos brutos
+  max: number;                  // pontuação máxima do pilar (do benchmark salvo)
+  pctInicial: number | null;    // 0-100
+  pctAtual: number | null;      // 0-100
+  pctDelta: number | null;      // 0-100
 }
 
 export interface KpiItem {
