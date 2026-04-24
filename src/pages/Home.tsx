@@ -299,12 +299,11 @@ function Problema() {
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
             A realidade que ninguém quer ver
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            Você trabalha mais do que nunca.
-            <br />
+          <h2 className="mt-4 max-w-[22ch] font-display text-3xl text-verde-raiz md:text-4xl">
+            Você trabalha mais do que nunca.<br />
             E o resultado não cresce no mesmo ritmo.
           </h2>
-          <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/70">
+          <p className="mt-6 max-w-[680px] font-body font-light text-lg text-quase-preto/70">
             Isso não é falta de esforço. É um problema de estrutura. Existe uma causa raiz identificável para isso.
           </p>
         </Reveal>
