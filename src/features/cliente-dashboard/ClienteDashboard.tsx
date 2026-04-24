@@ -14,6 +14,7 @@ import ModulesGrid from "./components/ModulesGrid";
 import InsightsCard from "./components/InsightsCard";
 import PresentationMode from "./components/PresentationMode";
 import BrandLogo from "@/components/brand/BrandLogo";
+import CronogramaModulos from "@/components/CronogramaModulos";
 import {
   avgModuloPct, groupRows, parseConfig, parseInsight, parseKpis,
   parseModulos, parsePilares,
@@ -33,6 +34,7 @@ interface Cliente {
   mes_referencia: string | null;
   pilares_foco: string | null;
   modulos_ativos: string | null;
+  status: string | null;
 }
 
 export default function ClienteDashboard() {
@@ -52,7 +54,7 @@ export default function ClienteDashboard() {
       const { data: clientes } = await supabase
         .from("clientes")
         .select(
-          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos",
+          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos, status",
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
@@ -250,6 +252,15 @@ export default function ClienteDashboard() {
         <ChartsRow pilares={pilares} kpis={kpis} />
 
         <ModulesGrid modulos={modulos} />
+
+        {cliente?.status === "projeto_ativo" && (
+          <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-soft">
+            <CronogramaModulos
+              clienteId={cliente.id}
+              dataInicioProj={cliente.data_inicio_projeto ?? null}
+            />
+          </div>
+        )}
 
         <InsightsCard texto={insight} cfg={cfg} />
 
