@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Printer, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
-import { PILARES, MODULOS_ALL, PLANOS } from "../data";
-import type { OrcamentoForm } from "../types";
+import { PILARES, PLANOS } from "../data";
+import { calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 
@@ -10,13 +10,15 @@ interface Props {
   form: OrcamentoForm;
   setField: <K extends keyof OrcamentoForm>(k: K, v: OrcamentoForm[K]) => void;
   setPilarScore: (id: string, v: string) => void;
-  toggleModulo: (id: string) => void;
+  toggleModulo: (codigo: string) => void;
   reset: () => void;
   clientes: ClienteOpt[];
   clienteId: string;
   selectCliente: (id: string) => void;
   loadingClientes: boolean;
   loadingDiag: boolean;
+  modulosDb: ModuloDb[];
+  loadingModulos: boolean;
   onPrint: () => void;
 }
 
@@ -29,14 +31,42 @@ const labelCls =
 const sectionCls =
   "text-[11px] font-bold text-dourado/80 uppercase tracking-[0.1em] mb-2.5";
 
+function fmtBRL(n: number) {
+  return "R$ " + n.toLocaleString("pt-BR");
+}
+
 export function OrcamentoSidebar(p: Props) {
   const [saving, setSaving] = useState(false);
-  // Agrupar módulos por pilar (mantém ordem)
-  const grouped: Record<string, typeof MODULOS_ALL> = {};
-  MODULOS_ALL.forEach((m) => {
-    if (!grouped[m.pilar]) grouped[m.pilar] = [];
-    grouped[m.pilar].push(m);
-  });
+
+  // Agrupar módulos por pilar_nome (vindos do DB, ordenados por pilar/ordem)
+  const grouped = useMemo(() => {
+    const g: Record<string, ModuloDb[]> = {};
+    p.modulosDb.forEach((m) => {
+      if (!g[m.pilar_nome]) g[m.pilar_nome] = [];
+      g[m.pilar_nome].push(m);
+    });
+    return g;
+  }, [p.modulosDb]);
+
+  // Códigos selecionados
+  const selecionados = useMemo(
+    () => Object.entries(p.form.modulos).filter(([, v]) => v).map(([k]) => k),
+    [p.form.modulos]
+  );
+
+  const valorCalculado = useMemo(
+    () => calcValorModulos(selecionados, p.modulosDb),
+    [selecionados, p.modulosDb]
+  );
+
+  // Sempre que o valor calculado muda, atualiza o "valor final" se ele estiver vazio
+  // ou igual ao último cálculo (heurística: se o consultor não editou manualmente).
+  useEffect(() => {
+    if (!p.form.valorFinal) {
+      p.setField("valorFinal", String(valorCalculado));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valorCalculado]);
 
   const handleSave = async () => {
     if (!p.clienteId) {
@@ -253,7 +283,14 @@ export function OrcamentoSidebar(p: Props) {
       </div>
 
       <div className={sectionCls}>Módulos Contratados</div>
-      <div className="max-h-[220px] overflow-y-auto pr-1 mb-2">
+      <div className="text-[10px] text-white/40 mb-2 leading-relaxed">
+        Pré-marcados automaticamente: pilares com score &lt; 50%.<br />
+        Fase 1: {fmtBRL(FASE_VALOR[1])} · Fase 2: {fmtBRL(FASE_VALOR[2])} · Fase 3: {fmtBRL(FASE_VALOR[3])}
+      </div>
+      <div className="max-h-[260px] overflow-y-auto pr-1 mb-3">
+        {p.loadingModulos && (
+          <div className="text-[12px] text-white/40 py-2">Carregando módulos…</div>
+        )}
         {Object.entries(grouped).map(([pilarName, mods]) => (
           <div key={pilarName}>
             <div className="text-[10px] font-bold text-white/35 uppercase tracking-[0.08em] mt-2 mb-1">
@@ -266,17 +303,47 @@ export function OrcamentoSidebar(p: Props) {
               >
                 <input
                   type="checkbox"
-                  checked={!!p.form.modulos[m.id]}
-                  onChange={() => p.toggleModulo(m.id)}
+                  checked={!!p.form.modulos[m.codigo]}
+                  onChange={() => p.toggleModulo(m.codigo)}
                   className="w-[15px] h-[15px] accent-dourado"
                 />
-                <span>
-                  {m.id} · {m.name}
+                <span className="flex-1">
+                  {m.codigo} · {m.nome}
+                </span>
+                <span className="text-[10px] text-white/35 tabular-nums">
+                  F{m.fase}
                 </span>
               </label>
             ))}
           </div>
         ))}
+      </div>
+
+      {/* Valor calculado + valor final editável */}
+      <div className="rounded-lg border border-dourado/30 bg-dourado/5 px-3 py-3 mb-4">
+        <div className="flex items-baseline justify-between mb-1">
+          <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.1em]">
+            Valor calculado
+          </span>
+          <span className="font-display text-[18px] font-semibold text-dourado tabular-nums">
+            {fmtBRL(valorCalculado)}
+          </span>
+        </div>
+        <div className="text-[10px] text-white/40 mb-3">
+          {selecionados.length} módulo{selecionados.length === 1 ? "" : "s"} selecionado
+          {selecionados.length === 1 ? "" : "s"}
+        </div>
+        <label className={labelCls}>Valor final acordado (R$)</label>
+        <input
+          type="number"
+          className={inputCls}
+          placeholder={String(valorCalculado || 0)}
+          value={p.form.valorFinal}
+          onChange={(e) => p.setField("valorFinal", e.target.value)}
+        />
+        <div className="mt-1 text-[10px] text-white/40">
+          Editável — aplique desconto ou condição especial.
+        </div>
       </div>
 
       <hr className="border-white/10 my-5" />
