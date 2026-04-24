@@ -104,111 +104,100 @@ export async function saveOrcamento(
   clienteId: string,
   modulosSelecionados: ModuloSelecionado[] = []
 ) {
-  if (!clienteId) throw new Error("Selecione um cliente vinculado antes de salvar.");
+  try {
+    if (!clienteId) throw new Error("Selecione um cliente vinculado antes de salvar.");
 
-  console.log("[saveOrcamento] início", {
-    clienteId,
-    modulosRecebidos: modulosSelecionados.length,
-    amostra: modulosSelecionados.slice(0, 3),
-  });
-
-  const blob = await generateOrcamentoPDFBlob();
-  console.log("[saveOrcamento] PDF gerado, size:", blob.size);
-
-  const planoInfo = PLANOS[form.plano];
-  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-  const safeNome = (form.nomeClinica || form.nomeCliente || "cliente")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  const fileName = `orcamento-${safeNome}-${ts}.pdf`;
-  const storagePath = `${clienteId}/${fileName}`;
-
-  const { error: upErr } = await supabase.storage
-    .from("orcamentos")
-    .upload(storagePath, blob, { contentType: "application/pdf", upsert: false });
-  if (upErr) {
-    console.error("[saveOrcamento] erro no upload:", upErr);
-    throw upErr;
-  }
-  console.log("[saveOrcamento] upload OK:", storagePath);
-
-  const { data: userRes } = await supabase.auth.getUser();
-
-  // Passo C — Insert do orçamento (retornando id)
-  const { data: orcInserted, error: insErr } = await supabase
-    .from("orcamentos")
-    .insert({
-      cliente_id: clienteId,
-      plano: form.plano,
-      plano_nome: planoInfo?.name ?? null,
-      valor: form.valorFinal
-        ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}`
-        : (planoInfo?.valor ?? null),
-      score: form.score ? Number(form.score) : null,
-      score_max: form.scoreMax ? Number(form.scoreMax) : null,
-      storage_path: storagePath,
-      file_name: fileName,
-      created_by: userRes.user?.id ?? null,
-    })
-    .select("id")
-    .single();
-  if (insErr || !orcInserted) {
-    console.error("[saveOrcamento] erro insert orcamentos:", insErr);
-    await supabase.storage.from("orcamentos").remove([storagePath]);
-    throw insErr ?? new Error("Falha ao inserir orçamento.");
-  }
-
-  const orcamentoId = orcInserted.id;
-  console.log("[saveOrcamento] orçamento inserido id:", orcamentoId);
-
-  // Passo D — Inserir módulos contratados em cliente_modulos
-  if (modulosSelecionados.length > 0) {
-    const distribuidos = distribuirMesesExecucao(modulosSelecionados);
-    const rows = distribuidos.map((m) => ({
-      cliente_id: clienteId,
-      modulo_id: m.id,
-      orcamento_id: orcamentoId,
-      mes_execucao: m.mes_execucao,
-      status: "pendente",
-    }));
-
-    console.log("[saveOrcamento] inserindo cliente_modulos:", {
-      qtd: rows.length,
-      rows,
+    console.log("[saveOrcamento] início", {
+      clienteId,
+      modulosRecebidos: modulosSelecionados.length,
+      amostra: modulosSelecionados.slice(0, 3),
     });
 
-    const { data: cmData, error: cmErr } = await supabase
-      .from("cliente_modulos")
-      .upsert(rows, {
-        onConflict: "cliente_id,modulo_id",
-        ignoreDuplicates: true,
+    const blob = await generateOrcamentoPDFBlob();
+    console.log("[saveOrcamento] PDF gerado", blob.size);
+
+    const planoInfo = PLANOS[form.plano];
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const safeNome = (form.nomeClinica || form.nomeCliente || "cliente")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const fileName = `orcamento-${safeNome}-${ts}.pdf`;
+    const storagePath = `${clienteId}/${fileName}`;
+
+    const { error: upErr } = await supabase.storage
+      .from("orcamentos")
+      .upload(storagePath, blob, { contentType: "application/pdf", upsert: false });
+    if (upErr) throw upErr;
+    console.log("[saveOrcamento] upload ok", storagePath);
+
+    const { data: userRes } = await supabase.auth.getUser();
+
+    const { data: orcInserted, error: insErr } = await supabase
+      .from("orcamentos")
+      .insert({
+        cliente_id: clienteId,
+        plano: form.plano,
+        plano_nome: planoInfo?.name ?? null,
+        valor: form.valorFinal
+          ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}`
+          : (planoInfo?.valor ?? null),
+        score: form.score ? Number(form.score) : null,
+        score_max: form.scoreMax ? Number(form.scoreMax) : null,
+        storage_path: storagePath,
+        file_name: fileName,
+        created_by: userRes.user?.id ?? null,
       })
-      .select();
-    if (cmErr) {
-      console.error("[saveOrcamento] erro cliente_modulos:", cmErr);
-      throw cmErr;
+      .select("id")
+      .single();
+    if (insErr || !orcInserted) {
+      await supabase.storage.from("orcamentos").remove([storagePath]);
+      throw insErr ?? new Error("Falha ao inserir orçamento.");
     }
-    console.log("[saveOrcamento] cliente_modulos OK, inseridos:", cmData?.length ?? 0);
-  } else {
-    console.warn("[saveOrcamento] nenhum módulo selecionado — pulando cliente_modulos");
-  }
+    console.log("[saveOrcamento] orcamento inserido", orcInserted);
 
-  // Passo E — Ativar projeto do cliente
-  const { data: updData, error: updErr } = await supabase
-    .from("clientes")
-    .update({ status: "projeto_ativo" })
-    .eq("id", clienteId)
-    .select("id, status");
-  if (updErr) {
-    console.error("[saveOrcamento] erro update cliente:", updErr);
-    throw updErr;
-  }
-  console.log("[saveOrcamento] cliente atualizado:", updData);
+    const orcamentoId = orcInserted.id;
 
-  return { fileName, storagePath, orcamentoId };
+    if (modulosSelecionados.length > 0) {
+      const distribuidos = distribuirMesesExecucao(modulosSelecionados);
+      const rows = distribuidos.map((m) => ({
+        cliente_id: clienteId,
+        modulo_id: m.id,
+        orcamento_id: orcamentoId,
+        mes_execucao: m.mes_execucao,
+        status: "pendente",
+      }));
+
+      console.log("[saveOrcamento] inserindo cliente_modulos", rows.length, rows);
+
+      const { data: cmData, error: cmErr } = await supabase
+        .from("cliente_modulos")
+        .upsert(rows, {
+          onConflict: "cliente_id,modulo_id",
+          ignoreDuplicates: true,
+        })
+        .select();
+      if (cmErr) throw cmErr;
+      console.log("[saveOrcamento] cliente_modulos inseridos", cmData);
+    } else {
+      console.log("[saveOrcamento] nenhum módulo selecionado");
+    }
+
+    const { data: updData, error: updErr } = await supabase
+      .from("clientes")
+      .update({ status: "projeto_ativo" })
+      .eq("id", clienteId)
+      .select("id, status");
+    if (updErr) throw updErr;
+    console.log("[saveOrcamento] cliente atualizado", updData);
+
+    return { fileName, storagePath, orcamentoId };
+  } catch (error) {
+    console.error("[saveOrcamento] ERRO", error);
+    throw error;
+  }
 }
 
 export async function listOrcamentosByCliente(clienteId: string): Promise<OrcamentoSalvo[]> {
