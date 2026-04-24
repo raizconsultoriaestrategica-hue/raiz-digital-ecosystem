@@ -6,6 +6,7 @@ export type KpiKey =
   | "taxa_no_show"
   | "taxa_followup"
   | "tempo_resposta_min"
+  | "tempo_resposta_lead"
   | "faturamento_bruto"
   | "margem_liquida"
   | "overhead"
