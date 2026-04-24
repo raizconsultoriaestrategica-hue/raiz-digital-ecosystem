@@ -8,12 +8,13 @@ import { cn } from "@/lib/utils";
 import {
   getClassif, getPlano, getScore, getSortedByPct, getStatus, getTotals,
 } from "../logic";
-import type { ClientData, Ramo, ScoresMap, SelOpts } from "../types";
+import type { ClientData, KpisIniciaisData, Pilar, Ramo, ScoresMap, SelOpts } from "../types";
 import { RadarPilares } from "../components/RadarPilares";
 import { PlanoCard } from "../components/PlanoCard";
 import { generatePDF } from "../pdf";
 import { saveDiagnosticoToSupabase, updateDiagnosticoNotasInSupabase } from "../persistence";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface ResultScreenProps {
@@ -24,6 +25,8 @@ interface ResultScreenProps {
   clienteId: string | null;
   notas: string;
   analise: string;
+  kpisIniciais: KpisIniciaisData;
+  activePilares: Pilar[];
   onNotasChange: (v: string) => void;
   onAnaliseChange: (v: string) => void;
   onRestart: () => void;
