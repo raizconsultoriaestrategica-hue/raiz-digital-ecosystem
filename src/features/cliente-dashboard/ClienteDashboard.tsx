@@ -1,0 +1,213 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import TopBar from "./components/TopBar";
+import HeroCard from "./components/HeroCard";
+import FaturamentoRow from "./components/FaturamentoRow";
+import KpiGrid from "./components/KpiGrid";
+import RoiCard from "./components/RoiCard";
+import ChartsRow from "./components/ChartsRow";
+import ModulesGrid from "./components/ModulesGrid";
+import InsightsCard from "./components/InsightsCard";
+import PresentationMode from "./components/PresentationMode";
+import {
+  avgModuloPct, groupRows, parseConfig, parseInsight, parseKpis,
+  parseModulos, parsePilares,
+} from "./logic";
+import type { DashboardRow } from "./types";
+
+interface Cliente {
+  id: string;
+  nome_cliente: string;
+  nome_clinica: string | null;
+  cidade: string | null;
+  especialidade: string | null;
+  ramo: string | null;
+  orcamento_inicial: number | null;
+  meta_faturamento: number | null;
+  data_inicio_projeto: string | null;
+  mes_referencia: string | null;
+  pilares_foco: string | null;
+  modulos_ativos: string | null;
+}
+
+export default function ClienteDashboard() {
+  const { user, signOut } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [rows, setRows] = useState<DashboardRow[]>([]);
+  const [presentation, setPresentation] = useState(false);
+
+  // Carga
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!user) return;
+      setLoading(true);
+      const { data: clientes } = await supabase
+        .from("clientes")
+        .select(
+          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos",
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+      const c = clientes?.[0] as Cliente | undefined;
+      if (!active) return;
+      if (!c) { setCliente(null); setRows([]); setLoading(false); return; }
+      setCliente(c);
+
+      const { data } = await supabase
+        .from("dashboard_data")
+        .select("tipo, campo, valor, benchmark, mes, updated_at")
+        .eq("cliente_id", c.id);
+
+      if (!active) return;
+      setRows((data as DashboardRow[]) ?? []);
+      setLoading(false);
+    }
+    load();
+    return () => { active = false; };
+  }, [user]);
+
+  // Atalho P para apresentação
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key.toLowerCase() === "p") setPresentation((v) => !v);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Parse
+  const grouped = useMemo(() => groupRows(rows), [rows]);
+  const cfgFromRows = useMemo(() => parseConfig(grouped.CONFIG || []), [grouped]);
+  const cfg = useMemo(() => ({
+    // Mescla CONFIG (dashboard_data) com dados da tabela clientes
+    cliente_nome: cfgFromRows.cliente_nome || cliente?.nome_cliente,
+    nome_clinica: cfgFromRows.nome_clinica || cliente?.nome_clinica || undefined,
+    especialidade: cfgFromRows.especialidade || cliente?.especialidade || undefined,
+    cidade: cfgFromRows.cidade || cliente?.cidade || undefined,
+    faturamento_inicial: cfgFromRows.faturamento_inicial ?? (cliente?.orcamento_inicial ?? undefined),
+    meta_faturamento: cfgFromRows.meta_faturamento ?? (cliente?.meta_faturamento ?? undefined),
+    inicio_consultoria: cfgFromRows.inicio_consultoria || cliente?.data_inicio_projeto || undefined,
+    mes_referencia: cfgFromRows.mes_referencia || cliente?.mes_referencia || undefined,
+    ramo: cfgFromRows.ramo || cliente?.ramo || undefined,
+    pilares_foco: cfgFromRows.pilares_foco || cliente?.pilares_foco || undefined,
+    modulos_ativos: cfgFromRows.modulos_ativos || cliente?.modulos_ativos || undefined,
+  }), [cfgFromRows, cliente]);
+
+  const pilares = useMemo(() => parsePilares(grouped.PILAR || []), [grouped]);
+  const kpis = useMemo(() => parseKpis(grouped.KPI || []), [grouped]);
+  const modulos = useMemo(() => parseModulos(grouped.MODULO || []), [grouped]);
+  const insight = useMemo(() => parseInsight(grouped.INSIGHT || []), [grouped]);
+  const avg = useMemo(() => avgModuloPct(modulos), [modulos]);
+
+  const userName = cliente?.nome_cliente || user?.email || "Você";
+
+  // ---------- LOADING ----------
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-verde-raiz">
+        <span className="font-display text-4xl text-linho">
+          Raiz<span className="text-dourado">.</span>
+        </span>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-dourado/20 border-t-dourado" />
+        <p className="text-sm text-linho/70">Carregando dashboard...</p>
+      </div>
+    );
+  }
+
+  // ---------- EMPTY ----------
+  const isEmpty = !cliente || (rows.length === 0);
+  if (isEmpty) {
+    return (
+      <div className="min-h-screen bg-off-white">
+        <TopBar
+          userName={userName}
+          onTogglePresentation={() => setPresentation(true)}
+          onSignOut={signOut}
+        />
+        <main className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-verde-musgo">
+            Em preparação
+          </span>
+          <h1 className="mt-3 font-display text-3xl text-verde-raiz sm:text-4xl">
+            Seu dashboard está sendo preparado
+          </h1>
+          <p className="mt-3 text-quase-preto/70">
+            O consultor irá ativar em breve. Assim que os primeiros KPIs forem
+            registrados, você verá tudo aqui.
+          </p>
+          <div className="mt-6">
+            <Button asChild variant="outline" className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5">
+              <Link to="/">Voltar ao início</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ---------- DASHBOARD ----------
+  return (
+    <div className="min-h-screen bg-off-white">
+      <TopBar
+        userName={userName}
+        onTogglePresentation={() => setPresentation(true)}
+        onSignOut={signOut}
+      />
+
+      <main className="mx-auto max-w-[1320px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        <HeroCard cfg={cfg} avgPct={avg} />
+        <FaturamentoRow cfg={cfg} />
+
+        {kpis.length > 0 ? (
+          <KpiGrid kpis={kpis} />
+        ) : (
+          <EmptyBlock title="Sem KPIs ainda" hint="O consultor está coletando os primeiros indicadores." />
+        )}
+
+        <RoiCard kpis={kpis} faturamentoBase={cfg.faturamento_inicial} />
+
+        <ChartsRow pilares={pilares} kpis={kpis} />
+
+        <ModulesGrid modulos={modulos} />
+
+        <InsightsCard texto={insight} cfg={cfg} />
+
+        <footer className="border-t border-border/60 pt-4 text-center text-[11px] uppercase tracking-[0.2em] text-quase-preto/45">
+          Dashboard de Acompanhamento — Raiz Consultoria Estratégica · Atualizado pelo consultor
+        </footer>
+      </main>
+
+      <PresentationMode
+        open={presentation}
+        onClose={() => setPresentation(false)}
+        cfg={cfg}
+        kpis={kpis}
+        pilares={pilares}
+      />
+    </div>
+  );
+}
+
+function EmptyBlock({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <section className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
+      <div className="font-display text-xl text-verde-raiz">{title}</div>
+      {hint && <p className="mt-1 text-sm text-quase-preto/60">{hint}</p>}
+      <div className="mx-auto mt-5 grid max-w-3xl gap-3 sm:grid-cols-3">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    </section>
+  );
+}
