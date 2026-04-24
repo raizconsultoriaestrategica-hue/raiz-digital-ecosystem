@@ -59,14 +59,15 @@ export function OrcamentoSidebar(p: Props) {
     [selecionados, p.modulosDb]
   );
 
-  // Sempre que o valor calculado muda, atualiza o "valor final" se ele estiver vazio
-  // ou igual ao último cálculo (heurística: se o consultor não editou manualmente).
+  // Mantém "Valor Final Acordado" sincronizado com o "Valor Calculado"
+  // até que o consultor o edite manualmente (rastreado por flag).
+  const [valorFinalEdited, setValorFinalEdited] = useState(false);
   useEffect(() => {
-    if (!p.form.valorFinal) {
+    if (!valorFinalEdited) {
       p.setField("valorFinal", String(valorCalculado));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valorCalculado]);
+  }, [valorCalculado, valorFinalEdited]);
 
   const handleSave = async () => {
     if (!p.clienteId) {
@@ -246,8 +247,8 @@ export function OrcamentoSidebar(p: Props) {
               type="number"
               min={0}
               max={100}
-              placeholder="—"
-              value={p.form.pilarScores[pi.id] ?? ""}
+              placeholder="0"
+              value={p.form.pilarScores[pi.id] ?? (pi.id === "p07" ? "0" : "")}
               onChange={(e) => p.setPilarScore(pi.id, e.target.value)}
               className="w-[52px] bg-white/[0.08] border border-white/15 rounded px-2 py-1 text-[12px] text-white text-center outline-none focus:border-dourado/60"
             />
@@ -339,7 +340,10 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls}
           placeholder={String(valorCalculado || 0)}
           value={p.form.valorFinal}
-          onChange={(e) => p.setField("valorFinal", e.target.value)}
+          onChange={(e) => {
+            setValorFinalEdited(true);
+            p.setField("valorFinal", e.target.value);
+          }}
         />
         <div className="mt-1 text-[10px] text-white/40">
           Editável — aplique desconto ou condição especial.
