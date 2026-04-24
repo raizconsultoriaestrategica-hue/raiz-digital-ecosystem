@@ -309,16 +309,21 @@ function Problema() {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-14 grid gap-6 md:grid-cols-2">
+          <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {PROBLEMAS.map((p) => (
               <article
                 key={p.n}
-                className="group relative overflow-hidden rounded-xl border border-border bg-linho p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-editorial"
+                className="group relative overflow-hidden rounded-xl border border-black/[0.08] bg-off-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft"
               >
-                <div className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 rounded-t-xl bg-dourado transition-transform duration-300 group-hover:scale-x-100" />
-                <div className="font-display text-3xl text-dourado">{p.n}</div>
-                <h3 className="mt-3 font-display text-2xl text-verde-raiz">{p.t}</h3>
-                <p className="mt-3 font-body font-light text-base leading-relaxed text-quase-preto/75">{p.d}</p>
+                <h3 className="font-display text-xl font-semibold text-verde-raiz">{p.t}</h3>
+                <p className="mt-3 max-w-[42ch] font-body text-sm leading-relaxed text-muted-foreground">{p.d}</p>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute bottom-2 right-3 select-none font-display leading-none text-dourado/20"
+                  style={{ fontSize: "64px" }}
+                >
+                  {p.n}
+                </span>
               </article>
             ))}
           </div>
