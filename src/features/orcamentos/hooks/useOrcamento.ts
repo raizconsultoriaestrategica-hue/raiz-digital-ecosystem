@@ -115,14 +115,13 @@ export function useOrcamento() {
         .eq("cliente_id", id)
         .eq("tipo", "PILAR")
         .eq("mes", "Diagnóstico"),
-      // 3. Faturamento bruto (não-PILAR) em dashboard_data
+      // 3. Faturamento bruto mais recente em dashboard_data
       supabase
         .from("dashboard_data")
-        .select("valor, tipo, mes, updated_at")
+        .select("valor, created_at")
         .eq("cliente_id", id)
         .eq("campo", "faturamento_bruto")
-        .neq("tipo", "PILAR")
-        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(1),
     ]);
 
