@@ -206,7 +206,7 @@ function Hero() {
       }}
     >
       <div className="container mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-5">
+        <div className="grid items-stretch gap-12 lg:grid-cols-5">
           {/* Coluna esquerda 60% */}
           <div className="lg:col-span-3">
             <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
@@ -241,8 +241,8 @@ function Hero() {
 
           {/* Coluna direita 40% */}
           <div className="flex justify-center lg:col-span-2 lg:justify-end">
-            <div className="relative">
-              <div className="relative aspect-[3/4] w-64 overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial md:w-80">
+            <div className="relative h-full w-full max-w-md">
+              <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial">
                 <img
                   src={patrickEstrategico}
                   alt="Patrick Ferreira, fundador e estrategista da Raiz Consultoria"
