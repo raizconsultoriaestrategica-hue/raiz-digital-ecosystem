@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      cliente_modulos: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          id: string
+          mes_execucao: number
+          modulo_id: string
+          observacoes: string | null
+          orcamento_id: string | null
+          status: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          mes_execucao: number
+          modulo_id: string
+          observacoes?: string | null
+          orcamento_id?: string | null
+          status?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          mes_execucao?: number
+          modulo_id?: string
+          observacoes?: string | null
+          orcamento_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_modulos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_modulos_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "modulos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_modulos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           cidade: string | null
@@ -179,6 +240,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      modulos: {
+        Row: {
+          codigo: string
+          created_at: string | null
+          descricao: string | null
+          fase: number
+          id: string
+          nome: string
+          ordem: number
+          pilar: number
+          pilar_nome: string
+          publico: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string | null
+          descricao?: string | null
+          fase: number
+          id?: string
+          nome: string
+          ordem: number
+          pilar: number
+          pilar_nome: string
+          publico?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string | null
+          descricao?: string | null
+          fase?: number
+          id?: string
+          nome?: string
+          ordem?: number
+          pilar?: number
+          pilar_nome?: string
+          publico?: string
+        }
+        Relationships: []
       }
       orcamentos: {
         Row: {
