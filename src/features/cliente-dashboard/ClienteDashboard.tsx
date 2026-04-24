@@ -138,18 +138,26 @@ export default function ClienteDashboard() {
   }, [pilaresAll, cfg.pilares_foco]);
   const kpisBase = useMemo(() => parseKpis(grouped.KPI || []), [grouped]);
   const kpis = useMemo(() => {
-    if (tempoRespostaScore === null) return kpisBase;
     const TEXTO: Record<number, string> = {
       0: "> 24h ou não responde",
       1: "Mesmo dia com atraso",
       2: "Até 2 horas",
       3: "Até 30 min (protocolo)",
     };
-    const score = Math.max(0, Math.min(3, Math.round(tempoRespostaScore)));
-    const status: "ok" | "warn" | "crit" =
-      score === 3 ? "ok" : score === 2 ? "warn" : "crit";
+    const hasScore = tempoRespostaScore !== null && tempoRespostaScore !== undefined;
+    const score = hasScore ? Math.max(0, Math.min(3, Math.round(tempoRespostaScore as number))) : null;
+
+    const status: "ok" | "warn" | "crit" | "neutral" =
+      score === null ? "neutral" : score === 3 ? "ok" : score === 2 ? "warn" : "crit";
     const statusLabel =
-      status === "ok" ? "✓ No benchmark" : status === "warn" ? "↗ Próximo" : "⚠ Abaixo";
+      score === null
+        ? "Sem dado"
+        : status === "ok"
+          ? "✓ No benchmark"
+          : status === "warn"
+            ? "↗ Próximo"
+            : "⚠ Abaixo";
+
     const tempoKpi = {
       key: "tempo_resposta_lead",
       label: "Tempo de Resposta Lead",
@@ -159,10 +167,11 @@ export default function ClienteDashboard() {
       higher: true,
       status,
       statusLabel,
-      pct: Math.round((score / 3) * 100),
-      valorTexto: TEXTO[score],
+      pct: score === null ? 0 : Math.round((score / 3) * 100),
+      valorTexto: score === null ? "Não informado" : TEXTO[score],
       benchmarkTexto: `Meta: ${TEXTO[3]}`,
     };
+
     // Insere logo após taxa_conversao se existir, senão no início
     const idx = kpisBase.findIndex((k) => k.key === "taxa_conversao");
     const out = [...kpisBase];
