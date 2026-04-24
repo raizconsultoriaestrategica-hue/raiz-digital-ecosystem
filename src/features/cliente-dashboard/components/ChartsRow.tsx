@@ -69,6 +69,9 @@ export default function ChartsRow({ pilares, kpis }: Props) {
       <div className="rounded-xl border border-border/70 bg-card p-5 shadow-soft">
         <h3 className="font-display text-xl text-verde-raiz">Atual × Benchmark</h3>
         <p className="text-xs text-quase-preto/60">Comparativo dos principais KPIs</p>
+        <p className="mt-1 text-[11px] text-quase-preto/50">
+          Valores normalizados como % do benchmark (100% = no benchmark)
+        </p>
         <div className="mt-4 h-[260px]">
           {chartKpis.length === 0 ? (
             <p className="flex h-full items-center justify-center text-sm text-quase-preto/50">
@@ -80,14 +83,19 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                 labels: chartKpis.map((k) => k.label),
                 datasets: [
                   {
-                    label: "Atual",
-                    data: chartKpis.map((k) => k.valor as number),
+                    label: "Atual (% do benchmark)",
+                    data: chartKpis.map((k) => {
+                      const bench = k.benchmark as number;
+                      const val = k.valor as number;
+                      if (!bench) return 0;
+                      return Math.round((val / bench) * 100);
+                    }),
                     backgroundColor: "#4A7C5F",
                     borderRadius: 4,
                   },
                   {
-                    label: "Benchmark",
-                    data: chartKpis.map((k) => k.benchmark as number),
+                    label: "Benchmark (100%)",
+                    data: chartKpis.map(() => 100),
                     backgroundColor: "rgba(201,168,76,0.4)",
                     borderRadius: 4,
                   },
@@ -102,14 +110,23 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                     callbacks: {
                       label: (ctx) => {
                         const k = chartKpis[ctx.dataIndex];
-                        return `${ctx.dataset.label}: ${fmtKpiValue(ctx.parsed.y, k.unidade)}`;
+                        const isAtual = ctx.datasetIndex === 0;
+                        const realValue = isAtual ? (k.valor as number) : (k.benchmark as number);
+                        const pct = ctx.parsed.y;
+                        return `${ctx.dataset.label}: ${pct}% (${fmtKpiValue(realValue, k.unidade)})`;
                       },
                     },
                   },
                 },
                 scales: {
                   x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                  y: { grid: { color: "rgba(0,0,0,0.05)" }, ticks: { font: { size: 10 } } },
+                  y: {
+                    grid: { color: "rgba(0,0,0,0.05)" },
+                    ticks: {
+                      font: { size: 10 },
+                      callback: (v) => `${v}%`,
+                    },
+                  },
                 },
               }}
             />
