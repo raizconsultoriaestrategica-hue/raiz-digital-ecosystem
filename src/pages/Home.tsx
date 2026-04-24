@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/accordion";
 import patrickEstrategico from "@/assets/patrick-estrategico.jpg";
 import patrickLifestyle from "@/assets/patrick-lifestyle.jpg";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 const WHATSAPP_URL = "https://wa.me/5544999993334";
 
@@ -154,8 +155,8 @@ function Nav() {
   return (
     <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "bg-verde-raiz/95 backdrop-blur shadow-soft" : "bg-transparent"}`}>
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-        <a href="#topo" className="font-display text-xl text-linho md:text-2xl">
-          Raiz <span className="font-body text-xs uppercase tracking-[0.22em] text-linho/60">Consultoria Estratégica</span>
+        <a href="#topo" className="inline-flex items-center" aria-label="Raiz Consultoria Estratégica">
+          <BrandLogo onDark className="h-9" />
         </a>
         <nav className="hidden items-center gap-8 lg:flex">
           {NAV_LINKS.map((l) => (
@@ -212,10 +213,11 @@ function Hero() {
               Consultoria Estratégica para Odontologia
             </span>
             <h1
-              className="mt-8 font-display font-medium leading-[1.05] text-linho"
-              style={{ fontSize: "clamp(2.25rem, 5.5vw, 4.5rem)" }}
+              className="mt-8 max-w-[18ch] font-display font-medium leading-[1.05] text-linho"
+              style={{ fontSize: "clamp(2.25rem, 4.8vw, 3.25rem)" }}
             >
-              Sua agenda está cheia. Seu faturamento está travado.{" "}
+              Sua agenda está cheia.<br />
+              Seu faturamento está travado.<br />
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
@@ -297,27 +299,31 @@ function Problema() {
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
             A realidade que ninguém quer ver
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            Você trabalha mais do que nunca.
-            <br />
+          <h2 className="mt-4 max-w-[22ch] font-display text-3xl text-verde-raiz md:text-4xl">
+            Você trabalha mais do que nunca.<br />
             E o resultado não cresce no mesmo ritmo.
           </h2>
-          <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/70">
+          <p className="mt-6 max-w-[680px] font-body font-light text-lg text-quase-preto/70">
             Isso não é falta de esforço. É um problema de estrutura. Existe uma causa raiz identificável para isso.
           </p>
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-14 grid gap-6 md:grid-cols-2">
+          <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {PROBLEMAS.map((p) => (
               <article
                 key={p.n}
-                className="group relative overflow-hidden rounded-xl border border-border bg-linho p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-editorial"
+                className="group relative overflow-hidden rounded-xl border border-black/[0.08] bg-off-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft"
               >
-                <div className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 rounded-t-xl bg-dourado transition-transform duration-300 group-hover:scale-x-100" />
-                <div className="font-display text-3xl text-dourado">{p.n}</div>
-                <h3 className="mt-3 font-display text-2xl text-verde-raiz">{p.t}</h3>
-                <p className="mt-3 font-body font-light text-base leading-relaxed text-quase-preto/75">{p.d}</p>
+                <h3 className="font-display text-xl font-semibold text-verde-raiz">{p.t}</h3>
+                <p className="mt-3 max-w-[42ch] font-body text-sm leading-relaxed text-muted-foreground">{p.d}</p>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute bottom-2 right-3 select-none font-display leading-none text-dourado/20"
+                  style={{ fontSize: "64px" }}
+                >
+                  {p.n}
+                </span>
               </article>
             ))}
           </div>
@@ -570,60 +576,57 @@ function Metodo() {
 function SeteP() {
   return (
     <section id="diagnostico" className="bg-verde-raiz py-20 md:py-28">
-      <div className="container mx-auto max-w-6xl px-6">
-        <Reveal>
-          <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-dourado">Diagnóstico 360°</span>
-          <h2 className="mt-4 font-display text-4xl text-linho md:text-5xl">
-            Os 7 pilares que determinam o crescimento da sua clínica
-          </h2>
-          <p className="mt-6 max-w-3xl font-body font-light text-lg text-linho/75">
-            Ignorar qualquer um desses pilares é como tentar encher um balde furado. O Diagnóstico 360° avalia todos com profundidade. Você recebe um plano de ação para cada um.
-          </p>
+      <div className="container mx-auto max-w-7xl px-6">
+        <div className="grid gap-12 lg:grid-cols-5">
+          {/* Coluna esquerda — 40% */}
+          <Reveal className="lg:col-span-2">
+            <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-dourado">Diagnóstico 360°</span>
+            <h2 className="mt-4 max-w-[20ch] font-display text-3xl text-linho md:text-[40px] md:leading-[1.1]">
+              Os 7 pilares que determinam o crescimento da sua clínica
+            </h2>
+            <p className="mt-6 max-w-[42ch] font-body font-light text-base leading-relaxed text-linho/75">
+              Ignorar qualquer um desses pilares é como tentar encher um balde furado. O Diagnóstico 360° avalia todos com profundidade.
+            </p>
 
-          <ul className="mt-8 grid max-w-3xl gap-3 md:grid-cols-2">
-            {[
-              "Avaliação completa dos 7 pilares em sessão estruturada de 2 a 3 horas",
-              "Relatório com pontuação por pilar e priorização de oportunidades",
-              "Plano de ação personalizado para os próximos 90 dias",
-              "Sem compromisso de contratação. Você decide o próximo passo",
-            ].map((b) => (
-              <li key={b} className="flex items-start gap-3 font-body font-light text-linho/85">
-                <Check className="mt-1 h-5 w-5 flex-shrink-0 text-dourado" />
-                <span>{b}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="mt-8 grid gap-3">
+              {[
+                "Sessão estruturada de 2 a 3 horas",
+                "Relatório com pontuação por pilar",
+                "Plano de ação personalizado de 90 dias",
+                "Sem compromisso de contratação",
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-3 font-body font-light text-sm text-linho/85">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-dourado" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
 
-          <div className="mt-8">
-            <Button asChild size="lg" className="bg-dourado px-8 py-6 text-marrom-raiz hover:bg-dourado/90">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar meu Diagnóstico</a>
-            </Button>
-          </div>
-        </Reveal>
+            <div className="mt-8">
+              <Button asChild size="lg" className="bg-dourado px-8 py-6 text-marrom-raiz hover:bg-dourado/90">
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar meu Diagnóstico</a>
+              </Button>
+            </div>
+          </Reveal>
 
-        <Reveal delay={150}>
-          <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {PILARES.map((p) => (
-              <article
-                key={p.n}
-                className="group relative overflow-hidden rounded-xl border border-dourado/20 bg-verde-raiz p-6 transition-all duration-300 hover:-translate-y-1 hover:border-dourado hover:shadow-md"
-              >
-                <span
-                  className="pointer-events-none absolute -bottom-6 -right-2 select-none font-display leading-none text-dourado/15"
-                  style={{ fontSize: "8rem" }}
-                  aria-hidden
+          {/* Coluna direita — 60% */}
+          <Reveal delay={150} className="lg:col-span-3">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {PILARES.map((p) => (
+                <article
+                  key={p.n}
+                  className="rounded-[10px] border border-linho/[0.12] bg-linho/[0.08] px-5 py-4 transition-colors duration-300 hover:border-dourado/40 hover:bg-linho/[0.12]"
                 >
-                  {p.n}
-                </span>
-                <div className="relative font-body text-xs font-semibold uppercase tracking-[0.22em] text-dourado">
-                  Pilar {p.n}
-                </div>
-                <h3 className="relative mt-2 font-display text-2xl text-linho">{p.t}</h3>
-                <p className="relative mt-3 font-body font-light text-sm leading-relaxed text-linho/70">{p.d}</p>
-              </article>
-            ))}
-          </div>
-        </Reveal>
+                  <div className="font-body text-[11px] font-semibold uppercase tracking-[0.22em] text-dourado">
+                    Pilar {p.n}
+                  </div>
+                  <h3 className="mt-1.5 font-display text-lg leading-tight text-linho">{p.t}</h3>
+                  <p className="mt-2 font-body font-light text-[13px] leading-relaxed text-linho/60">{p.d}</p>
+                </article>
+              ))}
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
