@@ -41,6 +41,7 @@ export default function ClienteDashboard() {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [presentation, setPresentation] = useState(false);
+  const [tempoRespostaScore, setTempoRespostaScore] = useState<number | null>(null);
 
   // Carga
   useEffect(() => {
@@ -62,13 +63,31 @@ export default function ClienteDashboard() {
       if (!c) { setCliente(null); setRows([]); setLoading(false); return; }
       setCliente(c);
 
-      const { data } = await supabase
-        .from("dashboard_data")
-        .select("tipo, campo, valor, benchmark, mes, updated_at")
-        .eq("cliente_id", c.id);
+      const [{ data: dashData }, { data: diagData }] = await Promise.all([
+        supabase
+          .from("dashboard_data")
+          .select("tipo, campo, valor, benchmark, mes, updated_at")
+          .eq("cliente_id", c.id),
+        supabase
+          .from("diagnostics")
+          .select("scores")
+          .eq("client_id", c.id)
+          .order("created_at", { ascending: false })
+          .limit(1),
+      ]);
 
       if (!active) return;
-      setRows((data as DashboardRow[]) ?? []);
+      setRows((dashData as DashboardRow[]) ?? []);
+
+      // Extrai score da 1ª pergunta do Pilar 03 (tempo de resposta a leads)
+      const scores = (diagData?.[0]?.scores ?? null) as Record<string, unknown> | null;
+      const p03 = scores?.p03;
+      if (Array.isArray(p03) && typeof p03[0] === "number") {
+        setTempoRespostaScore(p03[0] as number);
+      } else {
+        setTempoRespostaScore(null);
+      }
+
       setLoading(false);
     }
     load();
@@ -117,7 +136,39 @@ export default function ClienteDashboard() {
     );
     return filtered.length > 0 ? filtered : pilaresAll;
   }, [pilaresAll, cfg.pilares_foco]);
-  const kpis = useMemo(() => parseKpis(grouped.KPI || []), [grouped]);
+  const kpisBase = useMemo(() => parseKpis(grouped.KPI || []), [grouped]);
+  const kpis = useMemo(() => {
+    if (tempoRespostaScore === null) return kpisBase;
+    const TEXTO: Record<number, string> = {
+      0: "> 24h ou não responde",
+      1: "Mesmo dia com atraso",
+      2: "Até 2 horas",
+      3: "Até 30 min (protocolo)",
+    };
+    const score = Math.max(0, Math.min(3, Math.round(tempoRespostaScore)));
+    const status: "ok" | "warn" | "crit" =
+      score === 3 ? "ok" : score === 2 ? "warn" : "crit";
+    const statusLabel =
+      status === "ok" ? "✓ No benchmark" : status === "warn" ? "↗ Próximo" : "⚠ Abaixo";
+    const tempoKpi = {
+      key: "tempo_resposta_lead",
+      label: "Tempo de Resposta Lead",
+      valor: score,
+      benchmark: 3,
+      unidade: "" as const,
+      higher: true,
+      status,
+      statusLabel,
+      pct: Math.round((score / 3) * 100),
+      valorTexto: TEXTO[score],
+      benchmarkTexto: `Meta: ${TEXTO[3]}`,
+    };
+    // Insere logo após taxa_conversao se existir, senão no início
+    const idx = kpisBase.findIndex((k) => k.key === "taxa_conversao");
+    const out = [...kpisBase];
+    out.splice(idx >= 0 ? idx + 1 : 0, 0, tempoKpi);
+    return out;
+  }, [kpisBase, tempoRespostaScore]);
   const modulos = useMemo(() => parseModulos(grouped.MODULO || []), [grouped]);
   const insight = useMemo(() => parseInsight(grouped.INSIGHT || []), [grouped]);
   const avg = useMemo(() => avgModuloPct(modulos), [modulos]);
