@@ -104,7 +104,19 @@ export default function ClienteDashboard() {
     modulos_ativos: cfgFromRows.modulos_ativos || cliente?.modulos_ativos || undefined,
   }), [cfgFromRows, cliente]);
 
-  const pilares = useMemo(() => parsePilares(grouped.PILAR || []), [grouped]);
+  const pilaresAll = useMemo(() => parsePilares(grouped.PILAR || []), [grouped]);
+  const pilares = useMemo(() => {
+    const raw = (cfg.pilares_foco || "").trim();
+    if (!raw) return pilaresAll;
+    const norm = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const foco = raw.split(/[,;|]/).map(norm).filter(Boolean);
+    if (foco.length === 0) return pilaresAll;
+    const filtered = pilaresAll.filter((p) =>
+      foco.some((f) => norm(p.label).includes(f) || norm(p.key) === f || p.num === f),
+    );
+    return filtered.length > 0 ? filtered : pilaresAll;
+  }, [pilaresAll, cfg.pilares_foco]);
   const kpis = useMemo(() => parseKpis(grouped.KPI || []), [grouped]);
   const modulos = useMemo(() => parseModulos(grouped.MODULO || []), [grouped]);
   const insight = useMemo(() => parseInsight(grouped.INSIGHT || []), [grouped]);
