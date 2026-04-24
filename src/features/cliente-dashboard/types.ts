@@ -49,6 +49,10 @@ export interface KpiItem {
   status: "ok" | "warn" | "crit" | "neutral";
   statusLabel: string;
   pct: number;           // 0-100 para barra
+  /** Texto exibido no lugar do número (ex.: "Até 30 min") */
+  valorTexto?: string;
+  /** Texto exibido no lugar de "Meta X" (ex.: "Meta: Até 30 min") */
+  benchmarkTexto?: string;
 }
 
 export interface ModuloItem {
