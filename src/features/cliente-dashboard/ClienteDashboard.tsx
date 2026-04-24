@@ -253,6 +253,15 @@ export default function ClienteDashboard() {
 
         <ModulesGrid modulos={modulos} />
 
+        {cliente?.status === "projeto_ativo" && (
+          <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-soft">
+            <CronogramaModulos
+              clienteId={cliente.id}
+              dataInicioProj={cliente.data_inicio_projeto ?? null}
+            />
+          </div>
+        )}
+
         <InsightsCard texto={insight} cfg={cfg} />
 
         <footer className="border-t border-border/60 pt-4 text-center text-[11px] uppercase tracking-[0.2em] text-quase-preto/45">
