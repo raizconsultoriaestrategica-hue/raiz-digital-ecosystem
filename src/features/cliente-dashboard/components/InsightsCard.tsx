@@ -1,5 +1,6 @@
 import { fmtBRL } from "../logic";
 import type { ClienteCfg } from "../types";
+import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface Props {
   texto: string;
@@ -10,6 +11,7 @@ export default function InsightsCard({ texto, cfg }: Props) {
   if (!texto) return null;
   return (
     <section className="relative overflow-hidden rounded-xl bg-verde-raiz p-7 sm:p-9 shadow-editorial">
+      <BrandSymbolBg size={280} opacity={0.08} position="bottom-right" white />
       <span
         aria-hidden
         className="pointer-events-none absolute -top-6 left-4 select-none font-display text-[100px] leading-none text-dourado/12"
@@ -17,7 +19,7 @@ export default function InsightsCard({ texto, cfg }: Props) {
       >
         “
       </span>
-      <div className="relative">
+      <div className="relative z-10">
         <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-dourado">
           Análise Estratégica
         </span>

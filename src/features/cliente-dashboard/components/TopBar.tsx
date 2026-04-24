@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Maximize2, LogOut } from "lucide-react";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 interface Props {
   userName: string;
@@ -24,9 +25,7 @@ export default function TopBar({ userName, onTogglePresentation, onSignOut }: Pr
       className="sticky top-0 z-40 flex h-[58px] items-center justify-between border-b-2 border-dourado bg-verde-raiz px-4 sm:px-6"
     >
       <div className="flex items-center gap-3">
-        <span className="font-display text-2xl text-linho">
-          Raiz<span className="text-dourado">.</span>
-        </span>
+        <BrandLogo onDark className="h-7" />
       </div>
 
       <div className="hidden items-center gap-3 md:flex">

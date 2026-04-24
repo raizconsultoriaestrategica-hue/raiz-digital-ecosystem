@@ -3,6 +3,7 @@ import KpiCard from "./KpiCard";
 import RoiCard from "./RoiCard";
 import { fmtDate } from "../logic";
 import type { ClienteCfg, KpiItem, PilarScore } from "../types";
+import BrandSymbolBg from "@/components/brand/BrandSymbolBg";
 
 interface Props {
   open: boolean;
@@ -42,7 +43,8 @@ export default function PresentationMode({ open, onClose, cfg, kpis, pilares }: 
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-auto" style={{ backgroundColor: "#0D2218" }}>
-      <div className="mx-auto max-w-[1400px] px-8 py-8">
+      <BrandSymbolBg size={500} opacity={0.05} position="center" white className="!fixed" />
+      <div className="relative z-10 mx-auto max-w-[1400px] px-8 py-8">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-dourado">
