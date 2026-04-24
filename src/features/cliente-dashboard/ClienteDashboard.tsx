@@ -54,7 +54,7 @@ export default function ClienteDashboard() {
       const { data: clientes } = await supabase
         .from("clientes")
         .select(
-          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos",
+          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos, status",
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
