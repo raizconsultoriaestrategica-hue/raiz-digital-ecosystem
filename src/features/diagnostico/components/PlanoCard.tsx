@@ -24,18 +24,6 @@ export function PlanoCard({ plano }: PlanoCardProps) {
             </span>
           ))}
         </div>
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-dourado/20 bg-dourado/10 px-4 py-3.5">
-          <div>
-            <div className="text-[11px] text-linho/50">INVESTIMENTO MENSAL</div>
-            <div className="text-lg font-bold text-dourado">{plano.valor}</div>
-            <div className="text-[10px] text-linho/40">{plano.duracao}</div>
-          </div>
-          <div className="text-right text-xs text-linho/60">
-            Potencial:
-            <br />
-            <strong className="text-dourado">{plano.roi}</strong>
-          </div>
-        </div>
       </div>
     </div>
   );
