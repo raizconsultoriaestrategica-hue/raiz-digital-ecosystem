@@ -106,6 +106,8 @@ export default function Diagnostico() {
               clienteId={dx.state.clienteId}
               notas={dx.state.notas}
               analise={dx.state.analise}
+              kpisIniciais={dx.state.kpisIniciais}
+              activePilares={dx.activePilares}
               onNotasChange={dx.setNotas}
               onAnaliseChange={dx.setAnalise}
               onRestart={dx.reset}
