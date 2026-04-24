@@ -36,9 +36,11 @@ export default function Orcamentos() {
           selectCliente={orc.selectCliente}
           loadingClientes={orc.loadingClientes}
           loadingDiag={orc.loadingDiag}
+          modulosDb={orc.modulosDb}
+          loadingModulos={orc.loadingModulos}
           onPrint={handlePrint}
         />
-        <OrcamentoPreview form={orc.form} />
+        <OrcamentoPreview form={orc.form} modulosDb={orc.modulosDb} />
       </div>
     </div>
   );

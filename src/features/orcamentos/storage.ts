@@ -86,7 +86,7 @@ export async function saveOrcamento(form: OrcamentoForm, clienteId: string) {
     cliente_id: clienteId,
     plano: form.plano,
     plano_nome: planoInfo?.name ?? null,
-    valor: planoInfo?.valor ?? null,
+    valor: form.valorFinal ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}` : (planoInfo?.valor ?? null),
     score: form.score ? Number(form.score) : null,
     score_max: form.scoreMax ? Number(form.scoreMax) : null,
     storage_path: storagePath,

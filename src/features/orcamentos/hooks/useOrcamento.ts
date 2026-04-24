@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { initialForm, OrcamentoForm } from "../types";
+import { initialForm, OrcamentoForm, ModuloDb } from "../types";
 import { PILARES } from "../data";
 
 export interface ClienteOpt {
@@ -12,7 +12,7 @@ export interface ClienteOpt {
   especialidade: string | null;
 }
 
-function toNumeric(raw: string): number | null {
+function toNumeric(raw: string | number | null | undefined): number | null {
   if (raw == null) return null;
   let s = String(raw).trim();
   if (!s) return null;
@@ -23,24 +23,41 @@ function toNumeric(raw: string): number | null {
   return isNaN(n) ? null : Math.round(n);
 }
 
+/** Pilar id "p01" → número 1 */
+function pilarIdToNum(pid: string): number {
+  return parseInt(pid.replace(/\D/g, ""), 10);
+}
+
 export function useOrcamento() {
   const [form, setForm] = useState<OrcamentoForm>(initialForm);
   const [clientes, setClientes] = useState<ClienteOpt[]>([]);
   const [clienteId, setClienteId] = useState<string>("");
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [loadingDiag, setLoadingDiag] = useState(false);
+  const [modulosDb, setModulosDb] = useState<ModuloDb[]>([]);
+  const [loadingModulos, setLoadingModulos] = useState(true);
 
-  // Buscar clientes
+  // Buscar clientes + módulos em paralelo
   useEffect(() => {
     (async () => {
-      setLoadingClientes(true);
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("id, nome_cliente, nome_clinica, cidade, especialidade")
-        .order("nome_cliente");
-      if (error) toast.error("Erro ao carregar clientes: " + error.message);
-      setClientes(data || []);
+      const [cliRes, modRes] = await Promise.all([
+        supabase
+          .from("clientes")
+          .select("id, nome_cliente, nome_clinica, cidade, especialidade")
+          .order("nome_cliente"),
+        supabase
+          .from("modulos")
+          .select("id, codigo, nome, pilar, pilar_nome, fase")
+          .order("pilar")
+          .order("ordem"),
+      ]);
+      if (cliRes.error) toast.error("Erro ao carregar clientes: " + cliRes.error.message);
+      setClientes(cliRes.data || []);
       setLoadingClientes(false);
+
+      if (modRes.error) toast.error("Erro ao carregar módulos: " + modRes.error.message);
+      setModulosDb((modRes.data || []) as ModuloDb[]);
+      setLoadingModulos(false);
     })();
   }, []);
 
@@ -50,8 +67,8 @@ export function useOrcamento() {
   const setPilarScore = (pilarId: string, value: string) =>
     setForm((f) => ({ ...f, pilarScores: { ...f.pilarScores, [pilarId]: value } }));
 
-  const toggleModulo = (modId: string) =>
-    setForm((f) => ({ ...f, modulos: { ...f.modulos, [modId]: !f.modulos[modId] } }));
+  const toggleModulo = (codigo: string) =>
+    setForm((f) => ({ ...f, modulos: { ...f.modulos, [codigo]: !f.modulos[codigo] } }));
 
   const reset = () => {
     if (!confirm("Limpar todos os dados e começar uma nova proposta?")) return;
@@ -59,87 +76,106 @@ export function useOrcamento() {
     setClienteId("");
   };
 
-  // Selecionar cliente → pré-preenche dados + busca diagnóstico + CONFIG
+  /** Marca automaticamente módulos cujo pilar tem score < 50% */
+  function autoSelecionarModulos(
+    pilarScores: Record<string, string>,
+    mods: ModuloDb[]
+  ): Record<string, boolean> {
+    const sel: Record<string, boolean> = {};
+    for (const m of mods) {
+      const pid = `p${String(m.pilar).padStart(2, "0")}`;
+      const raw = pilarScores[pid];
+      if (raw === undefined || raw === "") continue;
+      const v = parseFloat(raw);
+      if (!isNaN(v) && v < 50) sel[m.codigo] = true;
+    }
+    return sel;
+  }
+
+  // Selecionar cliente → pré-preenche dados + busca diagnóstico
   const selectCliente = async (id: string) => {
     setClienteId(id);
     if (!id) return;
-    const c = clientes.find((x) => x.id === id);
-    if (c) {
-      setForm((f) => ({
-        ...f,
-        nomeCliente: c.nome_cliente || "",
-        nomeClinica: c.nome_clinica || "",
-        cidade: c.cidade || "",
-        especialidade: c.especialidade || "",
-      }));
-    }
 
-    // Buscar diagnóstico salvo + CONFIG (faturamento/meta/dor) em duas queries
     setLoadingDiag(true);
-    const [diagRes, cfgRes] = await Promise.all([
+
+    // 1. Dados completos do cliente da tabela clientes
+    const [cliFullRes, diagRes] = await Promise.all([
+      supabase
+        .from("clientes")
+        .select(
+          "nome_cliente, nome_clinica, especialidade, cidade, orcamento_inicial, meta_faturamento, pilares_foco"
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      // 2. Scores dos pilares no diagnóstico
       supabase
         .from("dashboard_data")
-        .select("campo, valor, benchmark, tipo, mes")
+        .select("campo, valor, benchmark")
         .eq("cliente_id", id)
         .eq("tipo", "PILAR")
         .eq("mes", "Diagnóstico"),
-      supabase
-        .from("dashboard_data")
-        .select("campo, valor, benchmark, tipo, mes")
-        .eq("cliente_id", id)
-        .eq("tipo", "CONFIG"),
     ]);
+
     setLoadingDiag(false);
 
+    if (cliFullRes.error) {
+      toast.error("Erro ao buscar cliente: " + cliFullRes.error.message);
+      return;
+    }
     if (diagRes.error) {
       toast.error("Erro ao buscar diagnóstico: " + diagRes.error.message);
-      return;
-    }
-    if (cfgRes.error) {
-      toast.error("Erro ao buscar contexto: " + cfgRes.error.message);
-      return;
-    }
-    const data = [...(diagRes.data || []), ...(cfgRes.data || [])];
-    if (data.length === 0) {
-      toast.info("Nenhum diagnóstico ou contexto salvo para este cliente");
-      return;
     }
 
-    // Mapeia: SCORE_TOTAL → score/scoreMax; pilares → pilarScores; CONFIG → fat/meta/dor
-    const updates: Partial<OrcamentoForm> = { pilarScores: {} };
+    const cli = cliFullRes.data;
+    const updates: Partial<OrcamentoForm> = {};
+
+    if (cli) {
+      updates.nomeCliente = cli.nome_cliente || "";
+      updates.nomeClinica = cli.nome_clinica || "";
+      updates.especialidade = cli.especialidade || "";
+      updates.cidade = cli.cidade || "";
+      updates.faturamento =
+        cli.orcamento_inicial != null ? String(cli.orcamento_inicial) : "";
+      updates.meta =
+        cli.meta_faturamento != null ? String(cli.meta_faturamento) : "";
+      updates.dor = cli.pilares_foco || "";
+    }
+
+    // 3. Mapear scores por pilar (apenas campos começando com p0)
     const pilarScores: Record<string, string> = {};
+    let scoreTotal = 0;
+    let benchTotal = 0;
 
-    data.forEach((row) => {
-      if (row.tipo === "CONFIG") {
-        if (row.campo === "fat" && row.valor) updates.faturamento = String(toNumeric(row.valor) ?? row.valor);
-        else if (row.campo === "meta" && row.valor) updates.meta = String(toNumeric(row.valor) ?? row.valor);
-        else if (row.campo === "dor" && row.valor) updates.dor = row.valor;
-        else if (row.campo === "especialidade" && row.valor) updates.especialidade = row.valor;
-        return;
-      }
-      // tipo === PILAR
-      if (row.campo === "SCORE_TOTAL") {
-        updates.score = row.valor || "";
-        updates.scoreMax = row.benchmark || "";
-      } else if (row.campo === "CLASSIFICACAO") {
-        // ignora — derivamos do score
-      } else {
-        // Match por ID (p01..p07) primeiro; fallback por nome (retrocompat)
+    (diagRes.data || []).forEach((row) => {
+      const campo = row.campo || "";
+      if (!/^p0\d/i.test(campo)) return;
+
+      const v = parseFloat(row.valor || "");
+      const b = parseFloat(row.benchmark || "");
+      if (!isNaN(v) && !isNaN(b) && b > 0) {
+        // Match por id (p01..p07); match case-insensitive
         const pilar =
-          PILARES.find((p) => p.id === row.campo) ??
-          PILARES.find((p) => p.name === row.campo) ??
-          PILARES.find((p) => row.campo && p.name.startsWith(row.campo));
-        if (pilar && row.valor && row.benchmark) {
-          const v = parseFloat(row.valor);
-          const b = parseFloat(row.benchmark);
-          if (b > 0 && !isNaN(v)) {
-            pilarScores[pilar.id] = String(Math.round((v / b) * 100));
-          }
+          PILARES.find((p) => p.id.toLowerCase() === campo.toLowerCase()) ?? null;
+        if (pilar) {
+          pilarScores[pilar.id] = String(Math.round((v / b) * 100));
+          scoreTotal += v;
+          benchTotal += b;
         }
       }
     });
 
     updates.pilarScores = pilarScores;
+    if (benchTotal > 0) {
+      updates.score = String(Math.round(scoreTotal));
+      updates.scoreMax = String(Math.round(benchTotal));
+    }
+
+    // 4. Auto-seleção inteligente de módulos (pilares com score < 50%)
+    if (modulosDb.length > 0 && Object.keys(pilarScores).length > 0) {
+      updates.modulos = autoSelecionarModulos(pilarScores, modulosDb);
+    }
+
     setForm((f) => ({ ...f, ...updates }));
     toast.success("Dados do cliente carregados");
   };
@@ -155,5 +191,7 @@ export function useOrcamento() {
     selectCliente,
     loadingClientes,
     loadingDiag,
+    modulosDb,
+    loadingModulos,
   };
 }

@@ -1,12 +1,13 @@
 import { useMemo } from "react";
-import { PILARES, PLANOS, MODULOS_ALL, fmtMoney, getBarColor, classifFor } from "../data";
-import type { OrcamentoForm } from "../types";
+import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor } from "../data";
+import { calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
 
 interface Props {
   form: OrcamentoForm;
+  modulosDb: ModuloDb[];
 }
 
-export function OrcamentoPreview({ form }: Props) {
+export function OrcamentoPreview({ form, modulosDb }: Props) {
   const data = useMemo(() => {
     const nomeCliente = form.nomeCliente || "Cliente";
     const nomeClinica = form.nomeClinica || "";
@@ -28,7 +29,14 @@ export function OrcamentoPreview({ form }: Props) {
       return { ...p, pct };
     });
 
-    const selectedMods = MODULOS_ALL.filter((m) => form.modulos[m.id]);
+    const selectedMods = modulosDb.filter((m) => form.modulos[m.codigo]);
+    const valorCalculado = calcValorModulos(
+      selectedMods.map((m) => m.codigo),
+      modulosDb
+    );
+    const valorFinalNum = parseFloat(form.valorFinal);
+    const valorFinal =
+      !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
 
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
@@ -57,8 +65,9 @@ export function OrcamentoPreview({ form }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
+      valorCalculado, valorFinal,
     };
-  }, [form]);
+  }, [form, modulosDb]);
 
   return (
     <div className="orc-doc-wrap flex-1 px-4 md:px-8 py-6 md:py-10 overflow-y-auto flex justify-center bg-[#E8E4E0]">
@@ -167,7 +176,7 @@ export function OrcamentoPreview({ form }: Props) {
                       key={m.id}
                       className="bg-[#f0f7f4] border border-verde-menta rounded-[5px] px-2.5 py-1 text-[11px] font-semibold text-verde-raiz"
                     >
-                      {m.id} · {m.name}
+                      {m.codigo} · {m.nome}
                     </div>
                   ))
                 ) : (
@@ -183,9 +192,16 @@ export function OrcamentoPreview({ form }: Props) {
                 Investimento Mensal
               </div>
               <div className="font-display text-[30px] font-semibold text-verde-raiz leading-none">
-                {data.plano.valor}/mês
+                {fmtMoney(data.valorFinal)}/mês
               </div>
-              <div className="text-[11px] text-[#718096] mt-1">{data.plano.dur}</div>
+              <div className="text-[11px] text-[#718096] mt-1">
+                {data.selectedMods.length} módulo{data.selectedMods.length === 1 ? "" : "s"} · {data.plano.dur}
+                {data.valorFinal !== data.valorCalculado && data.valorCalculado > 0 && (
+                  <span className="text-dourado">
+                    {" "}· condição especial (de {fmtMoney(data.valorCalculado)})
+                  </span>
+                )}
+              </div>
             </div>
             <div className="px-6 py-5 bg-white">
               <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
