@@ -34,7 +34,7 @@ export default function ChartsRow({ pilares, kpis }: Props) {
             </p>
           )}
           {pilares.map((p) => {
-            const MAX = 100;
+            const max = p.max || 0;
             const ini = p.inicial ?? 0;
             const atu = p.atual ?? ini;
             const delta = p.delta;
@@ -42,13 +42,15 @@ export default function ChartsRow({ pilares, kpis }: Props) {
               delta === null ? "text-quase-preto/40"
                 : delta > 0 ? "text-[#1F6B2E]"
                 : delta < 0 ? "text-[#A2271B]" : "text-quase-preto/50";
-            // Cor da barra atual com base nas zonas: 0-40 vermelho, 41-70 amarelo, 71-100 verde
+            // Percentuais para largura visual e zonas de cor
+            const pctIni = max > 0 ? Math.min(100, (ini / max) * 100) : 0;
+            const pctAtu = max > 0 ? Math.min(100, (atu / max) * 100) : 0;
             const barColor =
-              atu <= 40 ? "bg-[#A2271B]"
-                : atu <= 70 ? "bg-[#C9A84C]"
+              pctAtu <= 40 ? "bg-[#A2271B]"
+                : pctAtu <= 70 ? "bg-[#C9A84C]"
                 : "bg-[#2D5016]";
             return (
-              <div key={p.key}>
+              <div key={p.key} className="pt-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium text-quase-preto">
                     <span className="mr-2 font-display text-dourado">{p.num}</span>
@@ -62,19 +64,33 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                   </span>
                 </div>
                 <div className="mt-0.5 text-[10px] text-quase-preto/55">
-                  Score: {atu} / máximo {MAX}
+                  Score: {atu} / máximo {max}
                 </div>
-                <div className="relative mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-linho">
+                <div className="relative mt-3 h-2.5 w-full rounded-full bg-linho">
                   {/* Barra do score inicial (sombra leve) */}
-                  <div className="absolute inset-y-0 left-0 bg-verde-musgo/30" style={{ width: `${ini}%` }} />
-                  {/* Barra do score atual com cor por zona */}
-                  <div className={`absolute inset-y-0 left-0 ${barColor}`} style={{ width: `${atu}%` }} />
-                  {/* Marcador de meta mínima em 70% */}
                   <div
-                    className="absolute inset-y-0 border-l-2 border-dashed border-quase-preto/60"
+                    className="absolute inset-y-0 left-0 rounded-full bg-verde-musgo/30"
+                    style={{ width: `${pctIni}%` }}
+                  />
+                  {/* Barra do score atual com cor por zona */}
+                  <div
+                    className={`absolute inset-y-0 left-0 rounded-full ${barColor}`}
+                    style={{ width: `${pctAtu}%` }}
+                  />
+                  {/* Marcador "Meta" em 70% — linha tracejada espessa + label acima */}
+                  <div
+                    className="pointer-events-none absolute -top-3 bottom-0"
+                    style={{ left: "70%", transform: "translateX(-50%)" }}
+                    aria-label="Meta mínima 70%"
+                  >
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-verde-raiz px-1 text-[8px] font-bold uppercase tracking-wider text-linho">
+                      Meta
+                    </span>
+                  </div>
+                  <div
+                    className="pointer-events-none absolute -top-1 -bottom-1 border-l-[3px] border-dashed border-verde-raiz"
                     style={{ left: "70%" }}
                     title="Meta mínima (70%)"
-                    aria-label="Meta mínima 70%"
                   />
                 </div>
               </div>
