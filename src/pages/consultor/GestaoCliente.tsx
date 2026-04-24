@@ -214,21 +214,33 @@ export default function GestaoCliente() {
         .eq("mes", mesRef)
         .in("tipo", ["KPI", "RELATORIO_MENSAL"]);
 
-      // 2) Insere KPIs do mês
-      const kpiRows = KPI_FIELDS
-        .filter((f) => kpiValues[f.key] && String(kpiValues[f.key]).trim() !== "")
-        .map((f) => ({
-          cliente_id: clienteId,
-          tipo: "KPI",
-          mes: mesRef,
-          campo: f.key,
-          valor: String(kpiValues[f.key]).trim(),
-          benchmark: f.benchmark || null,
-        }));
+      // 2) Insere KPIs do mês + relatório
+      type DashRow = {
+        cliente_id: string;
+        tipo: string;
+        mes: string | null;
+        campo: string;
+        valor: string;
+        benchmark: string | null;
+      };
+      const novasRows: DashRow[] = [];
 
-      const extraRows: typeof kpiRows = [];
+      KPI_FIELDS.forEach((f) => {
+        const v = kpiValues[f.key];
+        if (v && String(v).trim() !== "") {
+          novasRows.push({
+            cliente_id: clienteId,
+            tipo: "KPI",
+            mes: mesRef,
+            campo: f.key,
+            valor: String(v).trim(),
+            benchmark: f.benchmark || null,
+          });
+        }
+      });
+
       if (relatorio.trim()) {
-        extraRows.push({
+        novasRows.push({
           cliente_id: clienteId,
           tipo: "RELATORIO_MENSAL",
           mes: mesRef,
@@ -237,10 +249,11 @@ export default function GestaoCliente() {
           benchmark: null,
         });
       }
-      if (kpiRows.length + extraRows.length > 0) {
+
+      if (novasRows.length > 0) {
         const { error: insErr } = await supabase
           .from("dashboard_data")
-          .insert([...kpiRows, ...extraRows]);
+          .insert(novasRows);
         if (insErr) throw insErr;
       }
 
