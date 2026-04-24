@@ -34,6 +34,7 @@ interface Cliente {
   mes_referencia: string | null;
   pilares_foco: string | null;
   modulos_ativos: string | null;
+  status: string | null;
 }
 
 export default function ClienteDashboard() {
