@@ -17,42 +17,22 @@ Deno.serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE_PRIMARY = Deno.env.get("SERVICE_ROLE_KEY");
-    const SERVICE_ROLE_FALLBACK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SERVICE_ROLE = Deno.env.get("SERVICE_ROLE_KEY");
     const ANON = Deno.env.get("SUPABASE_ANON_KEY") ??
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 
     console.log("create-cliente env check", {
       hasSupabaseUrl: Boolean(SUPABASE_URL),
-      hasServiceRolePrimary: Boolean(SERVICE_ROLE_PRIMARY),
-      hasServiceRoleFallback: Boolean(SERVICE_ROLE_FALLBACK),
+      hasServiceRole: Boolean(SERVICE_ROLE),
       hasAnon: Boolean(ANON),
     });
 
-    if (!SUPABASE_URL || !ANON || (!SERVICE_ROLE_PRIMARY && !SERVICE_ROLE_FALLBACK)) {
+    if (!SUPABASE_URL || !ANON || !SERVICE_ROLE) {
       return new Response(JSON.stringify({ error: "Configuração do servidor incompleta" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const adminKeys = [SERVICE_ROLE_PRIMARY, SERVICE_ROLE_FALLBACK].filter(
-      (value, index, arr): value is string => Boolean(value) && arr.indexOf(value) === index,
-    );
-
-    const resolveAdminClient = async () => {
-      for (const key of adminKeys) {
-        const candidate = createClient(SUPABASE_URL, key, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-
-        const { error } = await candidate.auth.admin.listUsers({ page: 1, perPage: 1 });
-        if (!error) return candidate;
-        if (!/unregistered api key/i.test(error.message)) throw error;
-      }
-
-      return null;
-    };
 
     // 1) Validar que o chamador está autenticado e é admin
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -91,13 +71,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const admin = await resolveAdminClient();
-    if (!admin) {
-      return new Response(JSON.stringify({ error: "Service role key inválida ou indisponível" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     // 3) Criar usuário em auth.users
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
