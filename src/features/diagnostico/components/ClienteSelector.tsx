@@ -64,7 +64,15 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
     });
     setSaving(false);
     if (error || (data as any)?.error) {
-      const msg = (data as any)?.error ?? error?.message ?? "Erro ao criar cliente";
+      let msg = (data as any)?.error ?? "";
+      if (!msg) {
+        try {
+          const parsed = await (error as any)?.context?.json?.();
+          msg = parsed?.error ?? error?.message ?? "Erro ao criar cliente";
+        } catch {
+          msg = error?.message ?? "Erro ao criar cliente";
+        }
+      }
       toast.error(msg);
       return;
     }
