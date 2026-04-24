@@ -206,9 +206,9 @@ function Hero() {
       }}
     >
       <div className="container mx-auto max-w-7xl px-6">
-        <div className="grid items-stretch gap-12 lg:grid-cols-5">
-          {/* Coluna esquerda 60% */}
-          <div className="lg:col-span-3">
+        <div className="grid items-stretch gap-x-12 gap-y-6 lg:grid-cols-5 lg:grid-rows-[1fr_auto]">
+          {/* Coluna esquerda 60% — conteúdo principal */}
+          <div className="lg:col-span-3 lg:row-start-1">
             <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
               Consultoria Estratégica para Odontologia
             </span>
@@ -234,13 +234,10 @@ function Hero() {
             <p className="mt-8 font-body font-light text-sm text-linho/60">
               14+ anos em marketing, vendas, tecnologia e operações, aplicados ao setor de saúde
             </p>
-            <div className="mt-6 inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
-              ⏰ Vagas limitadas para Abril/2026: apenas 4 vagas disponíveis neste ciclo.
-            </div>
           </div>
 
-          {/* Coluna direita 40% */}
-          <div className="flex justify-center lg:col-span-2 lg:justify-end">
+          {/* Coluna direita 40% — imagem alinhada ao topo da linha "Vagas limitadas" */}
+          <div className="flex justify-center lg:col-span-2 lg:row-start-1 lg:justify-end">
             <div className="relative h-full w-full max-w-md">
               <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial">
                 <img
@@ -259,6 +256,13 @@ function Hero() {
               <span className="absolute -bottom-3 -left-3 rounded-full bg-dourado px-4 py-2 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz shadow-lg">
                 14+ anos
               </span>
+            </div>
+          </div>
+
+          {/* Linha "Vagas limitadas" — abaixo, ocupa coluna esquerda */}
+          <div className="lg:col-span-3 lg:row-start-2">
+            <div className="inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
+              ⏰ Vagas limitadas para Abril/2026: apenas 4 vagas disponíveis neste ciclo.
             </div>
           </div>
         </div>
