@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/accordion";
 import patrickEstrategico from "@/assets/patrick-estrategico.jpg";
 import patrickLifestyle from "@/assets/patrick-lifestyle.jpg";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 const WHATSAPP_URL = "https://wa.me/5544999993334";
 
