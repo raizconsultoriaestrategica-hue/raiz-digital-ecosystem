@@ -100,11 +100,11 @@ export function useOrcamento() {
     setLoadingDiag(true);
 
     // 1. Dados completos do cliente da tabela clientes
-    const [cliFullRes, diagRes] = await Promise.all([
+    const [cliFullRes, diagRes, fatRes] = await Promise.all([
       supabase
         .from("clientes")
         .select(
-          "nome_cliente, nome_clinica, especialidade, cidade, orcamento_inicial, meta_faturamento, pilares_foco"
+          "nome_cliente, nome_clinica, especialidade, ramo, cidade, orcamento_inicial, meta_faturamento, pilares_foco"
         )
         .eq("id", id)
         .maybeSingle(),
@@ -115,6 +115,15 @@ export function useOrcamento() {
         .eq("cliente_id", id)
         .eq("tipo", "PILAR")
         .eq("mes", "Diagnóstico"),
+      // 3. Faturamento bruto (não-PILAR) em dashboard_data
+      supabase
+        .from("dashboard_data")
+        .select("valor, tipo, mes, updated_at")
+        .eq("cliente_id", id)
+        .eq("campo", "faturamento_bruto")
+        .neq("tipo", "PILAR")
+        .order("updated_at", { ascending: false })
+        .limit(1),
     ]);
 
     setLoadingDiag(false);
@@ -133,13 +142,26 @@ export function useOrcamento() {
     if (cli) {
       updates.nomeCliente = cli.nome_cliente || "";
       updates.nomeClinica = cli.nome_clinica || "";
-      updates.especialidade = cli.especialidade || "";
+      // Especialidade vem de "ramo" (especialidade está nulo na maioria dos casos)
+      updates.especialidade = cli.ramo || cli.especialidade || "";
       updates.cidade = cli.cidade || "";
-      updates.faturamento =
-        cli.orcamento_inicial != null ? String(cli.orcamento_inicial) : "";
+
+      // Faturamento Atual: vem de dashboard_data (faturamento_bruto), não de orcamento_inicial
+      const fatRow = (fatRes.data || [])[0];
+      const fatValor = toNumeric(fatRow?.valor ?? null);
+      updates.faturamento = fatValor != null ? String(fatValor) : "";
+
+      // Meta: somente se preenchida no cadastro
       updates.meta =
         cli.meta_faturamento != null ? String(cli.meta_faturamento) : "";
-      updates.dor = cli.pilares_foco || "";
+
+      // Dor principal: preenchimento manual pelo consultor
+      updates.dor = "";
+
+      // Pilares em foco (campo separado, se existir no form)
+      if ("pilaresFoco" in (form as object)) {
+        (updates as Record<string, unknown>).pilaresFoco = cli.pilares_foco || "";
+      }
     }
 
     // 3. Mapear scores por pilar (apenas campos começando com p0)
