@@ -160,12 +160,12 @@ export function ResultScreen({
         }
       });
 
-      // PILAR (Inicial): score 0-100 por pilar
+      // PILAR (Inicial): valor = total real do pilar, benchmark = max real do pilar
       activePilares.forEach((p) => {
-        const { pct } = getScore(scores, p.id, ramo);
+        const { total, max } = getScore(scores, p.id, ramo);
         rows.push({
           cliente_id: clienteId, tipo: "PILAR", mes: "Inicial",
-          campo: p.id, valor: String(Math.round(pct * 100)), benchmark: "100",
+          campo: p.id, valor: String(total), benchmark: String(max),
         });
       });
 
