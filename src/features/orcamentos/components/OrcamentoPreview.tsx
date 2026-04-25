@@ -75,6 +75,11 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         className="orc-doc bg-white shadow-[0_8px_40px_rgba(0,0,0,0.15)] rounded-[4px] overflow-hidden relative"
         style={{ width: 794, minHeight: 1123 }}
       >
+        {/* Cabeçalho secundário (visível apenas na impressão, a partir da pág. 2) */}
+        <div className="orc-running-header" aria-hidden="true">
+          <span className="orc-running-brand">RAIZ · Consultoria Estratégica</span>
+          <span className="orc-running-client">{data.nomeClinica || data.nomeCliente}</span>
+        </div>
         {/* CAPA */}
         <div className="pg-cover relative overflow-hidden px-[52px] pt-14 pb-12" style={{ background: "#1C3D2E", minHeight: 420 }}>
           <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ border: "70px solid rgba(201,168,76,0.1)" }} />
