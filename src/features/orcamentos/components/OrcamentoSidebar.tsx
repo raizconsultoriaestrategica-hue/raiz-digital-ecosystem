@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Printer, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
-import { calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 
@@ -360,6 +360,42 @@ export function OrcamentoSidebar(p: Props) {
         <div className="mt-1 text-[10px] text-white/40">
           Editável — aplique desconto ou condição especial.
         </div>
+      </div>
+
+      <hr className="border-white/10 my-5" />
+      <div className={sectionCls}>Ancoragem de Valor</div>
+      <div className="text-[10px] text-white/40 mb-2.5 leading-relaxed">
+        Selecione uma frase para aparecer abaixo do investimento no PDF
+      </div>
+      <div className="space-y-1.5 mb-2">
+        <button
+          type="button"
+          onClick={() => p.setField("ancoragem", null)}
+          className={`w-full text-left px-3 py-2 rounded-md border text-[11px] transition-colors ${
+            p.form.ancoragem === null
+              ? "border-dourado bg-dourado/10 text-white"
+              : "border-white/15 bg-white/[0.04] text-white/60 hover:border-white/30"
+          }`}
+        >
+          Nenhuma
+        </button>
+        {ANCORAGENS.map((frase, idx) => {
+          const selected = p.form.ancoragem === idx;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => p.setField("ancoragem", idx)}
+              className={`w-full text-left px-3 py-2 rounded-md border text-[11px] leading-relaxed italic transition-colors ${
+                selected
+                  ? "border-dourado bg-dourado/10 text-white"
+                  : "border-white/15 bg-white/[0.04] text-white/60 hover:border-white/30"
+              }`}
+            >
+              "{frase}"
+            </button>
+          );
+        })}
       </div>
 
       <hr className="border-white/10 my-5" />
