@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor } from "../data";
-import { calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
 
 interface Props {
   form: OrcamentoForm;
@@ -62,10 +62,15 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       ? `potencial de +${fmtMoney(meta - fat)}/mês no faturamento`
       : "no faturamento em até 6 meses";
 
+    const ancoragemFrase =
+      form.ancoragem !== null && form.ancoragem !== undefined
+        ? ANCORAGENS[form.ancoragem] ?? null
+        : null;
+
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
-      valorCalculado, valorFinal,
+      valorCalculado, valorFinal, ancoragemFrase,
     };
   }, [form, modulosDb]);
 
@@ -191,15 +196,15 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
-            <div className="px-6 py-5 bg-white border-r-[1.5px] border-[#DDD8D0]">
+          <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
+            <div className="px-6 py-5 bg-white">
               <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
                 Investimento Mensal
               </div>
-              <div className="font-display text-[30px] font-semibold text-verde-raiz leading-none">
+              <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
                 {fmtMoney(data.valorFinal)}/mês
               </div>
-              <div className="text-[11px] text-[#718096] mt-1">
+              <div className="text-[11px] text-[#718096] mt-1.5">
                 {data.selectedMods.length} módulo{data.selectedMods.length === 1 ? "" : "s"} · {data.plano.dur}
                 {data.valorFinal !== data.valorCalculado && data.valorCalculado > 0 && (
                   <span className="text-dourado">
@@ -207,15 +212,14 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                   </span>
                 )}
               </div>
-            </div>
-            <div className="px-6 py-5 bg-white">
-              <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
-                Potencial de Crescimento
-              </div>
-              <div className="font-display text-[30px] font-semibold text-dourado leading-none">
-                {data.plano.roi}
-              </div>
-              <div className="text-[11px] text-[#718096] mt-1">{data.roiAbs}</div>
+              {data.ancoragemFrase && (
+                <div
+                  className="mt-3 pt-3 border-t border-[#EFE9DD] text-[12px] italic leading-[1.55]"
+                  style={{ color: "#C9A96E" }}
+                >
+                  "{data.ancoragemFrase}"
+                </div>
+              )}
             </div>
           </div>
         </Section>
