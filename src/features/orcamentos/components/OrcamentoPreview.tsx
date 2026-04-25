@@ -75,6 +75,11 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         className="orc-doc bg-white shadow-[0_8px_40px_rgba(0,0,0,0.15)] rounded-[4px] overflow-hidden relative"
         style={{ width: 794, minHeight: 1123 }}
       >
+        {/* Cabeçalho secundário (visível apenas na impressão, a partir da pág. 2) */}
+        <div className="orc-running-header" aria-hidden="true">
+          <span className="orc-running-brand">RAIZ · Consultoria Estratégica</span>
+          <span className="orc-running-client">{data.nomeClinica || data.nomeCliente}</span>
+        </div>
         {/* CAPA */}
         <div className="pg-cover relative overflow-hidden px-[52px] pt-14 pb-12" style={{ background: "#1C3D2E", minHeight: 420 }}>
           <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ border: "70px solid rgba(201,168,76,0.1)" }} />
@@ -296,9 +301,9 @@ function CoverMeta({ label, value }: { label: string; value: string }) {
 
 function Section({ label, title, children }: { label: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
+    <div className="orc-section px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
       <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">{label}</div>
-      <h2 className="font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
+      <h2 className="orc-section-title font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
       <div className="w-full h-px bg-gradient-to-r from-verde-raiz to-transparent mb-5" />
       {children}
     </div>

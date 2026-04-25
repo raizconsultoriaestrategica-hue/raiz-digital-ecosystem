@@ -336,9 +336,6 @@ export default function AdminDashboard() {
             Carteira completa: funil, MRR, projetos ativos e ticket médio.
           </p>
         </div>
-        <Button asChild className="bg-verde-raiz hover:bg-verde-raiz/90">
-          <Link to="/ferramentas/diagnostico">+ Novo diagnóstico</Link>
-        </Button>
       </div>
 
       {loading ? (
@@ -411,11 +408,8 @@ export default function AdminDashboard() {
                   Nenhum cliente cadastrado
                 </div>
                 <p className="max-w-md font-body text-sm text-quase-preto/70">
-                  Crie o primeiro cliente direto pelo Diagnóstico 360°.
+                  Acesse <strong>Ferramentas</strong> no menu lateral para iniciar pelo Diagnóstico 360°.
                 </p>
-                <Button asChild className="mt-2 bg-verde-raiz hover:bg-verde-raiz/90">
-                  <Link to="/ferramentas/diagnostico">Abrir Diagnóstico 360°</Link>
-                </Button>
               </CardContent>
             </Card>
           ) : (
