@@ -296,9 +296,9 @@ function CoverMeta({ label, value }: { label: string; value: string }) {
 
 function Section({ label, title, children }: { label: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
+    <div className="orc-section px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
       <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">{label}</div>
-      <h2 className="font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
+      <h2 className="orc-section-title font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
       <div className="w-full h-px bg-gradient-to-r from-verde-raiz to-transparent mb-5" />
       {children}
     </div>
