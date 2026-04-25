@@ -19,7 +19,23 @@ export interface OrcamentoForm {
   email: string;
   /** Valor final acordado (editável). String para permitir edição livre. */
   valorFinal: string;
+  /** Frase de ancoragem de valor selecionada (índice 0-9) ou null para "Nenhuma". */
+  ancoragem: number | null;
 }
+
+/** Frases de ancoragem de valor (10 opções). */
+export const ANCORAGENS: string[] = [
+  "O custo de não agir é silencioso — mas aparece todo mês no extrato.",
+  "Você foi formado para cuidar de pacientes, não para gerir empresa. A Raiz cuida da segunda parte.",
+  "Você cuida dos pacientes. A Raiz cuida do negócio. Simples assim.",
+  "A Raiz desmistifica a gestão para quem foi formado para curar, não para administrar.",
+  "Mais do que lucratividade — estrutura que traz tranquilidade para quem carrega o negócio nas costas.",
+  "Processos que funcionam sem você. Captação previsível. Equipe alinhada. É o que construímos junto.",
+  "Entendemos o que trava uma clínica. E sabemos exatamente por onde começar.",
+  "Cada mês sem processo estruturado é receita que não se converte. A Raiz existe para mudar isso.",
+  "Menos do que você paga de laboratório protético por mês.",
+  "O equivalente a 1 a 2 procedimentos por mês — com estrutura que multiplica os demais.",
+];
 
 export const initialForm = (): OrcamentoForm => ({
   nomeCliente: "",
@@ -39,6 +55,7 @@ export const initialForm = (): OrcamentoForm => ({
   whatsapp: "",
   email: "",
   valorFinal: "",
+  ancoragem: null,
 });
 
 /** Pesos por fase (R$ por módulo) */
