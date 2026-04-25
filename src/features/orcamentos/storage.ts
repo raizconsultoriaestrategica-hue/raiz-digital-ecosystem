@@ -25,11 +25,32 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
   const node = document.querySelector<HTMLElement>(".orc-doc");
   if (!node) throw new Error("Preview do orçamento não encontrado na tela.");
 
+  // Sanitiza imagens quebradas no DOM original (evita erro de createPattern)
+  const imgsLive = node.querySelectorAll("img");
+  imgsLive.forEach((img) => {
+    const i = img as HTMLImageElement;
+    if (!i.complete || i.naturalWidth === 0 || i.naturalHeight === 0) {
+      i.src = "";
+    }
+  });
+
   const canvas = await html2canvas(node, {
-    scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff",
+    allowTaint: false,
+    imageTimeout: 15000,
+    foreignObjectRendering: false,
+    scale: 2,
     logging: false,
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const imgs = clonedDoc.querySelectorAll(".orc-doc img");
+      imgs.forEach((img) => {
+        const i = img as HTMLImageElement;
+        if (!i.complete || i.naturalWidth === 0 || i.naturalHeight === 0) {
+          i.src = "";
+        }
+      });
+    },
   });
 
   const imgData = canvas.toDataURL("image/jpeg", 0.92);
