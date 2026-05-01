@@ -71,7 +71,7 @@ const STATUS_OPCOES = [
   { value: "encerrado", label: "Inativo" },
 ];
 
-// Gera lista de meses (MM/YYYY) — 12 últimos + 6 futuros
+// Gera lista de meses (MM/YYYY). 12 últimos + 6 futuros
 function gerarMeses(): string[] {
   const out: string[] = [];
   const hoje = new Date();

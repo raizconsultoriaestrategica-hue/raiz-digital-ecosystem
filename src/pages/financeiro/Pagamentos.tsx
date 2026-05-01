@@ -154,7 +154,7 @@ export default function Pagamentos() {
                 >
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__livre__">— Avulso —</SelectItem>
+                    <SelectItem value="__livre__">, Avulso ,</SelectItem>
                     {contratos.map((c) => (<SelectItem key={c.id} value={c.id}>{c.cliente_nome}</SelectItem>))}
                   </SelectContent>
                 </Select>

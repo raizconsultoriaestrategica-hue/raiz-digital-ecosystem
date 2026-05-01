@@ -18,9 +18,9 @@ export const PILARES: Pilar[] = [
 export const PLANOS: Record<PlanoKey, Plano> = {
   base: {
     key: "base",
-    badge: "FASE 1 — BASE",
+    badge: "FASE 1. BASE",
     name: "Raiz de Base",
-    desc: "Para clínicas que precisam construir a fundação do negócio. Estruturamos os pilares críticos — financeiro, atendimento e operação — para destravar o faturamento e criar a base mínima viável de crescimento.",
+    desc: "Para clínicas que precisam construir a fundação do negócio. Estruturamos os pilares críticos. Financeiro, atendimento e operação. Para destravar o faturamento e criar a base mínima viável de crescimento.",
     valor: "R$ 2.500 – R$ 3.500",
     dur: "3–4 meses · 1 encontro/semana",
     roi: "+40–80%",

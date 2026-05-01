@@ -130,7 +130,7 @@ export default function VisaoGeral() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-xl text-verde-raiz">Receita vs Custos — últimos 6 meses</CardTitle>
+          <CardTitle className="font-display text-xl text-verde-raiz">Receita vs Custos. Últimos 6 meses</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-72 w-full">

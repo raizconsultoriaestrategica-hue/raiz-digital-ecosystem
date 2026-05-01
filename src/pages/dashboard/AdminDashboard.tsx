@@ -100,7 +100,7 @@ const STATUS_LABEL: Record<StatusCarteira, string> = {
   encerrado: "Encerrado",
 };
 
-// Badges com cores semânticas — uso classes Tailwind diretas para tons de paleta solicitada
+// Badges com cores semânticas. Uso classes Tailwind diretas para tons de paleta solicitada
 const STATUS_BADGE: Record<StatusCarteira, string> = {
   lead: "bg-muted text-muted-foreground hover:bg-muted",
   diagnostico_feito: "bg-blue-100 text-blue-800 hover:bg-blue-100",
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
         .maybeSingle();
       const userId = cli?.user_id ?? null;
 
-      // 1) Tentar apagar do auth.users via edge function — se falhar, avisa e segue
+      // 1) Tentar apagar do auth.users via edge function. Se falhar, avisa e segue
       let authOk = true;
       if (userId) {
         const { data: authRes, error: authErr } = await supabase.functions.invoke(
@@ -456,7 +456,7 @@ export default function AdminDashboard() {
                                 </span>
                               </span>
                             ) : (
-                              <span className="text-quase-preto/40">—</span>
+                              <span className="text-quase-preto/40">,</span>
                             )}
                           </TableCell>
                           <TableCell>{formatBRL(l.cliente.orcamento_inicial)}</TableCell>

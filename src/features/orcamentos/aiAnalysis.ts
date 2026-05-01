@@ -31,8 +31,8 @@ function buildUserPrompt(
 
   return `Analise o diagnóstico 360° deste cliente e gere três blocos em JSON:
 
-1. "analise": texto de 3-4 parágrafos sobre os principais gargalos identificados, pilares críticos e oportunidades — tom consultivo e direto, sem bullet points
-2. "ancoragem": uma frase de até 2 linhas que use obrigatoriamente números reais do cliente (faturamento atual, perdas calculadas por no-show, pacientes inativos ou conversão baixa) para mostrar o custo concreto da inércia. A frase deve ser direta e emocional — falar o que ele está perdendo em reais por mês ou por ano, de forma que qualquer pessoa entenda sem precisar de explicação. Sem jargão, sem termos técnicos como ROI ou KPI. Tom de conversa honesta entre sócios. Exemplo de estrutura (não copiar, apenas referência de formato): 'Com [faturamento] por mês e [problema identificado], você está deixando cerca de R$X na mesa todo mês — isso é R$Y por ano trabalhando de graça.' Calcule os números com base nos dados reais do diagnóstico.
+1. "analise": texto de 3-4 parágrafos sobre os principais gargalos identificados, pilares críticos e oportunidades. Tom consultivo e direto, sem bullet points
+2. "ancoragem": uma frase de até 2 linhas que use obrigatoriamente números reais do cliente (faturamento atual, perdas calculadas por no-show, pacientes inativos ou conversão baixa) para mostrar o custo concreto da inércia. A frase deve ser direta e emocional. Falar o que ele está perdendo em reais por mês ou por ano, de forma que qualquer pessoa entenda sem precisar de explicação. Sem jargão, sem termos técnicos como ROI ou KPI. Tom de conversa honesta entre sócios. Exemplo de estrutura (não copiar, apenas referência de formato): 'Com [faturamento] por mês e [problema identificado], você está deixando cerca de R$X na mesa todo mês. Isso é R$Y por ano trabalhando de graça.' Calcule os números com base nos dados reais do diagnóstico.
 3. "justificativas": objeto onde cada chave é o código do módulo selecionado e o valor é uma frase curta (máx 15 palavras) explicando o impacto esperado para esse cliente específico
 
 Retorne APENAS o JSON, sem texto adicional.

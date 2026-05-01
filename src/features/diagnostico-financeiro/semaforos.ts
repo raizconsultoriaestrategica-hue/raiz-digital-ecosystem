@@ -1,5 +1,5 @@
 /**
- * Semáforos de indicadores financeiros — fonte única de verdade.
+ * Semáforos de indicadores financeiros. Fonte única de verdade.
  *
  * Use estas funções tanto na ferramenta do consultor (input) quanto
  * na exibição do cliente (Pasta do Cliente). Para alterar regras,
@@ -60,7 +60,7 @@ export function semProLabore(p: number): Semaforo {
   return "vermelho";
 }
 
-/** CPL — Custo Por Lead (R$): verde 20–60, amarelo 60–100, vermelho >100 ou <20 */
+/** CPL. Custo Por Lead (R$): verde 20–60, amarelo 60–100, vermelho >100 ou <20 */
 export function semCPL(reais: number): Semaforo {
   if (reais >= 20 && reais <= 60) return "verde";
   if (reais > 60 && reais <= 100) return "amarelo";

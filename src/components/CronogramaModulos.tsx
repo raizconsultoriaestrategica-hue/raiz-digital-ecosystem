@@ -190,7 +190,7 @@ export default function CronogramaModulos({ clienteId, dataInicioProj }: Props) 
                         variant="outline"
                         className={`mb-2 text-[10px] font-semibold uppercase tracking-wide ${FASE_COLOR[Number(fase)]}`}
                       >
-                        Fase {fase} — {FASE_LABEL[Number(fase)]}
+                        Fase {fase}. {FASE_LABEL[Number(fase)]}
                       </Badge>
                       <ul className="space-y-2">
                         {itens.map((item) => (

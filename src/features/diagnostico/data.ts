@@ -5,14 +5,14 @@ export const ADMIN_PIN = "raiz360";
 export type Ramo = "dentista" | "medico";
 
 /* ============================================================
- * PILARES — Versão DENTISTA (default)
+ * PILARES. Versão DENTISTA (default)
  * ============================================================ */
 export const PILARES: Pilar[] = [
   {
     id: "p01", num: "01", name: "Marketing Digital & Presença", max: 15,
     desc: "Avalia posicionamento, presença digital, consistência de comunicação e capacidade de atrair pacientes pelo ambiente online.",
     questions: [
-      { text: "O profissional tem posicionamento claro — sabe para quem fala, o que oferece e por que é diferente dos concorrentes?", labels: ["Nunca pensou nisso", "Pensa nisso, mas não está definido", "Posicionamento básico na cabeça", "Posicionamento estratégico documentado"] },
+      { text: "O profissional tem posicionamento claro. Sabe para quem fala, o que oferece e por que é diferente dos concorrentes?", labels: ["Nunca pensou nisso", "Pensa nisso, mas não está definido", "Posicionamento básico na cabeça", "Posicionamento estratégico documentado"] },
       { text: "Com que consistência publica conteúdo relevante nas redes sociais?", labels: ["Não publica ou raramente", "Esporádico e sem estratégia", "Regular, mas sem planejamento", "Calendário editorial ativo e estratégico"] },
       { text: "A identidade visual da clínica (logo, cores, padrão de posts) transmite autoridade e profissionalismo?", labels: ["Sem identidade definida", "Visual despadronizado e inconsistente", "Identidade básica com alguma consistência", "Marca sólida, premium e reconhecível"] },
       { text: "Tem processo ativo de coleta de avaliações no Google Meu Negócio?", labels: ["Sem cadastro ou perfil incompleto", "Tem cadastro, não gerencia", "Pede avaliações às vezes, sem processo", "Processo ativo + responde avaliações"] },
@@ -76,7 +76,7 @@ export const PILARES: Pilar[] = [
   },
   {
     id: "p07", num: "07", name: "Crescimento & Expansão", max: 9,
-    desc: "Avalia a maturidade do negócio para o próximo salto — segunda unidade, modelo de sócio-operador ou replicação da operação em escala.",
+    desc: "Avalia a maturidade do negócio para o próximo salto. Segunda unidade, modelo de sócio-operador ou replicação da operação em escala.",
     questions: [
       { text: "Tem clareza sobre quando e como expandir (segunda unidade, sócio ou replicação)?", labels: ["Nunca pensou no assunto", "Quer expandir, mas não sabe como/quando", "Tem ideia do caminho, sem plano", "Plano de expansão estruturado com viabilidade calculada"] },
       { text: "Os processos atuais estão documentados a ponto de serem replicados em outra unidade?", labels: ["Processos não existem formalmente", "Estão na cabeça do dono", "Documentados parcialmente", "Manual completo e replicável testado"] },
@@ -86,7 +86,7 @@ export const PILARES: Pilar[] = [
 ];
 
 /* ============================================================
- * PILARES — Versão MÉDICO / SAÚDE
+ * PILARES. Versão MÉDICO / SAÚDE
  * ============================================================ */
 export const PILARES_MEDICO: Pilar[] = [
   {
@@ -157,7 +157,7 @@ export const PILARES_MEDICO: Pilar[] = [
   },
   {
     id: "p07", num: "07", name: "Crescimento & Expansão", max: 9,
-    desc: "Avalia a maturidade do negócio para o próximo salto — segunda unidade, sócio-operador ou replicação em escala.",
+    desc: "Avalia a maturidade do negócio para o próximo salto. Segunda unidade, sócio-operador ou replicação em escala.",
     questions: [
       { text: "Tem clareza sobre quando e como expandir (segunda unidade, sócio ou replicação)?", labels: ["Nunca pensou no assunto", "Quer expandir, sem saber como", "Tem ideia do caminho, sem plano", "Plano estruturado com viabilidade calculada"] },
       { text: "Os processos atuais estão documentados a ponto de serem replicados?", labels: ["Processos não existem formalmente", "Na cabeça do dono", "Documentados parcialmente", "Manual completo e replicável testado"] },
@@ -174,13 +174,13 @@ export function getPilaresByRamo(ramo: Ramo): Pilar[] {
  * PLANOS
  * ============================================================ */
 export const PLANOS: Plano[] = [
-  { trigger: (p) => p < 0.35, badge: "FASE 1 — BASE", name: "Raiz de Base", desc: "Para clínicas que precisam construir a fundação do negócio. Estruturamos os pilares críticos — financeiro, atendimento e operação — para destravar o faturamento e criar a base mínima viável de crescimento.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Posicionamento Digital"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
+  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base", desc: "Para clínicas que precisam construir a fundação do negócio. Estruturamos os pilares críticos. Financeiro, atendimento e operação. Para destravar o faturamento e criar a base mínima viável de crescimento.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Posicionamento Digital"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
   { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento", desc: "Para clínicas com alguma estrutura mas crescimento estagnado. Expandimos captação, marketing e gestão financeira para acelerar o faturamento com previsibilidade e consistência.", modulos: ["Captação & Tráfego", "Marketing Digital", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
   { trigger: () => true, badge: "FASE 2–3 · ESCALA", name: "Raiz de Expansão", desc: "Para clínicas com base consolidada, prontas para escalar. Foco em retenção de pacientes, gestão de equipe, tecnologia, IA aplicada à clínica e estruturação para crescimento sustentável.", modulos: ["Relacionamento & Retenção", "Gestão de Pessoas", "Tecnologia & IA", "Crescimento & Expansão"], valor: "R$ 5.000 – R$ 7.500/mês", duracao: "5–6+ meses · encontros semanais ou quinzenais", roi: "+80–150%" },
 ];
 
 export const PLANOS_MEDICO: Plano[] = [
-  { trigger: (p) => p < 0.35, badge: "FASE 1 — BASE", name: "Raiz de Base · Saúde", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing & Posicionamento"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
+  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base · Saúde", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing & Posicionamento"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
   { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento · Saúde", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de particulares, marketing médico ético e gestão financeira para acelerar faturamento com consistência.", modulos: ["Captação & Novos Pacientes", "Marketing & Posicionamento", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
   { trigger: () => true, badge: "FASE 2–3 · ESCALA", name: "Raiz de Escala · Saúde", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing & Posicionamento", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
 ];
@@ -232,7 +232,7 @@ export const ESPECIALIDADES_MED = [
   "Cirurgia Plástica & Estética", "Oncologia", "Outra",
 ];
 
-/* KPIs Iniciais — definição declarativa para reuso (form + persistência + dashboard) */
+/* KPIs Iniciais. Definição declarativa para reuso (form + persistência + dashboard) */
 export interface KpiInitField {
   key: keyof KpisIniciais;
   label: string;

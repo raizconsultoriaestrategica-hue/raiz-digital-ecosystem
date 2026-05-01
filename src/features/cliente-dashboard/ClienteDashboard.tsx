@@ -297,7 +297,7 @@ export default function ClienteDashboard() {
         <InsightsCard texto={insight} cfg={cfg} />
 
         <footer className="border-t border-border/60 pt-4 text-center text-[11px] uppercase tracking-[0.2em] text-quase-preto/45">
-          Dashboard de Acompanhamento — Raiz Consultoria Estratégica · Atualizado pelo consultor
+          Dashboard de Acompanhamento. Raiz Consultoria Estratégica · Atualizado pelo consultor
         </footer>
       </main>
 

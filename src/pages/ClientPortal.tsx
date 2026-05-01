@@ -265,7 +265,7 @@ export default function ClientPortal() {
       </header>
 
       <main className="mx-auto max-w-6xl space-y-16 px-6 py-12">
-        {/* SEÇÃO 1 — Diagnóstico 360° */}
+        {/* SEÇÃO 1. Diagnóstico 360° */}
         <section>
           <SectionTitle sub="Avaliação dos 7 pilares estratégicos">Diagnóstico 360°</SectionTitle>
           {!diagnostico ? (
@@ -311,7 +311,7 @@ export default function ClientPortal() {
           )}
         </section>
 
-        {/* SEÇÃO 2 — Proposta & Orçamento */}
+        {/* SEÇÃO 2. Proposta & Orçamento */}
         <section>
           <SectionTitle sub="Plano de consultoria contratado">Proposta & Orçamento</SectionTitle>
           {!orcamento ? (
@@ -386,7 +386,7 @@ export default function ClientPortal() {
           )}
         </section>
 
-        {/* SEÇÃO 3 — Diagnóstico Financeiro */}
+        {/* SEÇÃO 3. Diagnóstico Financeiro */}
         <section>
           <SectionTitle sub="Indicadores e semáforos de saúde financeira">Diagnóstico Financeiro</SectionTitle>
           {!diagFin || Object.keys(indicadores).length === 0 ? (
@@ -424,7 +424,7 @@ export default function ClientPortal() {
           )}
         </section>
 
-        {/* SEÇÃO 4 — Tabela de Honorários */}
+        {/* SEÇÃO 4. Tabela de Honorários */}
         <section>
           <SectionTitle sub="Precificação estratégica dos seus procedimentos">Tabela de Honorários</SectionTitle>
           {procedimentos.length === 0 ? (
@@ -463,7 +463,7 @@ export default function ClientPortal() {
           )}
         </section>
 
-        {/* SEÇÃO 5 — Progresso dos Módulos */}
+        {/* SEÇÃO 5. Progresso dos Módulos */}
         <section>
           <SectionTitle sub="Acompanhamento da execução do seu plano">Progresso dos Módulos</SectionTitle>
           {modulos.length === 0 ? (

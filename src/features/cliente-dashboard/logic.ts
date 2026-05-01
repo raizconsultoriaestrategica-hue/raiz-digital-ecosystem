@@ -176,7 +176,7 @@ function humanizePilar(key: string): string {
 
 export function parseModulos(rows: DashboardRow[]): ModuloItem[] {
   return rows.map((r) => {
-    // campo esperado: "M03 — Funil de Conversão | pilar=p02"
+    // campo esperado: "M03. Funil de Conversão | pilar=p02"
     const raw = r.campo || "";
     const parts = raw.split("|");
     const principal = parts[0]?.trim() || raw;

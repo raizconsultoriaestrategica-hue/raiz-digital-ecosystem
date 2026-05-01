@@ -326,7 +326,7 @@ export function ResultScreen({
                       <strong>
                         {atencao.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}
                       </strong>{" "}
-                      precisam de atenção — não são emergências, mas estão limitando o crescimento.
+                      precisam de atenção. Não são emergências, mas estão limitando o crescimento.
                     </p>
                   )}
                   <p>

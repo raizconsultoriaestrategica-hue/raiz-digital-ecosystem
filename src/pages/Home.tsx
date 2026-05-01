@@ -207,7 +207,7 @@ function Hero() {
     >
       <div className="container mx-auto max-w-7xl px-6">
         <div className="grid items-stretch gap-x-12 gap-y-6 lg:grid-cols-5 lg:grid-rows-[1fr_auto]">
-          {/* Coluna esquerda 60% — conteúdo principal */}
+          {/* Coluna esquerda 60%. Conteúdo principal */}
           <div className="lg:col-span-3 lg:row-start-1">
             <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
               Consultoria Estratégica para Odontologia
@@ -241,7 +241,7 @@ function Hero() {
             </div>
           </div>
 
-          {/* Coluna direita 40% — imagem */}
+          {/* Coluna direita 40%. Imagem */}
           <div className="flex justify-center lg:col-span-2 lg:row-start-1 lg:row-span-2 lg:justify-end">
             <div className="relative h-full w-full max-w-md">
               <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-2xl border-2 border-dourado/60 shadow-editorial">
@@ -581,7 +581,7 @@ function SeteP() {
     <section id="diagnostico" className="bg-verde-raiz py-20 md:py-28">
       <div className="container mx-auto max-w-7xl px-6">
         <div className="grid gap-12 lg:grid-cols-5">
-          {/* Coluna esquerda — 40% */}
+          {/* Coluna esquerda. 40% */}
           <Reveal className="lg:col-span-2">
             <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-dourado">Diagnóstico 360°</span>
             <h2 className="mt-4 max-w-[20ch] font-display text-3xl text-linho md:text-[40px] md:leading-[1.1]">
@@ -612,7 +612,7 @@ function SeteP() {
             </div>
           </Reveal>
 
-          {/* Coluna direita — 60% */}
+          {/* Coluna direita. 60% */}
           <Reveal delay={150} className="lg:col-span-3">
             <div className="grid gap-4 sm:grid-cols-2">
               {PILARES.map((p) => (
@@ -782,7 +782,7 @@ function Planos() {
         <Reveal>
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/15 p-5 text-amber-800">
             <p className="font-body text-sm md:text-base">
-              ⏰ <strong>Vagas limitadas para novas clínicas em Abril/2026</strong> — Apenas 4 vagas disponíveis neste ciclo.{" "}
+              ⏰ <strong>Vagas limitadas para novas clínicas em Abril/2026</strong>. Apenas 4 vagas disponíveis neste ciclo.{" "}
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-amber-900">
                 Garantir minha vaga →
               </a>
@@ -1124,7 +1124,7 @@ function HomeFooter() {
           <div>
             <div className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-dourado">Contato</div>
             <p className="mt-4 font-body font-light text-sm leading-relaxed text-linho/60">
-              (44) 99999-3334<br />@consult.raiz<br />Maringá, Paraná — Atendimento em todo o Brasil
+              (44) 99999-3334<br />@consult.raiz<br />Maringá, Paraná. Atendimento em todo o Brasil
             </p>
           </div>
         </div>

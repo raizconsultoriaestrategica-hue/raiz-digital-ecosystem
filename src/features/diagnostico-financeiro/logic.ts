@@ -76,7 +76,7 @@ export const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 export const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 
-// Semáforos centralizados em ./semaforos.ts — aliases legados para compat.
+// Semáforos centralizados em ./semaforos.ts. Aliases legados para compat.
 import {
   semMargemLiquida, semNoShow as semNoShowCore, semInadimplencia,
   semOcupacaoAgenda, semCustoMaterial, semProLabore as semProLaboreCore,
@@ -174,12 +174,12 @@ export function calcular(form: DiagFinForm): CalcResult {
   push(semMargem(margem), {
     nivel: "amarelo", titulo: "Margem líquida abaixo do saudável",
     texto: `Sua margem líquida é de ${margem.toFixed(1)}%. O saudável é acima de 20%.`,
-    recomendacao: "Revise precificação e composição de custos. Módulo 4.2 — Precificação Estratégica recomendado.",
+    recomendacao: "Revise precificação e composição de custos. Módulo 4.2. Precificação Estratégica recomendado.",
   });
   push(semNoShow(form.receitas.no_show || 0), {
     nivel: "amarelo", titulo: "No-show elevado",
-    texto: `${(form.receitas.no_show || 0).toFixed(1)}% das consultas viram cadeira vazia — receita perdida sem retorno.`,
-    recomendacao: "Implementar confirmação ativa, lista de espera e política de remarcação. Módulo 2.1 — Gestão de Agenda.",
+    texto: `${(form.receitas.no_show || 0).toFixed(1)}% das consultas viram cadeira vazia. Receita perdida sem retorno.`,
+    recomendacao: "Implementar confirmação ativa, lista de espera e política de remarcação. Módulo 2.1. Gestão de Agenda.",
   });
   push(semInadimp(form.receitas.taxa_inadimplencia || 0), {
     nivel: "amarelo", titulo: "Inadimplência fora do ideal",

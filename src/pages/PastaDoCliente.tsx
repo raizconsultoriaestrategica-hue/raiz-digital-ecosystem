@@ -167,7 +167,7 @@ export default function PastaDoCliente() {
         supabase.from("cliente_modulos").select("*, modulos(nome, ordem, pilar_nome, descricao)").eq("cliente_id", cid),
       ]);
 
-      // Tabelas opcionais — try/catch defensivo
+      // Tabelas opcionais. Try/catch defensivo
       let reunioesData: any[] = [];
       let arquivosData: any[] = [];
       try {
@@ -220,9 +220,9 @@ export default function PastaDoCliente() {
         pct = Math.round(raw.pct);
       }
       const recomendacao =
-        pct >= 70 ? "Pilar consolidado — manter ritmo." :
-        pct >= 40 ? "Espaço para evolução — priorizar este pilar." :
-        "Atenção crítica — ação imediata recomendada.";
+        pct >= 70 ? "Pilar consolidado. Manter ritmo." :
+        pct >= 40 ? "Espaço para evolução. Priorizar este pilar." :
+        "Atenção crítica. Ação imediata recomendada.";
       return { key, label: PILARES_LABELS[key], pct, recomendacao };
     });
   }, [diagnostico]);
@@ -266,7 +266,7 @@ export default function PastaDoCliente() {
     const novos = Number(diagFin.pacientes_novos_mes ?? 0);
     push(novos > 0, "Pacientes Novos/Mês", String(Math.round(novos)), "neutral");
 
-    // --- Indicadores derivados (do jsonb opcional) — só se existirem ---
+    // --- Indicadores derivados (do jsonb opcional). Só se existirem ---
     const margem = Number(ind.margem_liquida ?? ind.margem ?? NaN);
     push(isFinite(margem), "Margem Líquida", `${margem.toFixed(1)}%`, semMargemLiquida(margem));
 
@@ -379,7 +379,7 @@ export default function PastaDoCliente() {
           <TabsTrigger value="arquivos"><FolderOpen className="mr-1 h-4 w-4" />Arquivos</TabsTrigger>
         </TabsList>
 
-        {/* ABA 1 — Diagnóstico 360 */}
+        {/* ABA 1. Diagnóstico 360 */}
         <TabsContent value="diag360" className="mt-6">
           {!diagnostico ? (
             <EmptyState icon={Activity} title="Diagnóstico ainda não realizado" hint="Em breve seu consultor publicará a avaliação completa por aqui." />
@@ -420,7 +420,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 2 — Meu Plano */}
+        {/* ABA 2. Meu Plano */}
         <TabsContent value="plano" className="mt-6">
           {!orcamento ? (
             <EmptyState icon={FileText} title="Plano em preparação" hint="Assim que o orçamento for emitido, ele aparecerá aqui." />
@@ -449,7 +449,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 3 — Diagnóstico Financeiro */}
+        {/* ABA 3. Diagnóstico Financeiro */}
         <TabsContent value="diagfin" className="mt-6">
           {!diagFin ? (
             <EmptyState icon={Wallet} title="Diagnóstico financeiro pendente" hint="Os indicadores serão publicados após a coleta de dados." />
@@ -465,7 +465,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 4 — Honorários */}
+        {/* ABA 4. Honorários */}
         <TabsContent value="honorarios" className="mt-6">
           {procedimentos.length === 0 ? (
             <EmptyState icon={Calculator} title="Tabela de honorários em construção" hint="Em breve seus preços estratégicos serão publicados." />
@@ -505,7 +505,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 5 — Módulos */}
+        {/* ABA 5. Módulos */}
         <TabsContent value="modulos" className="mt-6">
           {modulosOrdenados.length === 0 ? (
             <EmptyState icon={ListChecks} title="Módulos serão definidos em breve" hint="Sua jornada será publicada após o kickoff." />
@@ -551,7 +551,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 6 — Reuniões */}
+        {/* ABA 6. Reuniões */}
         <TabsContent value="reunioes" className="mt-6">
           {reunioes.length === 0 ? (
             <EmptyState icon={CalendarDays} title="Reuniões & Atas" hint="Em breve suas atas e próximos passos aparecerão aqui." />
@@ -585,7 +585,7 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 7 — Arquivos */}
+        {/* ABA 7. Arquivos */}
         <TabsContent value="arquivos" className="mt-6">
           {arquivos.length === 0 ? (
             <EmptyState icon={FolderOpen} title="Arquivos & Entregas" hint="Seus documentos e entregas aparecerão aqui assim que forem disponibilizados." />

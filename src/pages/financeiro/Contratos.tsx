@@ -154,7 +154,7 @@ export default function Contratos() {
                 >
                   <SelectTrigger><SelectValue placeholder="Selecione um cliente" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__livre__">— Digitar nome livremente —</SelectItem>
+                    <SelectItem value="__livre__">, Digitar nome livremente ,</SelectItem>
                     {clientes.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.nome_cliente}</SelectItem>
                     ))}

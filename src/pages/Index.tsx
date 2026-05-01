@@ -6,7 +6,7 @@ const pilares = [
   {
     icon: Compass,
     title: "Diagnóstico 360°",
-    desc: "Mapeamos a clínica em 8 dimensões — gestão, marketing, operação e cultura — com profundidade incomum.",
+    desc: "Mapeamos a clínica em 8 dimensões. Gestão, marketing, operação e cultura. Com profundidade incomum.",
   },
   {
     icon: LineChart,
@@ -63,7 +63,7 @@ export default function Index() {
             <div className="relative h-full min-h-[320px] rounded-2xl bg-gradient-raiz p-10 text-linho shadow-editorial animate-fade-up">
               <div className="font-display text-6xl leading-none text-dourado">“</div>
               <p className="mt-2 font-display text-2xl italic leading-snug">
-                A clínica que conhece seus números pára de improvisar — e começa a decidir.
+                A clínica que conhece seus números pára de improvisar. E começa a decidir.
               </p>
               <div className="mt-10 border-t border-linho/20 pt-6 font-body text-sm text-linho/80">
                 Manifesto Raiz · 2025
@@ -112,7 +112,7 @@ export default function Index() {
           <div className="space-y-6 font-body text-base leading-relaxed text-quase-preto/80 md:col-span-7">
             <p>
               Trabalhamos lado a lado com gestores de clínicas que sentem que cresceram demais
-              para o improviso — e ainda pequenos para uma consultoria genérica.
+              para o improviso. E ainda pequenos para uma consultoria genérica.
             </p>
             <p>
               Combinamos diagnóstico profundo, painéis vivos de indicadores e rituais de decisão

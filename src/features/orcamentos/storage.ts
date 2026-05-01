@@ -107,7 +107,7 @@ function distribuirMesesExecucao(
     result.push({ ...m, mes_execucao: 3 });
   });
 
-  // Fase 3 → 1 por mês a partir do mês 4 (clamp em 12 — constraint do banco)
+  // Fase 3 → 1 por mês a partir do mês 4 (clamp em 12. Constraint do banco)
   f3.forEach((m, i) => {
     result.push({ ...m, mes_execucao: Math.min(4 + i, 12) });
   });
@@ -169,7 +169,7 @@ export async function saveOrcamento(
       savedStoragePath = storagePath;
     } catch (pdfErr) {
       pdfFailed = true;
-      console.warn("[saveOrcamento] PDF/upload falhou — prosseguindo sem PDF", pdfErr);
+      console.warn("[saveOrcamento] PDF/upload falhou. Prosseguindo sem PDF", pdfErr);
     }
 
     const { data: userRes } = await supabase.auth.getUser();
@@ -178,7 +178,7 @@ export async function saveOrcamento(
     const valorFinalNum = form.valorFinal ? Number(String(form.valorFinal).replace(/[^\d.,-]/g, "").replace(",", ".")) : null;
     const valorFinalNumerico = valorFinalNum && !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : null;
 
-    // === Passo C — Insert do orçamento (com ou sem PDF) ===
+    // === Passo C. Insert do orçamento (com ou sem PDF) ===
     const { data: orcInserted, error: insErr } = await supabase
       .from("orcamentos")
       .insert({
@@ -211,7 +211,7 @@ export async function saveOrcamento(
 
     const orcamentoId = orcInserted.id;
 
-    // === Passo D — cliente_modulos ===
+    // === Passo D. Cliente_modulos ===
     if (modulosSelecionados.length > 0) {
       const distribuidos = distribuirMesesExecucao(modulosSelecionados);
       const rows = distribuidos.map((m) => ({
@@ -237,7 +237,7 @@ export async function saveOrcamento(
       console.log("[saveOrcamento] nenhum módulo selecionado");
     }
 
-    // === Passo E — ativar projeto ===
+    // === Passo E. Ativar projeto ===
     const { data: updData, error: updErr } = await supabase
       .from("clientes")
       .update({ status: "projeto_ativo" })
@@ -246,7 +246,7 @@ export async function saveOrcamento(
     if (updErr) throw updErr;
     console.log("[saveOrcamento] cliente atualizado", updData);
 
-    // === Passo F — criar contrato em contratos_raiz ===
+    // === Passo F. Criar contrato em contratos_raiz ===
     try {
       const DURACAO_MESES: Record<string, number> = { base: 4, crescimento: 5, expansao: 6 };
       const duracao = DURACAO_MESES[form.plano] ?? 5;

@@ -12,7 +12,7 @@ export default function Diagnostico() {
   const dx = useDiagnostico();
   const [params] = useSearchParams();
 
-  // Pré-seleção de cliente via ?cliente=ID (vindo do painel admin) — vai direto para "dados"
+  // Pré-seleção de cliente via ?cliente=ID (vindo do painel admin). Vai direto para "dados"
   useEffect(() => {
     const cid = params.get("cliente");
     if (cid && cid !== dx.state.clienteId) {

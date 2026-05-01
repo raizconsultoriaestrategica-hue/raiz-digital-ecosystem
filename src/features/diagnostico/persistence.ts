@@ -49,7 +49,7 @@ export async function saveDiagnosticoToSupabase(
       max += 3;
     });
     if (max === 0) return; // Pilar inteiramente pulado
-    // Grava por ID (p01..p07) — fonte de verdade
+    // Grava por ID (p01..p07). Fonte de verdade
     rows.push({
       cliente_id: clienteId,
       tipo: "PILAR",
@@ -225,7 +225,7 @@ export async function saveClienteConfigToSupabase(
 }
 
 /* ============================================================
- * Painel admin — leitura/atualização do histórico no Supabase
+ * Painel admin. Leitura/atualização do histórico no Supabase
  * ============================================================ */
 
 export interface StoredDiagnostico extends DiagnosticoSnapshot {

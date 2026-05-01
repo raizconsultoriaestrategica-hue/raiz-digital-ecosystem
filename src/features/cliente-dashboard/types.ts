@@ -1,4 +1,4 @@
-// Tipos do Dashboard do Cliente — modelo dashboard_data (CSV-like)
+// Tipos do Dashboard do Cliente. Modelo dashboard_data (CSV-like)
 
 export type DashboardTipo = "CONFIG" | "PILAR" | "KPI" | "MODULO" | "INSIGHT";
 

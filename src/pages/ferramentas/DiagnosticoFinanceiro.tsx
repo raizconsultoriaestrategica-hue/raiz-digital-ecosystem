@@ -152,7 +152,7 @@ export default function DiagnosticoFinanceiro() {
           <p className="text-xs uppercase tracking-[0.2em] text-dourado">Módulo 4.1</p>
           <h1 className="mt-2 font-serif text-3xl text-linho md:text-4xl">Diagnóstico Financeiro</h1>
           <p className="mt-2 max-w-2xl text-sm text-linho/80">
-            Mapeie a saúde financeira do consultório em 3 passos — receitas, custos e indicadores estratégicos.
+            Mapeie a saúde financeira do consultório em 3 passos. Receitas, custos e indicadores estratégicos.
           </p>
         </div>
       </div>

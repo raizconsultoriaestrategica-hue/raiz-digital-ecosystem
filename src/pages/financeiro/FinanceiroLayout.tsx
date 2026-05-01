@@ -14,7 +14,7 @@ export default function FinanceiroLayout() {
       <header>
         <h1 className="font-display text-3xl text-verde-raiz">Financeiro Raiz</h1>
         <p className="font-body text-sm text-quase-preto/70">
-          Gestão financeira interna da consultoria — contratos, pagamentos e custos.
+          Gestão financeira interna da consultoria. Contratos, pagamentos e custos.
         </p>
       </header>
 

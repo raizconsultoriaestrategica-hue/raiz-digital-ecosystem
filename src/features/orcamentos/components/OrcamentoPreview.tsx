@@ -127,7 +127,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               </div>
               <div className="text-[11px] text-[#718096] mt-0.5">de {data.scoreMax} pts</div>
               <div className="text-[11px] font-bold text-dourado mt-1.5">
-                {data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : "—%"}
+                {data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : ",%"}
               </div>
             </div>
             <div>
