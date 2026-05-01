@@ -369,25 +369,36 @@ export function OrcamentoSidebar(p: Props) {
             <div className="text-[10px] font-bold text-white/35 uppercase tracking-[0.08em] mt-2 mb-1">
               {pilarName}
             </div>
-            {mods.map((m) => (
-              <label
-                key={m.id}
-                className="flex items-center gap-2 py-1.5 cursor-pointer text-[12px] text-white/75"
-              >
-                <input
-                  type="checkbox"
-                  checked={!!p.form.modulos[m.codigo]}
-                  onChange={() => p.toggleModulo(m.codigo)}
-                  className="w-[15px] h-[15px] accent-dourado"
-                />
-                <span className="flex-1">
-                  {m.codigo} · {m.nome}
-                </span>
-                <span className="text-[10px] text-white/35 tabular-nums">
-                  F{m.fase}
-                </span>
-              </label>
-            ))}
+            {mods.map((m) => {
+              const just = p.form.justificativasIA?.[m.codigo];
+              const isOn = !!p.form.modulos[m.codigo];
+              return (
+                <div key={m.id}>
+                  <label
+                    className="flex items-center gap-2 py-1.5 cursor-pointer text-[12px] text-white/75"
+                    title={just || undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isOn}
+                      onChange={() => p.toggleModulo(m.codigo)}
+                      className="w-[15px] h-[15px] accent-dourado"
+                    />
+                    <span className="flex-1">
+                      {m.codigo} · {m.nome}
+                    </span>
+                    <span className="text-[10px] text-white/35 tabular-nums">
+                      F{m.fase}
+                    </span>
+                  </label>
+                  {isOn && just && (
+                    <div className="ml-[23px] -mt-1 mb-1.5 text-[10.5px] italic text-dourado/75 leading-snug">
+                      💡 {just}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
