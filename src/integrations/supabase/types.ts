@@ -618,6 +618,65 @@ export type Database = {
           },
         ]
       }
+      simulacoes_precificacao: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          created_by: string | null
+          custos_fixos: Json | null
+          dias_mes: number | null
+          horas_dia: number | null
+          id: string
+          multiplicador: number | null
+          nome_clinica: string | null
+          posicionamento: string | null
+          procedimentos: Json | null
+          resultados_globais: Json | null
+          segmento: string | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custos_fixos?: Json | null
+          dias_mes?: number | null
+          horas_dia?: number | null
+          id?: string
+          multiplicador?: number | null
+          nome_clinica?: string | null
+          posicionamento?: string | null
+          procedimentos?: Json | null
+          resultados_globais?: Json | null
+          segmento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custos_fixos?: Json | null
+          dias_mes?: number | null
+          horas_dia?: number | null
+          id?: string
+          multiplicador?: number | null
+          nome_clinica?: string | null
+          posicionamento?: string | null
+          procedimentos?: Json | null
+          resultados_globais?: Json | null
+          segmento?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacoes_precificacao_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
