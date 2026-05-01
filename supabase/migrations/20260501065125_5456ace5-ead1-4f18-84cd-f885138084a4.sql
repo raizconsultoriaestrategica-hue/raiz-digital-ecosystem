@@ -1,0 +1,1 @@
+ALTER TABLE public.simulacoes_precificacao ADD COLUMN IF NOT EXISTS politica_descontos jsonb DEFAULT '{}'::jsonb;
