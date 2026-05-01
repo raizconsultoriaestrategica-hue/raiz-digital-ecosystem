@@ -21,6 +21,10 @@ export interface OrcamentoForm {
   valorFinal: string;
   /** Frase de ancoragem de valor selecionada (índice 0-9) ou null para "Nenhuma". */
   ancoragem: number | null;
+  /** Ancoragem personalizada gerada pela IA (sobrescreve `ancoragem` quando preenchida). */
+  ancoragemIA: string;
+  /** Justificativas por código de módulo, geradas pela IA. */
+  justificativasIA: Record<string, string>;
 }
 
 /** Frases de ancoragem de valor (10 opções). */
