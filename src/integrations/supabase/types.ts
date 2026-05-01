@@ -629,6 +629,7 @@ export type Database = {
           id: string
           multiplicador: number | null
           nome_clinica: string | null
+          politica_descontos: Json | null
           posicionamento: string | null
           procedimentos: Json | null
           resultados_globais: Json | null
@@ -645,6 +646,7 @@ export type Database = {
           id?: string
           multiplicador?: number | null
           nome_clinica?: string | null
+          politica_descontos?: Json | null
           posicionamento?: string | null
           procedimentos?: Json | null
           resultados_globais?: Json | null
@@ -661,6 +663,7 @@ export type Database = {
           id?: string
           multiplicador?: number | null
           nome_clinica?: string | null
+          politica_descontos?: Json | null
           posicionamento?: string | null
           procedimentos?: Json | null
           resultados_globais?: Json | null
