@@ -292,7 +292,7 @@ export default function Biblioteca() {
           </TabsList>
 
           <TabsContent value="modulos" className="mt-6">
-            <Placeholder title="Módulos" description="Catálogo de módulos da metodologia Raiz — em breve." />
+            <ModulosGuia />
           </TabsContent>
           <TabsContent value="consultor" className="mt-6">
             <ConsultorIA />
