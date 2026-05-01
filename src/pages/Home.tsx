@@ -92,15 +92,18 @@ const NAO_VOCE = [
 ];
 
 const PLANOS = [
-  { nome: "PLANO RAIZ", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas em estruturação (R$15k–R$30k/mês)", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","2 reuniões mensais","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz", destaque: false },
-  { nome: "PLANO CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas em aceleração (R$30k–R$60k/mês)", itens: ["Tudo do Plano Raiz + 4 reuniões + visita presencial trimestral","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Crescimento", destaque: true },
-  { nome: "PLANO EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas prontas para escalar (acima de R$60k/mês)", itens: ["Tudo do Plano Crescimento + Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz","Consultoria presencial sob demanda"], cta: "Falar sobre o Plano Expansão", destaque: false },
+  { nome: "PLANO RAIZ", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas que precisam de base antes de escalar", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","2 reuniões mensais","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz", destaque: false },
+  { nome: "PLANO CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas com potencial claro e gargalo identificado", itens: ["Tudo do Plano Raiz + 4 reuniões + visita presencial trimestral","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Crescimento", destaque: true },
+  { nome: "PLANO EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas que querem crescer com um sócio estratégico ativo", itens: ["Tudo do Plano Crescimento + Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz","Consultoria presencial sob demanda"], cta: "Falar sobre o Plano Expansão", destaque: false },
 ];
 
 const FAQ = [
   { q: "Quanto tempo leva para ver os primeiros resultados?", a: "Os primeiros resultados aparecem entre 30 e 60 dias. Ajustes de precificação e conversão tendem a gerar retorno mais rápido. Resultados estruturais levam de 3 a 6 meses." },
   { q: "Preciso abrir o financeiro da clínica?", a: "Sim. Sem os números reais da clínica, como faturamento, ticket médio e inadimplência, não tem como identificar onde o dinheiro está vazando. Tudo o que você compartilhar fica restrito à consultoria." },
   { q: "O Diagnóstico 360° tem compromisso de contratação?", a: "Não. É uma sessão de análise sem compromisso nenhum. Você recebe o relatório completo e o plano de ação. Depois, você decide se quer a Raiz do seu lado ou prefere tocar por conta própria." },
+  { q: "Já contratei consultoria antes e não funcionou. Por que seria diferente?", a: "A maioria das consultorias entrega um relatório e some. A Raiz fica. Acompanhamos a execução ao lado do seu time, com reuniões periódicas, metas documentadas e portal com KPIs em tempo real. O resultado é rastreado, não prometido." },
+  { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si é gratuito e sem compromisso de contratação." },
+  { q: "Funciona para médicos estetas e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estetas e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
 ];
 
 const fmtBRL = (v: number) =>
@@ -797,7 +800,7 @@ function Planos() {
               Planos de consultoria
             </span>
             <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-              Escolha o nível de parceria ideal para sua clínica
+              Três formatos de atuação. Um método. Resultado documentado nos três.
             </h2>
           </div>
         </Reveal>
@@ -847,7 +850,7 @@ function Planos() {
           </div>
 
           <p className="mt-8 text-center font-body font-light text-sm text-muted-foreground">
-            Os valores variam conforme o porte e a complexidade da clínica.
+            O investimento é definido depois do Diagnóstico 360°, com base no porte e nos objetivos da sua clínica. Sem proposta padrão.
           </p>
         </Reveal>
       </div>
@@ -897,12 +900,15 @@ function Calculadora() {
     <section id="calculadora" className="bg-[#0D2218] py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
-          <h2 className="font-display text-4xl text-dourado md:text-5xl">Calculadora de Receita Invisível</h2>
+          <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-dourado">
+            Calculadora de receita invisível
+          </span>
+          <h2 className="mt-4 font-display text-4xl text-dourado md:text-5xl">Calculadora de Receita Invisível</h2>
           <p className="mt-3 font-body font-light italic text-lg text-linho/70">
-            Descubra quanto você pode estar deixando na mesa
+            Quanto sua clínica está perdendo todo mês sem saber
           </p>
           <p className="mt-3 max-w-3xl font-body font-light text-base text-linho/60">
-            Ajuste os valores para refletir a realidade da sua clínica. Os resultados aparecem em tempo real.
+            Coloque os dados reais da sua clínica. Em segundos, você vê onde está o vazamento e quanto ele custa por mês.
           </p>
         </Reveal>
 
@@ -969,6 +975,17 @@ function Calculadora() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-10 rounded-xl border border-dourado/30 bg-[#1a3a26] p-6 text-center">
+            <p className="font-body font-light text-base text-linho/85">
+              Seu diagnóstico mostra potencial. Quer entender o próximo passo?
+            </p>
+            <div className="mt-4">
+              <Button asChild className="bg-dourado px-8 py-5 text-marrom-raiz hover:bg-dourado/90">
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar Diagnóstico Gratuito</a>
+              </Button>
             </div>
           </div>
         </Reveal>
@@ -1038,7 +1055,7 @@ function Faq() {
             Perguntas frequentes
           </span>
           <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            O que você precisa saber antes de começar
+            Perguntas que a gente recebe bastante
           </h2>
 
           <Accordion type="single" collapsible className="mt-10">
@@ -1069,18 +1086,18 @@ function CtaFinal() {
             O próximo passo é simples
           </span>
           <h2 className="mt-6 font-display text-4xl text-linho md:text-5xl">
-            Chega de crescer no improviso. <em className="text-dourado not-italic">A Raiz entra na sua clínica com você.</em>
+            Você já sabe que algo precisa mudar. <em className="text-dourado not-italic">O primeiro passo é entender exatamente o quê.</em>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl font-body font-light text-lg text-linho/75">
-            Agende seu Diagnóstico 360°: uma sessão estruturada, sem compromisso de contratação. Você sai sabendo exatamente onde estão os gargalos e o que fazer nos próximos 90 dias.
+            O Diagnóstico 360° é gratuito, dura até 60 minutos e não tem compromisso de contratação. Você sai com um raio-x real da clínica, independente de qualquer decisão.
           </p>
           <div className="mt-10">
             <Button asChild className="h-auto bg-dourado px-10 py-4 text-lg text-marrom-raiz hover:bg-dourado/90">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar Diagnóstico 360°</a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico Gratuito</a>
             </Button>
           </div>
           <p className="mt-6 font-body font-light text-sm text-linho/50">
-            Sem compromisso de contratação · Vagas limitadas · Resposta em até 24h
+            Sem compromisso. Apenas 4 vagas em Maio/2026. Resposta em até 24h.
           </p>
         </Reveal>
       </div>
@@ -1097,7 +1114,7 @@ function HomeFooter() {
           <div>
             <div className="font-display text-2xl text-linho">Raiz Consultoria Estratégica</div>
             <p className="mt-4 max-w-sm font-body font-light text-sm leading-relaxed text-linho/50">
-              Consultoria estratégica especializada em clínicas odontológicas e profissionais de saúde. Estruturada, direta e focada em resultado mensurável.
+              Consultoria estratégica para dentistas, médicos estetas e dermatologistas. Metodologia própria. Resultado documentado. Sem pacote genérico.
             </p>
             <div className="mt-6 flex items-center gap-4">
               <a href="https://instagram.com/consult.raiz" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-linho/60 transition-colors hover:text-dourado">
