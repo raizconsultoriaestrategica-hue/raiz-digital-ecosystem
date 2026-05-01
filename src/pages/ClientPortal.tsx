@@ -364,16 +364,6 @@ export default function ClientPortal() {
                 </Card>
               )}
 
-              {cronograma && (
-                <Card className="bg-white">
-                  <CardHeader>
-                    <CardTitle className="text-base text-[#1a2e1a]">Cronograma</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-line text-sm text-gray-700">{cronograma}</p>
-                  </CardContent>
-                </Card>
-              )}
 
               {pdfUrl && (
                 <Button asChild className="bg-[#1a2e1a] hover:bg-[#1a2e1a]/90">
