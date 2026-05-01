@@ -553,7 +553,10 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls}
           placeholder="+55 66 9 9999-0000"
           value={p.form.whatsapp}
-          onChange={(e) => p.setField("whatsapp", e.target.value)}
+          onChange={(e) => {
+            setWhatsappEdited(true);
+            p.setField("whatsapp", e.target.value);
+          }}
         />
       </div>
       <div className="mb-4">
@@ -562,7 +565,10 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls}
           placeholder="patrick@raizconsultoria.com.br"
           value={p.form.email}
-          onChange={(e) => p.setField("email", e.target.value)}
+          onChange={(e) => {
+            setEmailEdited(true);
+            p.setField("email", e.target.value);
+          }}
         />
       </div>
 
