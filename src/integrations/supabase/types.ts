@@ -147,6 +147,98 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_pagar_raiz: {
+        Row: {
+          categoria: string
+          created_at: string
+          data_pagamento: string | null
+          descricao: string
+          id: string
+          observacoes: string | null
+          recorrencia: string
+          status: string
+          updated_at: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          data_pagamento?: string | null
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          recorrencia?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          data_pagamento?: string | null
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          recorrencia?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: []
+      }
+      contratos_raiz: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          id: string
+          observacoes: string | null
+          plano: string
+          status: string
+          updated_at: string
+          valor_mensal: number
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nome: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          id?: string
+          observacoes?: string | null
+          plano: string
+          status?: string
+          updated_at?: string
+          valor_mensal?: number
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nome?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          observacoes?: string | null
+          plano?: string
+          status?: string
+          updated_at?: string
+          valor_mensal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_raiz_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_data: {
         Row: {
           benchmark: string | null
@@ -326,6 +418,56 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos_raiz: {
+        Row: {
+          cliente_nome: string
+          contrato_id: string | null
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          mes_referencia: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          cliente_nome: string
+          contrato_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes_referencia: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          cliente_nome?: string
+          contrato_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes_referencia?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_raiz_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos_raiz"
             referencedColumns: ["id"]
           },
         ]

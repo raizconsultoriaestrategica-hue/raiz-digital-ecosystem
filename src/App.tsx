@@ -17,6 +17,12 @@ import Orcamentos from "./pages/ferramentas/Orcamentos";
 import NotFound from "./pages/NotFound";
 import GestaoCliente from "./pages/consultor/GestaoCliente";
 import Biblioteca from "./pages/Biblioteca";
+import EmBreve from "./pages/EmBreve";
+import FinanceiroLayout from "./pages/financeiro/FinanceiroLayout";
+import VisaoGeral from "./pages/financeiro/VisaoGeral";
+import Contratos from "./pages/financeiro/Contratos";
+import Pagamentos from "./pages/financeiro/Pagamentos";
+import ContasPagar from "./pages/financeiro/ContasPagar";
 
 const queryClient = new QueryClient();
 
@@ -82,8 +88,17 @@ const App = () => (
             >
               <Route path="/ferramentas" element={<Ferramentas />} />
               <Route path="/ferramentas/diagnostico" element={<Diagnostico />} />
+              <Route path="/ferramentas/diagnostico-financeiro" element={<EmBreve titulo="Diagnóstico Financeiro" />} />
+              <Route path="/ferramentas/precificacao" element={<EmBreve titulo="Simulador de Precificação" />} />
               <Route path="/ferramentas/orcamentos" element={<Orcamentos />} />
               <Route path="/consultor/clientes/:id" element={<GestaoCliente />} />
+
+              <Route path="/financeiro-raiz" element={<FinanceiroLayout />}>
+                <Route index element={<VisaoGeral />} />
+                <Route path="contratos" element={<Contratos />} />
+                <Route path="pagamentos" element={<Pagamentos />} />
+                <Route path="contas-pagar" element={<ContasPagar />} />
+              </Route>
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
