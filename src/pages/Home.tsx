@@ -51,10 +51,10 @@ const DADOS = [
 ];
 
 const STATS = [
-  { n: "+R$2M", d: "em faturamento gerado com clientes ativos" },
+  { n: "+R$2M", d: "em faturamento incremental gerado com clientes Raiz" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
   { n: "4", d: "etapas do método Raiz de resultado" },
-  { n: "100%", d: "foco em clínicas odontológicas" },
+  { n: "100%", d: "foco em clínicas de saúde e odontologia" },
 ];
 
 const ETAPAS = [
