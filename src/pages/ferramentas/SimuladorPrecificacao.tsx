@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Plus, Save, Trash2, Calculator } from "lucide-react";
+import { AlertTriangle, Plus, Save, Trash2, Calculator, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteSelector } from "@/features/diagnostico/components/ClienteSelector";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +61,64 @@ export default function SimuladorPrecificacao() {
   const { user } = useAuth();
   const [form, setForm] = useState<PrecificacaoForm>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [analisando, setAnalisando] = useState(false);
+  const [analiseIA, setAnaliseIA] = useState<{ analise: string; insights: string[] } | null>(null);
+
+  const handleAnalisarIA = async () => {
+    setAnalisando(true);
+    setAnaliseIA(null);
+    try {
+      const procs = form.procedimentos
+        .map((p) => {
+          const r = calc.por_procedimento[p.id];
+          if (!r) return null;
+          return `- ${p.nome || "Procedimento sem nome"}: preço mínimo ${fmtBRL(r.preco_minimo)}, preço estratégico ${fmtBRL(r.preco_estrategico)}, margem alvo ${p.margem_alvo_pct}%${p.preco_praticado ? `, preço praticado ${fmtBRL(p.preco_praticado)}` : ""}`;
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      const prompt = `Analise a precificação estratégica deste consultório e responda APENAS em JSON válido (sem markdown, sem \`\`\`) com dois campos:
+
+1. "analise": texto de 3-4 parágrafos avaliando se os preços estão adequados ao segmento e posicionamento, comparando com benchmarks reais do mercado brasileiro (odontologia: implante R$3.500-6.000, alinhador R$8.000-18.000, clareamento R$800-1.500, consulta R$300-600; medicina estética: botox R$800-1.800, preenchimento R$1.200-3.000, bioestimulador R$2.500-5.000). Identificar se há procedimentos com margem insuficiente ou preço abaixo do potencial do posicionamento escolhido. Tom direto e consultivo.
+
+2. "insights": array com 3-5 insights acionáveis sobre como melhorar a precificação, aumentar margem ou reposicionar procedimentos específicos.
+
+Dados do consultório:
+- Segmento: ${form.segmento || "não informado"}
+- Posicionamento: ${POSICIONAMENTO_LABEL[form.posicionamento]}
+- Custo/hora clínica: ${fmtBRL(calc.custo_hora_clinica)}
+- Faturamento total estimado: ${fmtBRL(calc.faturamento_total)}
+- Margem global: ${fmtPct(calc.margem_global_pct)}
+
+Procedimentos:
+${procs}`;
+
+      const { data, error } = await supabase.functions.invoke("consultor-ia", {
+        body: {
+          systemPrompt:
+            "Você é um consultor estratégico sênior da Raiz Consultoria, especializado em precificação para clínicas odontológicas e médicas. Responda sempre em JSON válido sem usar blocos de código markdown.",
+          messages: [{ role: "user", content: prompt }],
+        },
+      });
+      if (error) throw error;
+
+      const text =
+        (data as any)?.content?.[0]?.text ??
+        (data as any)?.choices?.[0]?.message?.content ??
+        "";
+      const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      setAnaliseIA({
+        analise: parsed.analise || "",
+        insights: Array.isArray(parsed.insights) ? parsed.insights : [],
+      });
+    } catch (e: any) {
+      console.error("[analisar IA] erro:", e);
+      toast.error("Erro ao analisar com IA: " + (e?.message || "tente novamente"));
+    } finally {
+      setAnalisando(false);
+    }
+  };
 
   useEffect(() => {
     const prev = document.title;
@@ -239,7 +297,9 @@ export default function SimuladorPrecificacao() {
                 placeholder="Nome do custo"
                 className="flex-1"
               />
-              <NumInput value={c.valor} onChange={(n) => setCusto(c.id, { valor: n })} placeholder="R$ 0" />
+              <div className="w-[140px] shrink-0">
+                <NumInput value={c.valor} onChange={(n) => setCusto(c.id, { valor: n })} placeholder="R$ 0" />
+              </div>
               <Button variant="ghost" size="icon" onClick={() => removeCusto(c.id)}>
                 <Trash2 className="h-4 w-4 text-red-600" />
               </Button>
@@ -340,9 +400,29 @@ export default function SimuladorPrecificacao() {
 
       {/* RESULTADOS GLOBAIS */}
       <Card className="bg-verde-raiz p-6 text-linho">
-        <div className="mb-4 flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-dourado" />
-          <h2 className="font-display text-xl text-dourado">Painel de resultados</h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-dourado" />
+            <h2 className="font-display text-xl text-dourado">Painel de resultados</h2>
+          </div>
+          {form.procedimentos.length > 0 && (
+            <Button
+              onClick={handleAnalisarIA}
+              disabled={analisando}
+              size="sm"
+              className="bg-dourado text-verde-raiz hover:bg-dourado/90"
+            >
+              {analisando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analisando…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" /> Analisar precificação com IA
+                </>
+              )}
+            </Button>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
           <GlobalKpi label="Faturamento total" value={fmtBRL(calc.faturamento_total)} />
@@ -355,6 +435,36 @@ export default function SimuladorPrecificacao() {
             hint={`${calc.horas_utilizadas.toFixed(1)}h de ${calc.capacidade_total_horas.toFixed(0)}h`}
           />
         </div>
+
+        {analiseIA && (
+          <div className="mt-6 space-y-4 border-t border-dourado/30 pt-6">
+            <div className="rounded-lg border border-dourado/40 bg-dourado/10 p-5">
+              <div className="mb-2 flex items-center gap-2 text-dourado">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Análise estratégica</span>
+              </div>
+              <div className="space-y-2 text-sm leading-relaxed text-linho/90 whitespace-pre-line">
+                {analiseIA.analise}
+              </div>
+            </div>
+            {analiseIA.insights.length > 0 && (
+              <div>
+                <h3 className="mb-3 font-display text-lg text-dourado">Insights acionáveis</h3>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {analiseIA.insights.map((ins, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-dourado/40 bg-dourado/10 p-4 text-sm text-linho"
+                    >
+                      <div className="mb-1 font-display text-base text-dourado">#{i + 1}</div>
+                      {ins}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* POLÍTICA DE DESCONTOS */}
