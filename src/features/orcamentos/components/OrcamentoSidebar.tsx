@@ -489,11 +489,33 @@ export function OrcamentoSidebar(p: Props) {
         Selecione uma frase para aparecer abaixo do investimento no PDF
       </div>
       <div className="space-y-1.5 mb-2">
+        {/* Ancoragem gerada pela IA — aparece como primeira opção quando disponível */}
+        {p.form.ancoragemIA && (
+          <button
+            type="button"
+            onClick={() => p.setField("ancoragem", null)}
+            className={`w-full text-left px-3 py-2.5 rounded-md border-2 text-[11px] leading-relaxed italic transition-colors relative ${
+              p.form.ancoragem === null
+                ? "border-dourado bg-dourado/15 text-white"
+                : "border-dourado/50 bg-dourado/5 text-white/80 hover:border-dourado"
+            }`}
+          >
+            <span className="not-italic inline-block bg-dourado text-quase-preto text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded mb-1.5">
+              ✨ Gerada pela IA
+            </span>
+            <div>"{p.form.ancoragemIA}"</div>
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={() => p.setField("ancoragem", null)}
+          onClick={() => {
+            // "Nenhuma" — descarta também a ancoragem da IA
+            p.setField("ancoragem", null);
+            if (p.form.ancoragemIA) p.setField("ancoragemIA", "");
+          }}
           className={`w-full text-left px-3 py-2 rounded-md border text-[11px] transition-colors ${
-            p.form.ancoragem === null
+            p.form.ancoragem === null && !p.form.ancoragemIA
               ? "border-dourado bg-dourado/10 text-white"
               : "border-white/15 bg-white/[0.04] text-white/60 hover:border-white/30"
           }`}
@@ -506,7 +528,11 @@ export function OrcamentoSidebar(p: Props) {
             <button
               key={idx}
               type="button"
-              onClick={() => p.setField("ancoragem", idx)}
+              onClick={() => {
+                p.setField("ancoragem", idx);
+                // Selecionar uma frase genérica desativa a ancoragem da IA
+                if (p.form.ancoragemIA) p.setField("ancoragemIA", "");
+              }}
               className={`w-full text-left px-3 py-2 rounded-md border text-[11px] leading-relaxed italic transition-colors ${
                 selected
                   ? "border-dourado bg-dourado/10 text-white"
