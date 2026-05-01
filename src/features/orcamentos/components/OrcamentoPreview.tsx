@@ -24,8 +24,11 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
 
     const pilares = PILARES.map((p) => {
       const raw = form.pilarScores[p.id];
-      const v = raw === undefined || raw === "" ? null : parseFloat(raw);
-      const pct = v === null || isNaN(v) ? null : Math.min(100, Math.max(0, v));
+      const v = raw === undefined || raw === "" ? NaN : parseFloat(raw);
+      // p07 (Crescimento & Expansão): se ausente/inválido, força 0% para manter barra visível
+      const pct = isNaN(v)
+        ? (p.id === "p07" ? 0 : null)
+        : Math.min(100, Math.max(0, v));
       return { ...p, pct };
     });
 

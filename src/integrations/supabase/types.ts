@@ -147,6 +147,33 @@ export type Database = {
         }
         Relationships: []
       }
+      consultor_profiles: {
+        Row: {
+          created_at: string
+          email_consultor: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          whatsapp_consultor: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_consultor?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_consultor?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_consultor?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_consultor?: string | null
+        }
+        Relationships: []
+      }
       contas_pagar_raiz: {
         Row: {
           categoria: string
