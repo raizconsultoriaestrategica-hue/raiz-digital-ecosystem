@@ -47,7 +47,7 @@ const DADOS = [
   { n: "73%", d: "das clínicas fecham em 5 anos por falta de gestão" },
   { n: "R$18k", d: "de faturamento médio deixado na mesa por mês por ineficiência" },
   { n: "40%", d: "dos orçamentos não são convertidos por falta de processo de vendas" },
-  { n: "1 em 3", d: "dentistas não sabe sua margem líquida real" },
+  { n: "1 em 3", d: "profissionais de saúde não sabe sua margem líquida real" },
 ];
 
 const STATS = [
