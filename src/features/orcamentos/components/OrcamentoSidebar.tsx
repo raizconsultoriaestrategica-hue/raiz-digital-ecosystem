@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
-import { Printer, RotateCcw, Save } from "lucide-react";
+import { Printer, RotateCcw, Save, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
 import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
+import { gerarAnaliseIA } from "../aiAnalysis";
 
 interface Props {
   form: OrcamentoForm;
