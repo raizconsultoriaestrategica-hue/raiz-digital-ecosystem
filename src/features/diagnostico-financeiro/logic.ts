@@ -1,4 +1,5 @@
-export type Semaforo = "verde" | "amarelo" | "vermelho";
+export type { Semaforo } from "./semaforos";
+import type { Semaforo } from "./semaforos";
 
 export interface DadosConsultorio {
   nome_profissional: string;
@@ -75,41 +76,20 @@ export const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 export const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 
-export function semMargem(p: number): Semaforo {
-  if (p >= 20) return "verde";
-  if (p >= 10) return "amarelo";
-  return "vermelho";
-}
-export function semNoShow(p: number): Semaforo {
-  if (p <= 15) return "verde";
-  if (p <= 25) return "amarelo";
-  return "vermelho";
-}
-export function semInadimp(p: number): Semaforo {
-  if (p <= 5) return "verde";
-  if (p <= 10) return "amarelo";
-  return "vermelho";
-}
-export function semOcupacao(p: number): Semaforo {
-  if (p >= 75 && p <= 85) return "verde";
-  if (p >= 60 && p < 75) return "amarelo";
-  return "vermelho";
-}
-export function semMatLab(p: number): Semaforo {
-  if (p <= 15) return "verde";
-  if (p <= 20) return "amarelo";
-  return "vermelho";
-}
-export function semProLabore(p: number): Semaforo {
-  if (p >= 25 && p <= 35) return "verde";
-  if (p >= 15 && p < 25) return "amarelo";
-  return "vermelho";
-}
-export function semPontoEquilibrio(diaPe: number): Semaforo {
-  if (diaPe <= 15) return "verde";
-  if (diaPe <= 20) return "amarelo";
-  return "vermelho";
-}
+// Semáforos centralizados em ./semaforos.ts — aliases legados para compat.
+import {
+  semMargemLiquida, semNoShow as semNoShowCore, semInadimplencia,
+  semOcupacaoAgenda, semCustoMaterial, semProLabore as semProLaboreCore,
+  semPontoEquilibrio as semPECore,
+} from "./semaforos";
+
+export const semMargem = semMargemLiquida;
+export const semNoShow = semNoShowCore;
+export const semInadimp = semInadimplencia;
+export const semOcupacao = semOcupacaoAgenda;
+export const semMatLab = semCustoMaterial;
+export const semProLabore = semProLaboreCore;
+export const semPontoEquilibrio = semPECore;
 
 export interface CalcResult {
   totalFixos: number;
