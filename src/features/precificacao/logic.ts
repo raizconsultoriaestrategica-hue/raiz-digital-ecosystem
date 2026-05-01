@@ -76,12 +76,12 @@ export function emptyForm(): PrecificacaoForm {
     horas_dia: 8,
     dias_mes: 22,
     custos_fixos: [
-      { id: uid(), nome: "Aluguel", valor: 0 },
-      { id: uid(), nome: "Salários", valor: 0 },
-      { id: uid(), nome: "Pró-labore", valor: 0 },
+      { id: uid(), nome: "Aluguel / Condomínio", valor: 0 },
+      { id: uid(), nome: "Folha de Pagamento / Salários", valor: 0 },
+      { id: uid(), nome: "Pró-labore do Titular", valor: 0 },
       { id: uid(), nome: "Contabilidade", valor: 0 },
-      { id: uid(), nome: "Energia/Internet", valor: 0 },
-      { id: uid(), nome: "Sistemas", valor: 0 },
+      { id: uid(), nome: "Energia / Água / Telefone", valor: 0 },
+      { id: uid(), nome: "Sistemas / Softwares / Internet", valor: 0 },
     ],
     procedimentos: [],
   };

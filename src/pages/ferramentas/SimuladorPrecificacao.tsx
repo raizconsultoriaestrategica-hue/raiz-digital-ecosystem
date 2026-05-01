@@ -159,13 +159,19 @@ export default function SimuladorPrecificacao() {
           <div className="lg:col-span-2">
             <ClienteSelector
               value={form.cliente_id}
-              onChange={(id, c) =>
+              onChange={(id, c) => {
+                const esp = (c?.especialidade || "").toLowerCase();
+                let segmento: PrecificacaoForm["segmento"] = form.segmento;
+                if (esp.includes("odonto") || esp.includes("dentist")) segmento = "Odontologia";
+                else if (esp.includes("derma")) segmento = "Dermatologia";
+                else if (esp.includes("estét") || esp.includes("estet") || esp.includes("medic")) segmento = "Medicina Estética";
                 setForm((f) => ({
                   ...f,
                   cliente_id: id,
                   nome_clinica: c?.nome_clinica || f.nome_clinica,
-                }))
-              }
+                  segmento: segmento || f.segmento,
+                }));
+              }}
             />
           </div>
           <Field label="Nome da clínica/profissional">
