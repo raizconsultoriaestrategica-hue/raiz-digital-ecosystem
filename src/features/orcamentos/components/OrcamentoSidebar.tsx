@@ -38,6 +38,8 @@ function fmtBRL(n: number) {
 
 export function OrcamentoSidebar(p: Props) {
   const [saving, setSaving] = useState(false);
+  const [generatingIA, setGeneratingIA] = useState(false);
+  const [iaSucesso, setIaSucesso] = useState(false);
 
   // Agrupar módulos por pilar_nome (vindos do DB, ordenados por pilar/ordem)
   const grouped = useMemo(() => {
