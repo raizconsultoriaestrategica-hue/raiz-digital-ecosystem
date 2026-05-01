@@ -62,8 +62,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       ? `potencial de +${fmtMoney(meta - fat)}/mês no faturamento`
       : "no faturamento em até 6 meses";
 
-    const ancoragemFrase =
-      form.ancoragem !== null && form.ancoragem !== undefined
+    const ancoragemFrase = form.ancoragemIA
+      ? form.ancoragemIA
+      : form.ancoragem !== null && form.ancoragem !== undefined
         ? ANCORAGENS[form.ancoragem] ?? null
         : null;
 

@@ -1,10 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
-import { Printer, RotateCcw, Save } from "lucide-react";
+import { Printer, RotateCcw, Save, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
 import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
+import { gerarAnaliseIA } from "../aiAnalysis";
 
 interface Props {
   form: OrcamentoForm;
@@ -37,6 +38,8 @@ function fmtBRL(n: number) {
 
 export function OrcamentoSidebar(p: Props) {
   const [saving, setSaving] = useState(false);
+  const [generatingIA, setGeneratingIA] = useState(false);
+  const [iaSucesso, setIaSucesso] = useState(false);
 
   // Agrupar módulos por pilar_nome (vindos do DB, ordenados por pilar/ordem)
   const grouped = useMemo(() => {
@@ -95,6 +98,34 @@ export function OrcamentoSidebar(p: Props) {
       toast.error(msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const podeGerarIA =
+    !!p.clienteId &&
+    Object.values(p.form.pilarScores).some((v) => v !== undefined && v !== "");
+
+  const handleGerarIA = async () => {
+    if (!podeGerarIA) {
+      toast.error("Selecione um cliente e preencha ao menos um score de pilar.");
+      return;
+    }
+    setGeneratingIA(true);
+    setIaSucesso(false);
+    try {
+      const result = await gerarAnaliseIA(p.form, p.modulosDb, selecionados);
+      p.setField("analise", result.analise);
+      p.setField("ancoragemIA", result.ancoragem);
+      p.setField("ancoragem", null);
+      p.setField("justificativasIA", result.justificativas);
+      setIaSucesso(true);
+      toast.success("Análise gerada com IA");
+      setTimeout(() => setIaSucesso(false), 6000);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao gerar análise";
+      toast.error(msg);
+    } finally {
+      setGeneratingIA(false);
     }
   };
 
@@ -268,6 +299,35 @@ export function OrcamentoSidebar(p: Props) {
         ))}
       </div>
 
+      {/* Botão IA — Gerar análise, ancoragem e justificativas */}
+      <div className="mt-2 mb-1">
+        <button
+          type="button"
+          onClick={handleGerarIA}
+          disabled={!podeGerarIA || generatingIA}
+          className="w-full bg-gradient-to-r from-dourado to-[#b8932f] hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[12px] rounded-lg py-2.5 flex items-center justify-center gap-2 transition-opacity"
+          title={!podeGerarIA ? "Selecione um cliente e preencha ao menos um score de pilar" : "Gerar análise, ancoragem e justificativas com IA"}
+        >
+          {generatingIA ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Gerando análise…
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Gerar análise com IA
+            </>
+          )}
+        </button>
+        {iaSucesso && !generatingIA && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#7ED957]">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Análise gerada com IA
+          </div>
+        )}
+      </div>
+
       <hr className="border-white/10 my-5" />
       <div className={sectionCls}>Plano Recomendado</div>
       <div className="mb-4">
@@ -309,25 +369,36 @@ export function OrcamentoSidebar(p: Props) {
             <div className="text-[10px] font-bold text-white/35 uppercase tracking-[0.08em] mt-2 mb-1">
               {pilarName}
             </div>
-            {mods.map((m) => (
-              <label
-                key={m.id}
-                className="flex items-center gap-2 py-1.5 cursor-pointer text-[12px] text-white/75"
-              >
-                <input
-                  type="checkbox"
-                  checked={!!p.form.modulos[m.codigo]}
-                  onChange={() => p.toggleModulo(m.codigo)}
-                  className="w-[15px] h-[15px] accent-dourado"
-                />
-                <span className="flex-1">
-                  {m.codigo} · {m.nome}
-                </span>
-                <span className="text-[10px] text-white/35 tabular-nums">
-                  F{m.fase}
-                </span>
-              </label>
-            ))}
+            {mods.map((m) => {
+              const just = p.form.justificativasIA?.[m.codigo];
+              const isOn = !!p.form.modulos[m.codigo];
+              return (
+                <div key={m.id}>
+                  <label
+                    className="flex items-center gap-2 py-1.5 cursor-pointer text-[12px] text-white/75"
+                    title={just || undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isOn}
+                      onChange={() => p.toggleModulo(m.codigo)}
+                      className="w-[15px] h-[15px] accent-dourado"
+                    />
+                    <span className="flex-1">
+                      {m.codigo} · {m.nome}
+                    </span>
+                    <span className="text-[10px] text-white/35 tabular-nums">
+                      F{m.fase}
+                    </span>
+                  </label>
+                  {isOn && just && (
+                    <div className="ml-[23px] -mt-1 mb-1.5 text-[10.5px] italic text-dourado/75 leading-snug">
+                      💡 {just}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>

@@ -374,9 +374,12 @@ export type Database = {
       }
       orcamentos: {
         Row: {
+          analise_ia: string | null
+          ancoragem_ia: string | null
           cliente_id: string
           created_at: string
           created_by: string | null
+          dor_principal: string | null
           file_name: string | null
           id: string
           plano: string
@@ -385,11 +388,15 @@ export type Database = {
           score_max: number | null
           storage_path: string | null
           valor: string | null
+          valor_final_numerico: number | null
         }
         Insert: {
+          analise_ia?: string | null
+          ancoragem_ia?: string | null
           cliente_id: string
           created_at?: string
           created_by?: string | null
+          dor_principal?: string | null
           file_name?: string | null
           id?: string
           plano: string
@@ -398,11 +405,15 @@ export type Database = {
           score_max?: number | null
           storage_path?: string | null
           valor?: string | null
+          valor_final_numerico?: number | null
         }
         Update: {
+          analise_ia?: string | null
+          ancoragem_ia?: string | null
           cliente_id?: string
           created_at?: string
           created_by?: string | null
+          dor_principal?: string | null
           file_name?: string | null
           id?: string
           plano?: string
@@ -411,6 +422,7 @@ export type Database = {
           score_max?: number | null
           storage_path?: string | null
           valor?: string | null
+          valor_final_numerico?: number | null
         }
         Relationships: [
           {
