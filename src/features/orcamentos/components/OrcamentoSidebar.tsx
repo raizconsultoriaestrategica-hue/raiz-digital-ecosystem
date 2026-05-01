@@ -73,6 +73,55 @@ export function OrcamentoSidebar(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valorCalculado, valorFinalEdited]);
 
+  // Auto-preenche WhatsApp e Email do consultor logado
+  const [consultorUserId, setConsultorUserId] = useState<string | null>(null);
+  const [whatsappEdited, setWhatsappEdited] = useState(false);
+  const [emailEdited, setEmailEdited] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      setConsultorUserId(user.id);
+
+      const { data: profile } = await supabase
+        .from("consultor_profiles")
+        .select("whatsapp_consultor, email_consultor")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      const emailToUse = profile?.email_consultor?.trim() || user.email || "";
+      const wppToUse = profile?.whatsapp_consultor?.trim() || "";
+
+      if (!emailEdited && !p.form.email && emailToUse) p.setField("email", emailToUse);
+      if (!whatsappEdited && !p.form.whatsapp && wppToUse) p.setField("whatsapp", wppToUse);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persiste WhatsApp/email do consultor (debounced)
+  useEffect(() => {
+    if (!consultorUserId) return;
+    if (!whatsappEdited && !emailEdited) return;
+    const t = setTimeout(() => {
+      supabase
+        .from("consultor_profiles")
+        .upsert(
+          {
+            user_id: consultorUserId,
+            whatsapp_consultor: p.form.whatsapp || null,
+            email_consultor: p.form.email || null,
+          },
+          { onConflict: "user_id" }
+        )
+        .then(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [p.form.whatsapp, p.form.email, consultorUserId, whatsappEdited, emailEdited]);
+
   const handleSave = async () => {
     if (!p.clienteId) {
       toast.error("Selecione um cliente vinculado para salvar.");
