@@ -197,15 +197,24 @@ export default function ClientPortal() {
       : 0;
 
   // ---- Orçamento ----
-  const orcModulos: string[] = Array.isArray(orcamento?.modulos_contratados)
-    ? orcamento.modulos_contratados
-    : Array.isArray(orcamento?.modulos)
-    ? orcamento.modulos
+  // Parse "valor" (text, ex.: "R$ 2.500,00") com fallback para valor_final_numerico
+  const parseBRL = (v: any): number => {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === "number") return v;
+    const s = String(v).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const valorTotal =
+    Number(orcamento?.valor_final_numerico ?? 0) || parseBRL(orcamento?.valor);
+  // Módulos contratados: vem do storage do orçamento; aqui mostramos o plano contratado.
+  const orcModulos: string[] = orcamento?.plano_nome
+    ? [orcamento.plano_nome]
+    : orcamento?.plano
+    ? [orcamento.plano]
     : [];
-  const valorTotal = Number(orcamento?.valor_total ?? orcamento?.valor_final_numerico ?? 0);
-  const cronograma = orcamento?.cronograma || "";
-  const pdfUrl = orcamento?.pdf_url || null;
-  const orcStatus = orcamento?.status || (orcamento ? "ativo" : "");
+  const pdfUrl = orcamento?.storage_path || null;
+  const orcStatus = orcamento ? "ativo" : "";
 
   // ---- Diagnóstico Financeiro ----
   const indicadores: Record<string, any> = (diagFin?.indicadores as Record<string, any>) || {};
