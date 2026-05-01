@@ -31,7 +31,7 @@ export default function Login() {
     // Sem isso, o admin é mandado para /dashboard na primeira tentativa
     // (porque role ainda é null) e precisa logar de novo.
     if (session && role) {
-      navigate(role === "admin" ? "/ferramentas" : "/dashboard", { replace: true });
+      navigate(role === "admin" ? "/dashboard" : "/painel", { replace: true });
     }
   }, [session, role, navigate]);
 
