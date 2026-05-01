@@ -3,8 +3,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, Loader2, BookOpen, Bot, BarChart3, FileText, Layers } from "lucide-react";
+import { Send, Loader2, BookOpen, Bot, BarChart3, FileText, Layers, Calculator, Lightbulb, ArrowRight } from "lucide-react";
 
 const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica — o cérebro estratégico da operação. Não é um chatbot genérico: é um especialista com visão de CEO, profundo conhecimento do mercado de saúde e odontologia no Brasil, e domínio completo da metodologia e dos módulos da Raiz.
 
