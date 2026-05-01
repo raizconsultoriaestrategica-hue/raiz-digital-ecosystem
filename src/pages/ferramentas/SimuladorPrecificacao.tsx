@@ -61,6 +61,64 @@ export default function SimuladorPrecificacao() {
   const { user } = useAuth();
   const [form, setForm] = useState<PrecificacaoForm>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [analisando, setAnalisando] = useState(false);
+  const [analiseIA, setAnaliseIA] = useState<{ analise: string; insights: string[] } | null>(null);
+
+  const handleAnalisarIA = async () => {
+    setAnalisando(true);
+    setAnaliseIA(null);
+    try {
+      const procs = form.procedimentos
+        .map((p) => {
+          const r = calc.por_procedimento[p.id];
+          if (!r) return null;
+          return `- ${p.nome || "Procedimento sem nome"}: preço mínimo ${fmtBRL(r.preco_minimo)}, preço estratégico ${fmtBRL(r.preco_estrategico)}, margem alvo ${p.margem_alvo_pct}%${p.preco_praticado ? `, preço praticado ${fmtBRL(p.preco_praticado)}` : ""}`;
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      const prompt = `Analise a precificação estratégica deste consultório e responda APENAS em JSON válido (sem markdown, sem \`\`\`) com dois campos:
+
+1. "analise": texto de 3-4 parágrafos avaliando se os preços estão adequados ao segmento e posicionamento, comparando com benchmarks reais do mercado brasileiro (odontologia: implante R$3.500-6.000, alinhador R$8.000-18.000, clareamento R$800-1.500, consulta R$300-600; medicina estética: botox R$800-1.800, preenchimento R$1.200-3.000, bioestimulador R$2.500-5.000). Identificar se há procedimentos com margem insuficiente ou preço abaixo do potencial do posicionamento escolhido. Tom direto e consultivo.
+
+2. "insights": array com 3-5 insights acionáveis sobre como melhorar a precificação, aumentar margem ou reposicionar procedimentos específicos.
+
+Dados do consultório:
+- Segmento: ${form.segmento || "não informado"}
+- Posicionamento: ${POSICIONAMENTO_LABEL[form.posicionamento]}
+- Custo/hora clínica: ${fmtBRL(calc.custo_hora_clinica)}
+- Faturamento total estimado: ${fmtBRL(calc.faturamento_total)}
+- Margem global: ${fmtPct(calc.margem_global_pct)}
+
+Procedimentos:
+${procs}`;
+
+      const { data, error } = await supabase.functions.invoke("consultor-ia", {
+        body: {
+          systemPrompt:
+            "Você é um consultor estratégico sênior da Raiz Consultoria, especializado em precificação para clínicas odontológicas e médicas. Responda sempre em JSON válido sem usar blocos de código markdown.",
+          messages: [{ role: "user", content: prompt }],
+        },
+      });
+      if (error) throw error;
+
+      const text =
+        (data as any)?.content?.[0]?.text ??
+        (data as any)?.choices?.[0]?.message?.content ??
+        "";
+      const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      setAnaliseIA({
+        analise: parsed.analise || "",
+        insights: Array.isArray(parsed.insights) ? parsed.insights : [],
+      });
+    } catch (e: any) {
+      console.error("[analisar IA] erro:", e);
+      toast.error("Erro ao analisar com IA: " + (e?.message || "tente novamente"));
+    } finally {
+      setAnalisando(false);
+    }
+  };
 
   useEffect(() => {
     const prev = document.title;
