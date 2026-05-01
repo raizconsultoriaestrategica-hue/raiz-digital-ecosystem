@@ -253,6 +253,48 @@ function ConsultorIA() {
   );
 }
 
+function ModulosGuia() {
+  return (
+    <div className="space-y-4">
+      <Card className="bg-verde-raiz border-dourado/20 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-dourado/80">Pilar 4 — Financeiro</span>
+        </div>
+        <h3 className="font-display text-2xl text-dourado mb-2">Módulo 4.2 — Precificação Estratégica</h3>
+        <p className="font-body text-linho/80 text-sm leading-relaxed">
+          Defina preços que refletem o seu posicionamento de mercado, cobrem todos os custos reais e garantem margem saudável por procedimento.
+        </p>
+
+        <div className="mt-6 rounded-lg border border-dourado/30 bg-verde-raiz/40 p-5">
+          <div className="flex items-center gap-2 mb-3 text-dourado">
+            <Calculator className="h-4 w-4" />
+            <h4 className="font-display text-lg">Como usar o Simulador</h4>
+          </div>
+          <ol className="space-y-2 text-sm text-linho/85 font-body">
+            <li><strong className="text-dourado">1.</strong> Configure seus custos fixos mensais (aluguel, salários, pró-labore, etc.).</li>
+            <li><strong className="text-dourado">2.</strong> Adicione os procedimentos com duração, materiais, sessões e margem alvo.</li>
+            <li><strong className="text-dourado">3.</strong> Analise com IA e ajuste sua tabela de honorários a partir dos preços mínimo viável e estratégico.</li>
+          </ol>
+          <Link to="/ferramentas/precificacao">
+            <Button className="mt-4 bg-dourado text-quase-preto hover:bg-dourado/90">
+              Abrir Simulador <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-dourado/30 bg-dourado/10 p-4 flex gap-3">
+          <Lightbulb className="h-4 w-4 text-dourado mt-0.5 shrink-0" />
+          <p className="text-sm text-linho/85 font-body leading-relaxed">
+            <strong className="text-dourado">Dica estratégica:</strong> Comece pelos 3-5 procedimentos que mais realiza. Se o preço praticado estiver abaixo do mínimo viável em qualquer um deles, você está trabalhando no prejuízo.
+          </p>
+        </div>
+      </Card>
+
+      <Placeholder title="Outros módulos" description="Catálogo completo da metodologia Raiz — em breve." />
+    </div>
+  );
+}
+
 function Placeholder({ title, description }: { title: string; description: string }) {
   return (
     <Card className="bg-verde-raiz border-dourado/20 p-10 text-center">
