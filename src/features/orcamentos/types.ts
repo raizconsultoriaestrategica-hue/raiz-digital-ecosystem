@@ -60,6 +60,8 @@ export const initialForm = (): OrcamentoForm => ({
   email: "",
   valorFinal: "",
   ancoragem: null,
+  ancoragemIA: "",
+  justificativasIA: {},
 });
 
 /** Pesos por fase (R$ por módulo) */
