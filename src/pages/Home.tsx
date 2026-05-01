@@ -47,14 +47,14 @@ const DADOS = [
   { n: "73%", d: "das clínicas fecham em 5 anos por falta de gestão" },
   { n: "R$18k", d: "de faturamento médio deixado na mesa por mês por ineficiência" },
   { n: "40%", d: "dos orçamentos não são convertidos por falta de processo de vendas" },
-  { n: "1 em 3", d: "dentistas não sabe sua margem líquida real" },
+  { n: "1 em 3", d: "profissionais de saúde não sabe sua margem líquida real" },
 ];
 
 const STATS = [
-  { n: "+R$2M", d: "em faturamento gerado com clientes ativos" },
+  { n: "+R$2M", d: "em faturamento incremental gerado com clientes Raiz" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
   { n: "4", d: "etapas do método Raiz de resultado" },
-  { n: "100%", d: "foco em clínicas odontológicas" },
+  { n: "100%", d: "foco em clínicas de saúde e odontologia" },
 ];
 
 const ETAPAS = [
@@ -210,7 +210,7 @@ function Hero() {
           {/* Coluna esquerda 60%. Conteúdo principal */}
           <div className="lg:col-span-3 lg:row-start-1">
             <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
-              Consultoria Estratégica para Odontologia
+              Consultoria Estratégica para Profissionais de Saúde
             </span>
             <h1
               className="mt-8 font-display font-medium leading-[1.1] text-linho"
@@ -221,22 +221,22 @@ function Hero() {
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
-              Diagnóstico personalizado, plano sob medida, execução guiada. Resultado mensurável. Transforme sua clínica num negócio lucrativo e previsível.
+              Dentistas, médicos estetas e dermatologistas que faturam entre R$15k e R$90k/mês trabalham mais do que deveriam para crescer menos do que poderiam. A Raiz encontra o gargalo exato e executa ao seu lado até o resultado aparecer nos números.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Button asChild size="lg" className="bg-dourado px-8 py-6 text-marrom-raiz hover:bg-dourado/90">
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar Diagnóstico 360°</a>
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico 360°</a>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-linho/30 bg-transparent px-8 py-6 text-linho hover:bg-linho/10 hover:text-linho">
                 <a href="#metodo">Ver o Método</a>
               </Button>
             </div>
             <p className="mt-8 font-body font-light text-sm text-linho/60">
-              14+ anos em marketing, vendas, tecnologia e operações, aplicados ao setor de saúde
+              14+ anos em marketing, vendas, tecnologia e operações em múltiplos mercados e segmentos, com visão estratégica aplicada ao crescimento de negócios de saúde
             </p>
             <div className="mt-6">
               <div className="inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
-                ⏰ Vagas limitadas para Abril/2026: apenas 4 vagas disponíveis neste ciclo.
+                ⏰ Vagas limitadas para Maio/2026. Apenas 4 vagas disponíveis neste ciclo.
               </div>
             </div>
           </div>
@@ -303,11 +303,11 @@ function Problema() {
             A realidade que ninguém quer ver
           </span>
           <h2 className="mt-4 max-w-[22ch] font-display text-3xl text-verde-raiz md:text-4xl">
-            Você trabalha mais do que nunca.<br />
-            E o resultado não cresce no mesmo ritmo.
+            Você está no limite.<br />
+            E a clínica ainda depende de você para tudo.
           </h2>
           <p className="mt-6 max-w-[680px] font-body font-light text-lg text-quase-preto/70">
-            Isso não é falta de esforço. É um problema de estrutura. Existe uma causa raiz identificável para isso.
+            Não é falta de dedicação. É falta de estrutura. Todo gargalo tem uma causa raiz: ela é identificável, mapeável e corrigível.
           </p>
         </Reveal>
 
@@ -346,7 +346,7 @@ function Dados() {
             Os números que ninguém te conta
           </span>
           <h2 className="mt-4 max-w-3xl font-display text-4xl text-linho md:text-5xl">
-            O setor odontológico em dados
+            O que os números dizem sobre a sua clínica
           </h2>
         </Reveal>
 
