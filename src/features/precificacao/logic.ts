@@ -142,7 +142,14 @@ export function calcular(form: PrecificacaoForm): ResultadosGlobais {
   }
 
   const lucro_total = faturamento_total - custo_total_geral - total_custos_fixos;
-  const margem_global_pct = faturamento_total > 0 ? (lucro_total / faturamento_total) * 100 : 0;
+  // Margem global = média ponderada das margens alvo pelo faturamento de cada procedimento
+  let lucro_estimado_total = 0;
+  for (const p of form.procedimentos) {
+    const r = por_procedimento[p.id];
+    if (!r) continue;
+    lucro_estimado_total += r.faturamento_mes * ((p.margem_alvo_pct || 0) / 100);
+  }
+  const margem_global_pct = faturamento_total > 0 ? (lucro_estimado_total / faturamento_total) * 100 : 0;
   const capacidade_utilizada_pct =
     capacidade_total_horas > 0 ? (horas_utilizadas / capacidade_total_horas) * 100 : 0;
 
