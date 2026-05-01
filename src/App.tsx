@@ -61,6 +61,15 @@ const App = () => (
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+
+            <Route
+              element={
+                <ProtectedRoute allow={["admin"]}>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/biblioteca" element={<Biblioteca />} />
             </Route>
 

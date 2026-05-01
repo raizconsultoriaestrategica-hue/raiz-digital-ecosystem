@@ -25,12 +25,12 @@ export default function AppSidebar() {
   const dashboardLabel = role === "admin" ? "Gestão de Clientes" : "Dashboard";
   const clienteItems = [
     { title: dashboardLabel, url: "/dashboard", icon: LayoutDashboard },
-    { title: "Biblioteca", url: "/biblioteca", icon: BookOpen },
   ];
   const adminItems = [
     { title: "Ferramentas", url: "/ferramentas", icon: Wrench, end: true },
     { title: "Diagnóstico 360°", url: "/ferramentas/diagnostico", icon: Stethoscope },
     { title: "Orçamentos", url: "/ferramentas/orcamentos", icon: Calculator },
+    { title: "Biblioteca", url: "/biblioteca", icon: BookOpen },
   ];
 
   const handleSignOut = async () => {
