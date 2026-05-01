@@ -400,9 +400,29 @@ ${procs}`;
 
       {/* RESULTADOS GLOBAIS */}
       <Card className="bg-verde-raiz p-6 text-linho">
-        <div className="mb-4 flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-dourado" />
-          <h2 className="font-display text-xl text-dourado">Painel de resultados</h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-dourado" />
+            <h2 className="font-display text-xl text-dourado">Painel de resultados</h2>
+          </div>
+          {form.procedimentos.length > 0 && (
+            <Button
+              onClick={handleAnalisarIA}
+              disabled={analisando}
+              size="sm"
+              className="bg-dourado text-verde-raiz hover:bg-dourado/90"
+            >
+              {analisando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analisando…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" /> Analisar precificação com IA
+                </>
+              )}
+            </Button>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
           <GlobalKpi label="Faturamento total" value={fmtBRL(calc.faturamento_total)} />
@@ -415,6 +435,36 @@ ${procs}`;
             hint={`${calc.horas_utilizadas.toFixed(1)}h de ${calc.capacidade_total_horas.toFixed(0)}h`}
           />
         </div>
+
+        {analiseIA && (
+          <div className="mt-6 space-y-4 border-t border-dourado/30 pt-6">
+            <div className="rounded-lg border border-dourado/40 bg-dourado/10 p-5">
+              <div className="mb-2 flex items-center gap-2 text-dourado">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-semibold uppercase tracking-wide">Análise estratégica</span>
+              </div>
+              <div className="space-y-2 text-sm leading-relaxed text-linho/90 whitespace-pre-line">
+                {analiseIA.analise}
+              </div>
+            </div>
+            {analiseIA.insights.length > 0 && (
+              <div>
+                <h3 className="mb-3 font-display text-lg text-dourado">Insights acionáveis</h3>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {analiseIA.insights.map((ins, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-dourado/40 bg-dourado/10 p-4 text-sm text-linho"
+                    >
+                      <div className="mb-1 font-display text-base text-dourado">#{i + 1}</div>
+                      {ins}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* POLÍTICA DE DESCONTOS */}
