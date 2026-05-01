@@ -174,6 +174,10 @@ export async function saveOrcamento(
 
     const { data: userRes } = await supabase.auth.getUser();
 
+    // Valor final numérico (parse robusto)
+    const valorFinalNum = form.valorFinal ? Number(String(form.valorFinal).replace(/[^\d.,-]/g, "").replace(",", ".")) : null;
+    const valorFinalNumerico = valorFinalNum && !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : null;
+
     // === Passo C — Insert do orçamento (com ou sem PDF) ===
     const { data: orcInserted, error: insErr } = await supabase
       .from("orcamentos")
@@ -189,6 +193,10 @@ export async function saveOrcamento(
         storage_path: savedStoragePath,
         file_name: savedFileName,
         created_by: userRes.user?.id ?? null,
+        analise_ia: form.analise || null,
+        ancoragem_ia: form.ancoragemIA || null,
+        valor_final_numerico: valorFinalNumerico,
+        dor_principal: form.dor || null,
       })
       .select("id")
       .single();
