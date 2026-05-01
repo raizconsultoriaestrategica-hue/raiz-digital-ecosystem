@@ -239,7 +239,9 @@ export default function SimuladorPrecificacao() {
                 placeholder="Nome do custo"
                 className="flex-1"
               />
-              <NumInput value={c.valor} onChange={(n) => setCusto(c.id, { valor: n })} placeholder="R$ 0" />
+              <div className="w-[140px] shrink-0">
+                <NumInput value={c.valor} onChange={(n) => setCusto(c.id, { valor: n })} placeholder="R$ 0" />
+              </div>
               <Button variant="ghost" size="icon" onClick={() => removeCusto(c.id)}>
                 <Trash2 className="h-4 w-4 text-red-600" />
               </Button>
