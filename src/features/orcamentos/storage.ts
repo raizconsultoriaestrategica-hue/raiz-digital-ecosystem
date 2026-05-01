@@ -246,6 +246,40 @@ export async function saveOrcamento(
     if (updErr) throw updErr;
     console.log("[saveOrcamento] cliente atualizado", updData);
 
+    // === Passo F — criar contrato em contratos_raiz ===
+    try {
+      const DURACAO_MESES: Record<string, number> = { base: 4, crescimento: 5, expansao: 6 };
+      const duracao = DURACAO_MESES[form.plano] ?? 5;
+      const valorTotal = valorFinalNumerico ?? 0;
+      const valorMensal = valorTotal > 0 ? Math.round(valorTotal / duracao) : 0;
+
+      const dataInicioStr = form.data || new Date().toISOString().slice(0, 10);
+      const dataInicio = new Date(dataInicioStr + "T12:00:00");
+      const dataFim = new Date(dataInicio);
+      dataFim.setMonth(dataFim.getMonth() + duracao);
+
+      const clienteNome = form.nomeClinica || form.nomeCliente || "Cliente";
+
+      const { error: contratoErr } = await supabase
+        .from("contratos_raiz")
+        .insert({
+          cliente_id: clienteId,
+          cliente_nome: clienteNome,
+          plano: planoInfo?.name ?? form.plano,
+          valor_mensal: valorMensal,
+          data_inicio: dataInicioStr,
+          data_fim: dataFim.toISOString().slice(0, 10),
+          status: "ativo",
+        });
+      if (contratoErr) {
+        console.warn("[saveOrcamento] falha ao criar contrato_raiz", contratoErr);
+      } else {
+        console.log("[saveOrcamento] contrato_raiz criado");
+      }
+    } catch (cErr) {
+      console.warn("[saveOrcamento] erro inesperado ao criar contrato_raiz", cErr);
+    }
+
     return {
       orcamentoId,
       fileName: savedFileName,
