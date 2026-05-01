@@ -239,6 +239,38 @@ export default function ClienteDashboard() {
 
       <main className="mx-auto max-w-[1320px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <HeroCard cfg={cfg} avgPct={avg} />
+
+        <Link
+          to="/pasta-do-cliente"
+          className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-dourado/30 bg-gradient-to-r from-verde-raiz to-verde-raiz/90 px-6 py-5 shadow-soft transition-all hover:border-dourado/60 hover:shadow-lg"
+        >
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-dourado/15 ring-1 ring-dourado/30">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-dourado">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-dourado">
+                Acesso exclusivo
+              </span>
+              <h3 className="mt-1 font-display text-xl text-linho sm:text-2xl">
+                Pasta do Cliente
+              </h3>
+              <p className="mt-0.5 text-xs text-linho/65">
+                Documentos, entregas e materiais do seu projeto
+              </p>
+            </div>
+          </div>
+          <div className="relative z-10 flex items-center gap-2 text-sm font-medium text-dourado transition-transform group-hover:translate-x-1">
+            <span className="hidden sm:inline">Acessar</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </div>
+          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-dourado/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+        </Link>
+
         <FaturamentoRow cfg={cfg} />
 
         {kpis.length > 0 ? (
