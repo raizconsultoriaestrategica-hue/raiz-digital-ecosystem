@@ -6,6 +6,7 @@ import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type Orcamento
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 import { gerarAnaliseIA } from "../aiAnalysis";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   form: OrcamentoForm;
@@ -71,6 +72,55 @@ export function OrcamentoSidebar(p: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valorCalculado, valorFinalEdited]);
+
+  // Auto-preenche WhatsApp e Email do consultor logado
+  const [consultorUserId, setConsultorUserId] = useState<string | null>(null);
+  const [whatsappEdited, setWhatsappEdited] = useState(false);
+  const [emailEdited, setEmailEdited] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      setConsultorUserId(user.id);
+
+      const { data: profile } = await supabase
+        .from("consultor_profiles")
+        .select("whatsapp_consultor, email_consultor")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      const emailToUse = profile?.email_consultor?.trim() || user.email || "";
+      const wppToUse = profile?.whatsapp_consultor?.trim() || "";
+
+      if (!emailEdited && !p.form.email && emailToUse) p.setField("email", emailToUse);
+      if (!whatsappEdited && !p.form.whatsapp && wppToUse) p.setField("whatsapp", wppToUse);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persiste WhatsApp/email do consultor (debounced)
+  useEffect(() => {
+    if (!consultorUserId) return;
+    if (!whatsappEdited && !emailEdited) return;
+    const t = setTimeout(() => {
+      supabase
+        .from("consultor_profiles")
+        .upsert(
+          {
+            user_id: consultorUserId,
+            whatsapp_consultor: p.form.whatsapp || null,
+            email_consultor: p.form.email || null,
+          },
+          { onConflict: "user_id" }
+        )
+        .then(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [p.form.whatsapp, p.form.email, consultorUserId, whatsappEdited, emailEdited]);
 
   const handleSave = async () => {
     if (!p.clienteId) {
@@ -439,11 +489,33 @@ export function OrcamentoSidebar(p: Props) {
         Selecione uma frase para aparecer abaixo do investimento no PDF
       </div>
       <div className="space-y-1.5 mb-2">
+        {/* Ancoragem gerada pela IA — aparece como primeira opção quando disponível */}
+        {p.form.ancoragemIA && (
+          <button
+            type="button"
+            onClick={() => p.setField("ancoragem", null)}
+            className={`w-full text-left px-3 py-2.5 rounded-md border-2 text-[11px] leading-relaxed italic transition-colors relative ${
+              p.form.ancoragem === null
+                ? "border-dourado bg-dourado/15 text-white"
+                : "border-dourado/50 bg-dourado/5 text-white/80 hover:border-dourado"
+            }`}
+          >
+            <span className="not-italic inline-block bg-dourado text-quase-preto text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded mb-1.5">
+              ✨ Gerada pela IA
+            </span>
+            <div>"{p.form.ancoragemIA}"</div>
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={() => p.setField("ancoragem", null)}
+          onClick={() => {
+            // "Nenhuma" — descarta também a ancoragem da IA
+            p.setField("ancoragem", null);
+            if (p.form.ancoragemIA) p.setField("ancoragemIA", "");
+          }}
           className={`w-full text-left px-3 py-2 rounded-md border text-[11px] transition-colors ${
-            p.form.ancoragem === null
+            p.form.ancoragem === null && !p.form.ancoragemIA
               ? "border-dourado bg-dourado/10 text-white"
               : "border-white/15 bg-white/[0.04] text-white/60 hover:border-white/30"
           }`}
@@ -456,7 +528,11 @@ export function OrcamentoSidebar(p: Props) {
             <button
               key={idx}
               type="button"
-              onClick={() => p.setField("ancoragem", idx)}
+              onClick={() => {
+                p.setField("ancoragem", idx);
+                // Selecionar uma frase genérica desativa a ancoragem da IA
+                if (p.form.ancoragemIA) p.setField("ancoragemIA", "");
+              }}
               className={`w-full text-left px-3 py-2 rounded-md border text-[11px] leading-relaxed italic transition-colors ${
                 selected
                   ? "border-dourado bg-dourado/10 text-white"
@@ -477,7 +553,10 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls}
           placeholder="+55 66 9 9999-0000"
           value={p.form.whatsapp}
-          onChange={(e) => p.setField("whatsapp", e.target.value)}
+          onChange={(e) => {
+            setWhatsappEdited(true);
+            p.setField("whatsapp", e.target.value);
+          }}
         />
       </div>
       <div className="mb-4">
@@ -486,7 +565,10 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls}
           placeholder="patrick@raizconsultoria.com.br"
           value={p.form.email}
-          onChange={(e) => p.setField("email", e.target.value)}
+          onChange={(e) => {
+            setEmailEdited(true);
+            p.setField("email", e.target.value);
+          }}
         />
       </div>
 
