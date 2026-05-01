@@ -299,6 +299,35 @@ export function OrcamentoSidebar(p: Props) {
         ))}
       </div>
 
+      {/* Botão IA — Gerar análise, ancoragem e justificativas */}
+      <div className="mt-2 mb-1">
+        <button
+          type="button"
+          onClick={handleGerarIA}
+          disabled={!podeGerarIA || generatingIA}
+          className="w-full bg-gradient-to-r from-dourado to-[#b8932f] hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[12px] rounded-lg py-2.5 flex items-center justify-center gap-2 transition-opacity"
+          title={!podeGerarIA ? "Selecione um cliente e preencha ao menos um score de pilar" : "Gerar análise, ancoragem e justificativas com IA"}
+        >
+          {generatingIA ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Gerando análise…
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Gerar análise com IA
+            </>
+          )}
+        </button>
+        {iaSucesso && !generatingIA && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#7ED957]">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Análise gerada com IA
+          </div>
+        )}
+      </div>
+
       <hr className="border-white/10 my-5" />
       <div className={sectionCls}>Plano Recomendado</div>
       <div className="mb-4">
