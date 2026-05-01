@@ -38,27 +38,30 @@ const scoreColor = (pct: number) =>
 const scoreRing = (pct: number) =>
   pct >= 70 ? "stroke-emerald-500" : pct >= 40 ? "stroke-amber-500" : "stroke-red-500";
 
-const semaforo = (status: "ok" | "warn" | "crit" | "neutral") =>
-  status === "ok"
+import {
+  semMargemLiquida, semNoShow, semInadimplencia, semPontoEquilibrio,
+  semOcupacaoAgenda, semCustoMaterial, semProLabore, semCPL,
+  semTaxaConversao, semTaxaRetencao, semNPS, semCAC,
+  type Semaforo,
+} from "@/features/diagnostico-financeiro/semaforos";
+
+type SemStatus = Semaforo | "neutral";
+
+const semaforo = (status: SemStatus) =>
+  status === "verde"
     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-    : status === "warn"
+    : status === "amarelo"
       ? "bg-amber-50 text-amber-700 border-amber-200"
-      : status === "crit"
+      : status === "vermelho"
         ? "bg-red-50 text-red-700 border-red-200"
         : "bg-muted text-muted-foreground border-border";
 
-// Avalia indicador: higher=true significa que maior é melhor
-function avalia(valor: number, ok: number, warn: number, higher = true): "ok" | "warn" | "crit" | "neutral" {
-  if (!isFinite(valor) || valor === 0) return "neutral";
-  if (higher) {
-    if (valor >= ok) return "ok";
-    if (valor >= warn) return "warn";
-    return "crit";
-  }
-  if (valor <= ok) return "ok";
-  if (valor <= warn) return "warn";
-  return "crit";
-}
+// Aplica semáforo apenas se houver valor; do contrário "neutral".
+const sem = <T extends number[]>(fn: (...args: T) => Semaforo, ...args: T): SemStatus => {
+  const principal = args[0];
+  if (!isFinite(principal as number) || principal === 0) return "neutral";
+  return fn(...args);
+};
 
 const PILARES_LABELS: Record<string, string> = {
   marketing_digital: "Marketing Digital",
