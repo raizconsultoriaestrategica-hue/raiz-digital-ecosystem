@@ -232,36 +232,66 @@ export default function PastaDoCliente() {
   // ---------- Aba 3: Diagnóstico Financeiro ----------
   const indicadoresFin = useMemo(() => {
     if (!diagFin) return [];
+    // Indicadores calculados (jsonb opcional, gerado pela ferramenta do consultor)
     const ind = diagFin.indicadores || {};
-    const margem = Number(ind.margem_liquida ?? ind.margem ?? 0);
-    const noShow = Number(diagFin.no_show ?? ind.no_show ?? 0);
-    const inad = Number(diagFin.taxa_inadimplencia ?? ind.inadimplencia ?? 0);
-    const pe = Number(ind.ponto_equilibrio ?? 0);
-    const diaPe = Number(ind.dia_ponto_equilibrio ?? ind.diaPontoEquilibrio ?? 0);
-    const ocup = Number(diagFin.ocupacao_agenda ?? ind.ocupacao_agenda ?? 0);
-    const custoMat = Number(ind.custo_material ?? 0);
-    const proLab = Number(ind.pro_labore ?? 0);
-    const cpl = Number(ind.cpl ?? 0);
-    const conv = Number(diagFin.taxa_conversao ?? ind.taxa_conversao ?? 0);
-    const ret = Number(ind.taxa_retencao ?? 0);
-    const nps = Number(ind.nps ?? 0);
-    const cac = Number(ind.cac ?? 0);
-    const ticket = Number(diagFin.ticket_medio ?? ind.ticket_medio ?? 0);
 
-    return [
-      { label: "Margem Líquida", valor: `${margem.toFixed(1)}%`, status: sem(semMargemLiquida, margem) },
-      { label: "No-Show", valor: `${noShow.toFixed(1)}%`, status: sem(semNoShow, noShow) },
-      { label: "Inadimplência", valor: `${inad.toFixed(1)}%`, status: sem(semInadimplencia, inad) },
-      { label: "Ponto de Equilíbrio", valor: diaPe ? `Dia ${Math.round(diaPe)}` : pe ? fmtBRL(pe) : "—", status: sem(semPontoEquilibrio, diaPe) },
-      { label: "Ocupação da Agenda", valor: `${ocup.toFixed(1)}%`, status: sem(semOcupacaoAgenda, ocup) },
-      { label: "Custo de Material", valor: `${custoMat.toFixed(1)}%`, status: sem(semCustoMaterial, custoMat) },
-      { label: "Pró-Labore", valor: `${proLab.toFixed(1)}%`, status: sem(semProLabore, proLab) },
-      { label: "CPL", valor: cpl ? fmtBRL(cpl) : "—", status: sem(semCPL, cpl) },
-      { label: "Taxa de Conversão", valor: `${conv.toFixed(1)}%`, status: sem(semTaxaConversao, conv) },
-      { label: "Taxa de Retenção", valor: `${ret.toFixed(1)}%`, status: sem(semTaxaRetencao, ret) },
-      { label: "NPS", valor: nps ? nps.toFixed(0) : "—", status: sem(semNPS, nps) },
-      { label: "CAC", valor: cac ? fmtBRL(cac) : "—", status: cac && ticket ? semCAC(cac, ticket) : "neutral" as SemStatus },
-    ];
+    // Helper: só inclui o item se tiver valor numérico válido (>0)
+    const items: Array<{ label: string; valor: string; status: SemStatus }> = [];
+    const push = (cond: any, label: string, valor: string, status: SemStatus) => {
+      if (cond) items.push({ label, valor, status });
+    };
+
+    // --- Colunas diretas da tabela diagnosticos_financeiros ---
+    const noShow = Number(diagFin.no_show ?? 0);
+    push(noShow > 0, "No-Show", `${noShow.toFixed(1)}%`, semNoShow(noShow));
+
+    const inad = Number(diagFin.taxa_inadimplencia ?? 0);
+    push(inad > 0, "Inadimplência", `${inad.toFixed(1)}%`, semInadimplencia(inad));
+
+    const ocup = Number(diagFin.ocupacao_agenda ?? 0);
+    push(ocup > 0, "Ocupação da Agenda", `${ocup.toFixed(1)}%`, semOcupacaoAgenda(ocup));
+
+    const conv = Number(diagFin.taxa_conversao ?? 0);
+    push(conv > 0, "Taxa de Conversão", `${conv.toFixed(1)}%`, semTaxaConversao(conv));
+
+    const fb = Number(diagFin.faturamento_bruto ?? 0);
+    push(fb > 0, "Faturamento Bruto", fmtBRL(fb), "neutral");
+
+    const ticket = Number(diagFin.ticket_medio ?? 0);
+    push(ticket > 0, "Ticket Médio", fmtBRL(ticket), "neutral");
+
+    const invMkt = Number(diagFin.investimento_marketing ?? 0);
+    push(invMkt > 0, "Investimento em Marketing", fmtBRL(invMkt), "neutral");
+
+    const novos = Number(diagFin.pacientes_novos_mes ?? 0);
+    push(novos > 0, "Pacientes Novos/Mês", String(Math.round(novos)), "neutral");
+
+    // --- Indicadores derivados (do jsonb opcional) — só se existirem ---
+    const margem = Number(ind.margem_liquida ?? ind.margem ?? NaN);
+    push(isFinite(margem), "Margem Líquida", `${margem.toFixed(1)}%`, semMargemLiquida(margem));
+
+    const diaPe = Number(ind.dia_ponto_equilibrio ?? ind.diaPontoEquilibrio ?? NaN);
+    push(isFinite(diaPe) && diaPe > 0, "Ponto de Equilíbrio", `Dia ${Math.round(diaPe)}`, semPontoEquilibrio(diaPe));
+
+    const custoMat = Number(ind.custo_material ?? ind.matlab ?? NaN);
+    push(isFinite(custoMat) && custoMat > 0, "Custo de Material", `${custoMat.toFixed(1)}%`, semCustoMaterial(custoMat));
+
+    const proLab = Number(ind.pro_labore ?? ind.prolab ?? NaN);
+    push(isFinite(proLab) && proLab > 0, "Pró-Labore", `${proLab.toFixed(1)}%`, semProLabore(proLab));
+
+    const cpl = Number(ind.cpl ?? NaN);
+    push(isFinite(cpl) && cpl > 0, "CPL", fmtBRL(cpl), semCPL(cpl));
+
+    const cac = Number(ind.cac ?? NaN);
+    push(isFinite(cac) && cac > 0 && ticket > 0, "CAC", fmtBRL(cac), semCAC(cac, ticket));
+
+    const ret = Number(ind.taxa_retencao ?? NaN);
+    push(isFinite(ret) && ret > 0, "Taxa de Retenção", `${ret.toFixed(1)}%`, semTaxaRetencao(ret));
+
+    const nps = Number(ind.nps ?? NaN);
+    push(isFinite(nps), "NPS", nps.toFixed(0), semNPS(nps));
+
+    return items;
   }, [diagFin]);
 
   // ---------- Aba 4: Honorários ----------
