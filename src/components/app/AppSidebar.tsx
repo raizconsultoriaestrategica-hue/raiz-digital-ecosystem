@@ -1,4 +1,4 @@
-import { LayoutDashboard, Wrench, Stethoscope, Calculator, LogOut } from "lucide-react";
+import { LayoutDashboard, Wrench, Stethoscope, Calculator, LogOut, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "@/components/brand/BrandLogo";
 import {
@@ -23,7 +23,10 @@ export default function AppSidebar() {
   const navigate = useNavigate();
 
   const dashboardLabel = role === "admin" ? "Gestão de Clientes" : "Dashboard";
-  const clienteItems = [{ title: dashboardLabel, url: "/dashboard", icon: LayoutDashboard }];
+  const clienteItems = [
+    { title: dashboardLabel, url: "/dashboard", icon: LayoutDashboard },
+    { title: "Biblioteca", url: "/biblioteca", icon: BookOpen },
+  ];
   const adminItems = [
     { title: "Ferramentas", url: "/ferramentas", icon: Wrench, end: true },
     { title: "Diagnóstico 360°", url: "/ferramentas/diagnostico", icon: Stethoscope },

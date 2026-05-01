@@ -16,6 +16,7 @@ import Diagnostico from "./pages/ferramentas/Diagnostico";
 import Orcamentos from "./pages/ferramentas/Orcamentos";
 import NotFound from "./pages/NotFound";
 import GestaoCliente from "./pages/consultor/GestaoCliente";
+import Biblioteca from "./pages/Biblioteca";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/biblioteca" element={<Biblioteca />} />
             </Route>
 
             <Route
