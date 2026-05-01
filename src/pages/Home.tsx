@@ -58,10 +58,10 @@ const STATS = [
 ];
 
 const ETAPAS = [
-  { n: "01", t: "Diagnóstico 360°", d: "Mapeamento completo dos 7 pilares da clínica. Você sai com um raio-x real do negócio." },
-  { n: "02", t: "Planejamento Estratégico", d: "Plano de ação com prioridades, prazos, metas financeiras e responsáveis. Sem achismo, com dados." },
-  { n: "03", t: "Execução Guiada", d: "Acompanhamos cada etapa da implementação ao lado do seu time. Não entregamos um documento e sumimos." },
-  { n: "04", t: "Resultado Mensurável", d: "Cada ação gera uma métrica. O crescimento é rastreado mês a mês. Você vê o resultado em números." },
+  { n: "01", t: "Diagnóstico 360°", d: "A gente avalia os 7 pilares da sua clínica: marketing, captação, atendimento, financeiro, gestão, retenção e expansão. Você sai com um diagnóstico documentado, semáforo por indicador e os três gargalos prioritários na mão." },
+  { n: "02", t: "Planejamento Estratégico", d: "Plano de 90 dias com metas financeiras, responsáveis definidos e priorização por impacto. Nada de recomendação genérica. Cada ação é calibrada pro estágio da sua clínica." },
+  { n: "03", t: "Execução Guiada", d: "A gente acompanha a implementação com o seu time. Reuniões periódicas, checklists de execução e portal do cliente com KPIs em tempo real. Você nunca fica sozinho com um plano na gaveta." },
+  { n: "04", t: "Resultado Mensurável", d: "Cada meta tem um número. O crescimento é rastreado mês a mês no seu dashboard. Você vê, com clareza, o quanto a clínica avançou desde o primeiro dia." },
 ];
 
 const PILARES = [
@@ -490,7 +490,7 @@ function Founder() {
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
-            Quem está do seu lado
+            Quem lidera a sua consultoria
           </span>
         </Reveal>
 
@@ -552,7 +552,7 @@ function Metodo() {
           </span>
           <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">O Método Raiz em 4 etapas</h2>
           <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/70">
-            Cada etapa tem uma entrega clara, um responsável definido e uma métrica para acompanhar o avanço.
+            Cada etapa tem uma entrega concreta, um prazo definido e uma métrica para acompanhar o avanço.
           </p>
         </Reveal>
 
@@ -660,7 +660,7 @@ function Resultados() {
             Resultados reais
           </span>
           <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            O que muda quando a estrutura está certa
+            De R$18k para R$52k em 6 meses. Veja o que mudou.
           </h2>
         </Reveal>
 
@@ -714,6 +714,9 @@ function Resultados() {
               </div>
             </div>
           </div>
+          <p className="mt-6 font-body font-light text-sm text-quase-preto/60">
+            Resultado de cliente real. Números documentados no portal Raiz com KPIs mensais.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -730,7 +733,7 @@ function Qualificacao() {
             A Raiz é para você?
           </span>
           <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            Trabalhamos com quem está pronto para sair do lugar
+            A Raiz não é para todo mundo. Veja se é para você.
           </h2>
           <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/75">
             Não atendemos todo mundo. Isso é intencional.
@@ -765,7 +768,7 @@ function Qualificacao() {
 
           <div className="mt-10">
             <Button asChild size="lg" className="bg-verde-raiz px-8 py-6 text-linho hover:bg-verde-musgo">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Falar com Especialista</a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Verificar se tenho perfil</a>
             </Button>
           </div>
         </Reveal>
