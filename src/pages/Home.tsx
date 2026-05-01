@@ -681,7 +681,7 @@ function Resultados() {
               </ul>
             </div>
 
-            <div className="flex flex-col rounded-xl border border-dourado/40 bg-verde-raiz p-8 shadow-editorial">
+            <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
               <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
               <ul className="mt-5 flex-1 space-y-4 font-body font-light text-linho/85">
                 {depois.map((i) => (
