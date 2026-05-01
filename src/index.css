@@ -102,6 +102,7 @@
   span, small, strong, em, label, button, a {
     text-wrap: pretty;
   }
+}
 
 @layer components {
   .container-editorial {
