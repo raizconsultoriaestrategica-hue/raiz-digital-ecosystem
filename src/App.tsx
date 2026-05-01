@@ -88,8 +88,17 @@ const App = () => (
             >
               <Route path="/ferramentas" element={<Ferramentas />} />
               <Route path="/ferramentas/diagnostico" element={<Diagnostico />} />
+              <Route path="/ferramentas/diagnostico-financeiro" element={<EmBreve titulo="Diagnóstico Financeiro" />} />
+              <Route path="/ferramentas/precificacao" element={<EmBreve titulo="Simulador de Precificação" />} />
               <Route path="/ferramentas/orcamentos" element={<Orcamentos />} />
               <Route path="/consultor/clientes/:id" element={<GestaoCliente />} />
+
+              <Route path="/financeiro-raiz" element={<FinanceiroLayout />}>
+                <Route index element={<VisaoGeral />} />
+                <Route path="contratos" element={<Contratos />} />
+                <Route path="pagamentos" element={<Pagamentos />} />
+                <Route path="contas-pagar" element={<ContasPagar />} />
+              </Route>
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
