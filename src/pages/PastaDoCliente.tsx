@@ -38,27 +38,30 @@ const scoreColor = (pct: number) =>
 const scoreRing = (pct: number) =>
   pct >= 70 ? "stroke-emerald-500" : pct >= 40 ? "stroke-amber-500" : "stroke-red-500";
 
-const semaforo = (status: "ok" | "warn" | "crit" | "neutral") =>
-  status === "ok"
+import {
+  semMargemLiquida, semNoShow, semInadimplencia, semPontoEquilibrio,
+  semOcupacaoAgenda, semCustoMaterial, semProLabore, semCPL,
+  semTaxaConversao, semTaxaRetencao, semNPS, semCAC,
+  type Semaforo,
+} from "@/features/diagnostico-financeiro/semaforos";
+
+type SemStatus = Semaforo | "neutral";
+
+const semaforo = (status: SemStatus) =>
+  status === "verde"
     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-    : status === "warn"
+    : status === "amarelo"
       ? "bg-amber-50 text-amber-700 border-amber-200"
-      : status === "crit"
+      : status === "vermelho"
         ? "bg-red-50 text-red-700 border-red-200"
         : "bg-muted text-muted-foreground border-border";
 
-// Avalia indicador: higher=true significa que maior é melhor
-function avalia(valor: number, ok: number, warn: number, higher = true): "ok" | "warn" | "crit" | "neutral" {
-  if (!isFinite(valor) || valor === 0) return "neutral";
-  if (higher) {
-    if (valor >= ok) return "ok";
-    if (valor >= warn) return "warn";
-    return "crit";
-  }
-  if (valor <= ok) return "ok";
-  if (valor <= warn) return "warn";
-  return "crit";
-}
+// Aplica semáforo apenas se houver valor; do contrário "neutral".
+const sem = <T extends number[]>(fn: (...args: T) => Semaforo, ...args: T): SemStatus => {
+  const principal = args[0];
+  if (!isFinite(principal as number) || principal === 0) return "neutral";
+  return fn(...args);
+};
 
 const PILARES_LABELS: Record<string, string> = {
   marketing_digital: "Marketing Digital",
@@ -230,11 +233,11 @@ export default function PastaDoCliente() {
   const indicadoresFin = useMemo(() => {
     if (!diagFin) return [];
     const ind = diagFin.indicadores || {};
-    const fb = Number(diagFin.faturamento_bruto ?? 0);
     const margem = Number(ind.margem_liquida ?? ind.margem ?? 0);
     const noShow = Number(diagFin.no_show ?? ind.no_show ?? 0);
     const inad = Number(diagFin.taxa_inadimplencia ?? ind.inadimplencia ?? 0);
     const pe = Number(ind.ponto_equilibrio ?? 0);
+    const diaPe = Number(ind.dia_ponto_equilibrio ?? ind.diaPontoEquilibrio ?? 0);
     const ocup = Number(diagFin.ocupacao_agenda ?? ind.ocupacao_agenda ?? 0);
     const custoMat = Number(ind.custo_material ?? 0);
     const proLab = Number(ind.pro_labore ?? 0);
@@ -243,20 +246,21 @@ export default function PastaDoCliente() {
     const ret = Number(ind.taxa_retencao ?? 0);
     const nps = Number(ind.nps ?? 0);
     const cac = Number(ind.cac ?? 0);
+    const ticket = Number(diagFin.ticket_medio ?? ind.ticket_medio ?? 0);
 
     return [
-      { label: "Margem Líquida", valor: `${margem.toFixed(1)}%`, status: avalia(margem, 20, 10, true) },
-      { label: "No-Show", valor: `${noShow.toFixed(1)}%`, status: avalia(noShow, 5, 10, false) },
-      { label: "Inadimplência", valor: `${inad.toFixed(1)}%`, status: avalia(inad, 3, 7, false) },
-      { label: "Ponto de Equilíbrio", valor: pe ? fmtBRL(pe) : "—", status: pe && fb ? avalia(fb / pe, 1.3, 1.0, true) : "neutral" as const },
-      { label: "Ocupação da Agenda", valor: `${ocup.toFixed(1)}%`, status: avalia(ocup, 80, 60, true) },
-      { label: "Custo de Material", valor: `${custoMat.toFixed(1)}%`, status: avalia(custoMat, 15, 25, false) },
-      { label: "Pró-Labore", valor: `${proLab.toFixed(1)}%`, status: avalia(proLab, 30, 40, false) },
-      { label: "CPL", valor: cpl ? fmtBRL(cpl) : "—", status: avalia(cpl, 50, 100, false) },
-      { label: "Taxa de Conversão", valor: `${conv.toFixed(1)}%`, status: avalia(conv, 50, 30, true) },
-      { label: "Taxa de Retenção", valor: `${ret.toFixed(1)}%`, status: avalia(ret, 70, 50, true) },
-      { label: "NPS", valor: nps ? nps.toFixed(0) : "—", status: avalia(nps, 70, 50, true) },
-      { label: "CAC", valor: cac ? fmtBRL(cac) : "—", status: avalia(cac, 100, 200, false) },
+      { label: "Margem Líquida", valor: `${margem.toFixed(1)}%`, status: sem(semMargemLiquida, margem) },
+      { label: "No-Show", valor: `${noShow.toFixed(1)}%`, status: sem(semNoShow, noShow) },
+      { label: "Inadimplência", valor: `${inad.toFixed(1)}%`, status: sem(semInadimplencia, inad) },
+      { label: "Ponto de Equilíbrio", valor: diaPe ? `Dia ${Math.round(diaPe)}` : pe ? fmtBRL(pe) : "—", status: sem(semPontoEquilibrio, diaPe) },
+      { label: "Ocupação da Agenda", valor: `${ocup.toFixed(1)}%`, status: sem(semOcupacaoAgenda, ocup) },
+      { label: "Custo de Material", valor: `${custoMat.toFixed(1)}%`, status: sem(semCustoMaterial, custoMat) },
+      { label: "Pró-Labore", valor: `${proLab.toFixed(1)}%`, status: sem(semProLabore, proLab) },
+      { label: "CPL", valor: cpl ? fmtBRL(cpl) : "—", status: sem(semCPL, cpl) },
+      { label: "Taxa de Conversão", valor: `${conv.toFixed(1)}%`, status: sem(semTaxaConversao, conv) },
+      { label: "Taxa de Retenção", valor: `${ret.toFixed(1)}%`, status: sem(semTaxaRetencao, ret) },
+      { label: "NPS", valor: nps ? nps.toFixed(0) : "—", status: sem(semNPS, nps) },
+      { label: "CAC", valor: cac ? fmtBRL(cac) : "—", status: cac && ticket ? semCAC(cac, ticket) : "neutral" as SemStatus },
     ];
   }, [diagFin]);
 
