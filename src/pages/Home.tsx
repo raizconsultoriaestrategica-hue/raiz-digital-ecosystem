@@ -1113,7 +1113,7 @@ function HomeFooter() {
         <div className="grid gap-12 md:grid-cols-3">
           <div>
             <div className="font-display text-2xl text-linho">Raiz Consultoria Estratégica</div>
-            <p className="mt-4 max-w-sm font-body font-light text-sm leading-relaxed text-linho/50">
+            <p className="mt-4 font-body font-light text-sm leading-relaxed text-linho/50" style={{ hyphens: "none", WebkitHyphens: "none", wordBreak: "normal", overflowWrap: "normal" }}>
               Consultoria estratégica para dentistas, médicos estetas e dermatologistas. Metodologia própria. Resultado documentado. Sem pacote genérico.
             </p>
             <div className="mt-6 flex items-center gap-4">
