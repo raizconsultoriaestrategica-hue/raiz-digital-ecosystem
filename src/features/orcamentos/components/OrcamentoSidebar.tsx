@@ -101,6 +101,34 @@ export function OrcamentoSidebar(p: Props) {
     }
   };
 
+  const podeGerarIA =
+    !!p.clienteId &&
+    Object.values(p.form.pilarScores).some((v) => v !== undefined && v !== "");
+
+  const handleGerarIA = async () => {
+    if (!podeGerarIA) {
+      toast.error("Selecione um cliente e preencha ao menos um score de pilar.");
+      return;
+    }
+    setGeneratingIA(true);
+    setIaSucesso(false);
+    try {
+      const result = await gerarAnaliseIA(p.form, p.modulosDb, selecionados);
+      p.setField("analise", result.analise);
+      p.setField("ancoragemIA", result.ancoragem);
+      p.setField("ancoragem", null);
+      p.setField("justificativasIA", result.justificativas);
+      setIaSucesso(true);
+      toast.success("Análise gerada com IA");
+      setTimeout(() => setIaSucesso(false), 6000);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao gerar análise";
+      toast.error(msg);
+    } finally {
+      setGeneratingIA(false);
+    }
+  };
+
   return (
     <aside
       data-orc-no-print
