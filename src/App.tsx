@@ -13,6 +13,7 @@ import TrocarSenha from "./pages/TrocarSenha";
 import Dashboard from "./pages/Dashboard";
 import Ferramentas from "./pages/Ferramentas";
 import Diagnostico from "./pages/ferramentas/Diagnostico";
+import DiagnosticoFinanceiro from "./pages/ferramentas/DiagnosticoFinanceiro";
 import Orcamentos from "./pages/ferramentas/Orcamentos";
 import NotFound from "./pages/NotFound";
 import GestaoCliente from "./pages/consultor/GestaoCliente";
@@ -88,7 +89,7 @@ const App = () => (
             >
               <Route path="/ferramentas" element={<Ferramentas />} />
               <Route path="/ferramentas/diagnostico" element={<Diagnostico />} />
-              <Route path="/ferramentas/diagnostico-financeiro" element={<EmBreve titulo="Diagnóstico Financeiro" />} />
+              <Route path="/ferramentas/diagnostico-financeiro" element={<DiagnosticoFinanceiro />} />
               <Route path="/ferramentas/precificacao" element={<EmBreve titulo="Simulador de Precificação" />} />
               <Route path="/ferramentas/orcamentos" element={<Orcamentos />} />
               <Route path="/consultor/clientes/:id" element={<GestaoCliente />} />
