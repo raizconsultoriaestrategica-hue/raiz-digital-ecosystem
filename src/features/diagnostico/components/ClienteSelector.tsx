@@ -36,7 +36,7 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("clientes")
-      .select("id, nome_cliente, nome_clinica, cidade")
+      .select("id, nome_cliente, nome_clinica, cidade, especialidade")
       .order("nome_cliente");
     if (error) toast.error("Erro ao carregar clientes: " + error.message);
     setClientes(data || []);
