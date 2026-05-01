@@ -16,6 +16,7 @@ export interface ClienteRow {
   nome_cliente: string;
   nome_clinica: string | null;
   cidade: string | null;
+  especialidade?: string | null;
 }
 
 interface ClienteSelectorProps {
