@@ -347,7 +347,7 @@ export default function ClientPortal() {
                           key={i}
                           className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
                         >
-                          {typeof m === "string" ? m : m?.nome || JSON.stringify(m)}
+                          {typeof m === "string" ? m : (m as any)?.nome || JSON.stringify(m)}
                         </Badge>
                       ))}
                     </div>
