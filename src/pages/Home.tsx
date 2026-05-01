@@ -681,7 +681,7 @@ function Resultados() {
               </ul>
             </div>
 
-            <div className="flex flex-col rounded-xl border border-dourado/40 bg-verde-raiz p-8 shadow-editorial">
+            <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
               <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
               <ul className="mt-5 flex-1 space-y-4 font-body font-light text-linho/85">
                 {depois.map((i) => (
@@ -1113,7 +1113,7 @@ function HomeFooter() {
         <div className="grid gap-12 md:grid-cols-3">
           <div>
             <div className="font-display text-2xl text-linho">Raiz Consultoria Estratégica</div>
-            <p className="mt-4 max-w-sm font-body font-light text-sm leading-relaxed text-linho/50">
+            <p className="mt-4 font-body font-light text-sm leading-relaxed text-linho/50" style={{ hyphens: "none", WebkitHyphens: "none", wordBreak: "normal", overflowWrap: "normal" }}>
               Consultoria estratégica para dentistas, médicos estetas e dermatologistas. Metodologia própria. Resultado documentado. Sem pacote genérico.
             </p>
             <div className="mt-6 flex items-center gap-4">
