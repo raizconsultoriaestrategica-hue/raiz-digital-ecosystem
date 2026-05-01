@@ -221,8 +221,17 @@ export default function ClientPortal() {
   const semaforos: Record<string, string> = (diagFin?.semaforos as Record<string, string>) || {};
 
   // ---- Precificação ----
-  const procedimentos: any[] = Array.isArray(precificacao?.procedimentos) ? precificacao.procedimentos : [];
-  const totalFat = procedimentos.reduce((s, p) => s + Number(p?.faturamento_mes || 0), 0);
+  const procedimentosRaw: any[] = Array.isArray(precificacao?.procedimentos) ? precificacao.procedimentos : [];
+  const procedimentos = procedimentosRaw.map((p) => {
+    const preco = Number(p?.preco_praticado ?? p?.preco_estrategico ?? 0);
+    const freq = Number(p?.frequencia_mes ?? 0);
+    return {
+      nome: p?.nome || "—",
+      preco_estrategico: preco,
+      faturamento_mes: preco * freq,
+    };
+  });
+  const totalFat = procedimentos.reduce((s, p) => s + p.faturamento_mes, 0);
 
   // ---- Módulos ----
   const totalMods = modulos.length;
