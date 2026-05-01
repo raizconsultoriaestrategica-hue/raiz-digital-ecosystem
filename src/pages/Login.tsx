@@ -27,7 +27,10 @@ export default function Login() {
   const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
-    if (session) {
+    // Só redireciona quando session E role estiverem prontos.
+    // Sem isso, o admin é mandado para /dashboard na primeira tentativa
+    // (porque role ainda é null) e precisa logar de novo.
+    if (session && role) {
       navigate(role === "admin" ? "/ferramentas" : "/dashboard", { replace: true });
     }
   }, [session, role, navigate]);
