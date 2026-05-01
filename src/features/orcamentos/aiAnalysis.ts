@@ -32,7 +32,7 @@ function buildUserPrompt(
   return `Analise o diagnóstico 360° deste cliente e gere três blocos em JSON:
 
 1. "analise": texto de 3-4 parágrafos sobre os principais gargalos identificados, pilares críticos e oportunidades — tom consultivo e direto, sem bullet points
-2. "ancoragem": uma frase de até 2 linhas, criada especificamente para este cliente com base no seu faturamento, dor principal, pilares críticos e contexto. A frase deve gerar impacto emocional e conexão real — falando sobre o que ele perde, o que ele quer ou o que o impede de chegar lá. Linguagem humana e direta, sem jargão técnico ou corporativo. Não use fórmulas fixas — crie algo que só faria sentido para esse cliente específico.
+2. "ancoragem": uma frase de até 2 linhas que use obrigatoriamente números reais do cliente (faturamento atual, perdas calculadas por no-show, pacientes inativos ou conversão baixa) para mostrar o custo concreto da inércia. A frase deve ser direta e emocional — falar o que ele está perdendo em reais por mês ou por ano, de forma que qualquer pessoa entenda sem precisar de explicação. Sem jargão, sem termos técnicos como ROI ou KPI. Tom de conversa honesta entre sócios. Exemplo de estrutura (não copiar, apenas referência de formato): 'Com [faturamento] por mês e [problema identificado], você está deixando cerca de R$X na mesa todo mês — isso é R$Y por ano trabalhando de graça.' Calcule os números com base nos dados reais do diagnóstico.
 3. "justificativas": objeto onde cada chave é o código do módulo selecionado e o valor é uma frase curta (máx 15 palavras) explicando o impacto esperado para esse cliente específico
 
 Retorne APENAS o JSON, sem texto adicional.
