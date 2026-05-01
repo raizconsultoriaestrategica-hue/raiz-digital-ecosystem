@@ -365,7 +365,7 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
         <div>
           <h1 className="font-display text-3xl text-verde-raiz">Simulador de Precificação Estratégica</h1>
           <p className="mt-1 text-sm text-quase-preto/70">
-            Módulo 4.2 — Calcule preços mínimos viáveis e estratégicos baseados em custos reais e posicionamento.
+            Módulo 4.2. Calcule preços mínimos viáveis e estratégicos baseados em custos reais e posicionamento.
           </p>
         </div>
 

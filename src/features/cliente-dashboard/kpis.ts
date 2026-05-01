@@ -1,4 +1,4 @@
-// Catálogo de KPIs — labels, unidades e direção (higher/lower é melhor)
+// Catálogo de KPIs. Labels, unidades e direção (higher/lower é melhor)
 
 export type KpiKey =
   | "taxa_conversao"

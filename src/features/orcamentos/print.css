@@ -89,7 +89,7 @@
     /* Garante espaço para o running header */
     padding-top: 40px !important;
   }
-  /* A primeira section (Diagnóstico) já vem após a capa — também começa em página nova */
+  /* A primeira section (Diagnóstico) já vem após a capa. Também começa em página nova */
   body.printing-orcamento .orc-section:first-of-type {
     page-break-before: always;
     break-before: page;

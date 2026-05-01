@@ -28,7 +28,7 @@ export function IntroScreen({ ramo, onRamoChange, onStart }: IntroScreenProps) {
     >
       <BrandSymbolBg size={500} opacity={0.05} position="center" white />
 
-      {/* Top bar — Modo Admin */}
+      {/* Top bar. Modo Admin */}
       <div className="relative z-10 flex items-center justify-between px-6 pt-6 md:px-10">
         <BrandLogo onDark className="h-9" />
         <Sheet open={adminOpen} onOpenChange={setAdminOpen}>
@@ -65,7 +65,7 @@ export function IntroScreen({ ramo, onRamoChange, onStart }: IntroScreenProps) {
           </h1>
           <p className="mt-4 max-w-md font-light text-linho/65">
             Avaliação estratégica em 7 pilares que mostra exatamente onde está o gargalo do seu
-            faturamento — e qual o caminho mais curto para destravar.
+            faturamento. E qual o caminho mais curto para destravar.
           </p>
 
           {/* Ramo selector */}

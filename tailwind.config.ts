@@ -58,7 +58,7 @@ export default {
         // Raiz brand palette
         "verde-raiz": "#1C3D2E",
         "verde-musgo": "#4A7C5F",
-        "verde-menta": "#C8E6D5",
+        "verde-menta": "#E8DDD0",
         dourado: "#C9A84C",
         "dourado-pale": "#F5EDD4",
         linho: "#F0EDEA",

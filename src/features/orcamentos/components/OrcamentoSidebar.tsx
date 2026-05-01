@@ -201,7 +201,7 @@ export function OrcamentoSidebar(p: Props) {
           className={inputCls + " cursor-pointer appearance-none"}
         >
           <option value="" className="bg-verde-raiz text-white">
-            {p.loadingClientes ? "Carregando…" : "— manual —"}
+            {p.loadingClientes ? "Carregando…" : ", manual ,"}
           </option>
           {p.clientes.map((c) => (
             <option key={c.id} value={c.id} className="bg-verde-raiz text-white">
@@ -349,7 +349,7 @@ export function OrcamentoSidebar(p: Props) {
         ))}
       </div>
 
-      {/* Botão IA — Gerar análise, ancoragem e justificativas */}
+      {/* Botão IA. Gerar análise, ancoragem e justificativas */}
       <div className="mt-2 mb-1">
         <button
           type="button"
@@ -479,7 +479,7 @@ export function OrcamentoSidebar(p: Props) {
           }}
         />
         <div className="mt-1 text-[10px] text-white/40">
-          Editável — aplique desconto ou condição especial.
+          Editável. Aplique desconto ou condição especial.
         </div>
       </div>
 
@@ -489,7 +489,7 @@ export function OrcamentoSidebar(p: Props) {
         Selecione uma frase para aparecer abaixo do investimento no PDF
       </div>
       <div className="space-y-1.5 mb-2">
-        {/* Ancoragem gerada pela IA — aparece como primeira opção quando disponível */}
+        {/* Ancoragem gerada pela IA. Aparece como primeira opção quando disponível */}
         {p.form.ancoragemIA && (
           <button
             type="button"
@@ -510,7 +510,7 @@ export function OrcamentoSidebar(p: Props) {
         <button
           type="button"
           onClick={() => {
-            // "Nenhuma" — descarta também a ancoragem da IA
+            // "Nenhuma". Descarta também a ancoragem da IA
             p.setField("ancoragem", null);
             if (p.form.ancoragemIA) p.setField("ancoragemIA", "");
           }}

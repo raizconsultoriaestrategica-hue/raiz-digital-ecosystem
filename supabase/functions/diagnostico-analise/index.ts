@@ -3,7 +3,7 @@
 // Suporta dois modos:
 //   1) Diagnóstico inicial (default): recebe pilares e gera análise do diagnóstico 360°.
 //   2) Atualização mensal (mode = "mensal"): recebe KPIs do mês atual + anterior,
-//      relatório do consultor, dados do diagnóstico inicial e meta — gera análise mensal.
+//      relatório do consultor, dados do diagnóstico inicial e meta. Gera análise mensal.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
               })
               .join("\n");
 
-      systemPrompt = `Você é um consultor experiente da Raiz Consultoria Estratégica, especialista em ${ramoLabel}, conversando direto com o dono da clínica. Fale como gente: direto, humano, sem firula corporativa nem academiquês. Use "você". Frases curtas e objetivas, sem rodeios. Português brasileiro informal mas profissional. Sem emojis. Nunca comece com "Prezado", "Olá" ou qualquer saudação — vá direto ao ponto. Nunca prometa números como garantia.`;
+      systemPrompt = `Você é um consultor experiente da Raiz Consultoria Estratégica, especialista em ${ramoLabel}, conversando direto com o dono da clínica. Fale como gente: direto, humano, sem firula corporativa nem academiquês. Use "você". Frases curtas e objetivas, sem rodeios. Português brasileiro informal mas profissional. Sem emojis. Nunca comece com "Prezado", "Olá" ou qualquer saudação. Vá direto ao ponto. Nunca prometa números como garantia.`;
 
       userPrompt = `Escreva a análise mensal de ${clientName} (${ramoLabel}) falando direto com o dono da clínica.
 
@@ -117,10 +117,10 @@ RELATÓRIO DO CONSULTOR:
 ${relatorioConsultor || "(não preenchido)"}
 
 Estruture em exatamente 4 parágrafos curtos, sem títulos, sem listas, sem marcadores, sem negrito. Cada parágrafo cobre um tema:
-1. Resumo do mês — em 2-3 frases, o que aconteceu comparado ao mês anterior.
-2. O que evoluiu — KPIs que melhoraram e ações que funcionaram.
-3. O que ainda precisa de atenção — o que travou ou piorou e por quê.
-4. Prioridade para os próximos 30 dias — o foco principal e 2-3 ações concretas.
+1. Resumo do mês. Em 2-3 frases, o que aconteceu comparado ao mês anterior.
+2. O que evoluiu. KPIs que melhoraram e ações que funcionaram.
+3. O que ainda precisa de atenção. O que travou ou piorou e por quê.
+4. Prioridade para os próximos 30 dias. O foco principal e 2-3 ações concretas.
 
 Regras de tom:
 - Use "você" o tempo todo.
@@ -152,7 +152,7 @@ Total: 220-320 palavras.`;
       const pilaresTxt = sorted
         .map(
           (p, i) =>
-            `${i + 1}. ${p.name} — ${Math.round(p.pct * 100)}% de maturidade (${p.total}/${p.max} pts)`,
+            `${i + 1}. ${p.name}. ${Math.round(p.pct * 100)}% de maturidade (${p.total}/${p.max} pts)`,
         )
         .join("\n");
 

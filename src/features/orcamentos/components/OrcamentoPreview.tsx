@@ -127,7 +127,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               </div>
               <div className="text-[11px] text-[#718096] mt-0.5">de {data.scoreMax} pts</div>
               <div className="text-[11px] font-bold text-dourado mt-1.5">
-                {data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : "—%"}
+                {data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : ",%"}
               </div>
             </div>
             <div>
@@ -231,7 +231,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         {/* CRONOGRAMA */}
         <Section label="03 · Cronograma de Execução" title="Fases do Trabalho">
           <div className="relative pl-7">
-            <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #C8E6D5)" }} />
+            <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #E8DDD0)" }} />
             {data.timeline.map((t) => (
               <div key={t.n} className="relative mb-4">
                 <div className="absolute -left-7 w-5 h-5 bg-verde-raiz rounded-full flex items-center justify-center text-[9px] font-bold text-white font-display top-0.5">

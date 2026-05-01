@@ -7,7 +7,7 @@ import AppSidebar from "./AppSidebar";
 
 export default function AppLayout() {
   const { loading } = useAuth();
-  // Pulso curto de carregamento ao trocar de rota — feedback visual.
+  // Pulso curto de carregamento ao trocar de rota. Feedback visual.
   const [routeBusy, setRouteBusy] = useState(false);
   let nav: ReturnType<typeof useNavigation> | null = null;
   try {

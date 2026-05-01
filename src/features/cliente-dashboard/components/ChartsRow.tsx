@@ -77,7 +77,7 @@ export default function ChartsRow({ pilares, kpis }: Props) {
                     className={`absolute inset-y-0 left-0 rounded-full ${barColor}`}
                     style={{ width: `${pctAtu}%` }}
                   />
-                  {/* Marcador "Meta" em 70% — linha tracejada espessa + label acima */}
+                  {/* Marcador "Meta" em 70%. Linha tracejada espessa + label acima */}
                   <div
                     className="pointer-events-none absolute -top-3 bottom-0"
                     style={{ left: "70%", transform: "translateX(-50%)" }}

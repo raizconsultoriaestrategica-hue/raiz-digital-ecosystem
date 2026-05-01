@@ -36,7 +36,7 @@ function calcImpacts(kpis: KpiItem[], faturamento: number): GapImpact[] {
 
   const out: GapImpact[] = [];
 
-  // Taxa de Conversão (higher) — leads ganhos extras × ticket atual
+  // Taxa de Conversão (higher). Leads ganhos extras × ticket atual
   if (conv && conv.valor !== null && conv.benchmark !== null && conv.valor < conv.benchmark && leadsMes > 0 && ticketAtual) {
     const ganhoPct = (conv.benchmark - conv.valor) / 100;
     const impacto = ganhoPct * leadsMes * ticketAtual;
@@ -54,7 +54,7 @@ function calcImpacts(kpis: KpiItem[], faturamento: number): GapImpact[] {
     }
   }
 
-  // Ticket Médio (higher) — ganho por atendimento × atendimentos
+  // Ticket Médio (higher). Ganho por atendimento × atendimentos
   if (ticket && ticket.valor !== null && ticket.benchmark !== null && ticket.valor < ticket.benchmark && atendimentosMes > 0) {
     const ganho = ticket.benchmark - ticket.valor;
     const impacto = ganho * atendimentosMes;
@@ -72,7 +72,7 @@ function calcImpacts(kpis: KpiItem[], faturamento: number): GapImpact[] {
     }
   }
 
-  // Ocupação de Cadeiras (higher) — proporcional ao faturamento
+  // Ocupação de Cadeiras (higher). Proporcional ao faturamento
   if (ocup && ocup.valor !== null && ocup.benchmark !== null && ocup.valor < ocup.benchmark && faturamento > 0) {
     const ratio = ocup.benchmark / ocup.valor;
     const impacto = faturamento * (ratio - 1);
@@ -117,7 +117,7 @@ export default function RoiCard({ kpis, faturamentoBase }: Props) {
             Potencial de Crescimento Identificado
           </span>
           <h3 className="mt-1 font-display text-2xl text-linho sm:text-3xl">
-            Análise de Gap — KPIs vs. Benchmarks de Mercado
+            Análise de Gap. KPIs vs. Benchmarks de Mercado
           </h3>
         </div>
         <div className="rounded-lg border border-dourado/30 bg-dourado/10 px-4 py-3 md:text-right">
@@ -126,7 +126,7 @@ export default function RoiCard({ kpis, faturamentoBase }: Props) {
           </div>
           {showEmptyState ? (
             <div className="mt-1 font-display text-2xl leading-none text-linho/40 sm:text-3xl">
-              —
+              ,
             </div>
           ) : (
             <>
