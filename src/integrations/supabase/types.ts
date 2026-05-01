@@ -310,6 +310,113 @@ export type Database = {
           },
         ]
       }
+      diagnosticos_financeiros: {
+        Row: {
+          alertas: Json | null
+          atendimentos_dia: number | null
+          cidade: string | null
+          cliente_id: string | null
+          created_at: string
+          created_by: string | null
+          custos_fixos: Json | null
+          custos_variaveis: Json | null
+          dias_trabalhados: number | null
+          especialidade: string | null
+          faturamento_bruto: number | null
+          faturamento_convenios: number | null
+          file_name: string | null
+          financiamentos: Json | null
+          horas_clinicas_dia: number | null
+          id: string
+          indicadores: Json | null
+          investimento_marketing: number | null
+          no_show: number | null
+          nome_profissional: string | null
+          num_profissionais: number | null
+          ocupacao_agenda: number | null
+          pacientes_novos_mes: number | null
+          pct_vista: number | null
+          regime_tributario: string | null
+          storage_path: string | null
+          taxa_conversao: number | null
+          taxa_inadimplencia: number | null
+          ticket_medio: number | null
+          updated_at: string
+        }
+        Insert: {
+          alertas?: Json | null
+          atendimentos_dia?: number | null
+          cidade?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custos_fixos?: Json | null
+          custos_variaveis?: Json | null
+          dias_trabalhados?: number | null
+          especialidade?: string | null
+          faturamento_bruto?: number | null
+          faturamento_convenios?: number | null
+          file_name?: string | null
+          financiamentos?: Json | null
+          horas_clinicas_dia?: number | null
+          id?: string
+          indicadores?: Json | null
+          investimento_marketing?: number | null
+          no_show?: number | null
+          nome_profissional?: string | null
+          num_profissionais?: number | null
+          ocupacao_agenda?: number | null
+          pacientes_novos_mes?: number | null
+          pct_vista?: number | null
+          regime_tributario?: string | null
+          storage_path?: string | null
+          taxa_conversao?: number | null
+          taxa_inadimplencia?: number | null
+          ticket_medio?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alertas?: Json | null
+          atendimentos_dia?: number | null
+          cidade?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custos_fixos?: Json | null
+          custos_variaveis?: Json | null
+          dias_trabalhados?: number | null
+          especialidade?: string | null
+          faturamento_bruto?: number | null
+          faturamento_convenios?: number | null
+          file_name?: string | null
+          financiamentos?: Json | null
+          horas_clinicas_dia?: number | null
+          id?: string
+          indicadores?: Json | null
+          investimento_marketing?: number | null
+          no_show?: number | null
+          nome_profissional?: string | null
+          num_profissionais?: number | null
+          ocupacao_agenda?: number | null
+          pacientes_novos_mes?: number | null
+          pct_vista?: number | null
+          regime_tributario?: string | null
+          storage_path?: string | null
+          taxa_conversao?: number | null
+          taxa_inadimplencia?: number | null
+          ticket_medio?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosticos_financeiros_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostics: {
         Row: {
           classif_label: string
