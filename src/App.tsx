@@ -17,6 +17,12 @@ import Orcamentos from "./pages/ferramentas/Orcamentos";
 import NotFound from "./pages/NotFound";
 import GestaoCliente from "./pages/consultor/GestaoCliente";
 import Biblioteca from "./pages/Biblioteca";
+import EmBreve from "./pages/EmBreve";
+import FinanceiroLayout from "./pages/financeiro/FinanceiroLayout";
+import VisaoGeral from "./pages/financeiro/VisaoGeral";
+import Contratos from "./pages/financeiro/Contratos";
+import Pagamentos from "./pages/financeiro/Pagamentos";
+import ContasPagar from "./pages/financeiro/ContasPagar";
 
 const queryClient = new QueryClient();
 
