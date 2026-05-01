@@ -6,6 +6,7 @@ import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type Orcamento
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 import { gerarAnaliseIA } from "../aiAnalysis";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   form: OrcamentoForm;
