@@ -25,7 +25,7 @@ import patrickEstrategico from "@/assets/patrick-estrategico.jpg";
 import patrickLifestyle from "@/assets/patrick-lifestyle.jpg";
 import BrandLogo from "@/components/brand/BrandLogo";
 
-const WHATSAPP_URL = "https://wa.me/5544999993334";
+const WHATSAPP_URL = "https://wa.me/5544999993334?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
 
 const NAV_LINKS = [
   { label: "O Método", href: "#metodo" },
@@ -46,8 +46,8 @@ const PROBLEMAS = [
 const DADOS = [
   { n: "73%", d: "das clínicas fecham em 5 anos por falta de gestão" },
   { n: "R$18k", d: "de faturamento médio deixado na mesa por mês por ineficiência" },
-  { n: "40%", d: "dos orçamentos não são convertidos por falta de processo de vendas" },
-  { n: "1 em 3", d: "profissionais de saúde não sabe sua margem líquida real" },
+  { n: "57%", d: "das clínicas investem em redes sociais sem conseguir medir retorno real" },
+  { n: "15%", d: "das consultas são perdidas por faltas, um dinheiro que desaparece todo mês sem ser percebido" },
 ];
 
 const STATS = [
@@ -365,6 +365,9 @@ function Dados() {
               </div>
             ))}
           </div>
+          <p className="mt-4 text-center font-body text-linho/60" style={{ fontSize: "0.75rem" }}>
+            Fontes: SEBRAE, CFO, CRO-BR e pesquisas internas Raiz Consultoria (2024–2025).
+          </p>
         </Reveal>
       </div>
     </section>
