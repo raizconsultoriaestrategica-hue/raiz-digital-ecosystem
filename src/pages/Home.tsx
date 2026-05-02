@@ -506,7 +506,7 @@ function Founder() {
               </em>
             </h2>
             <p className="mt-6 font-body font-light text-lg leading-relaxed text-quase-preto/75">
-              14+ anos de atuação em marketing, vendas, tecnologia e operações. Especializado em diagnosticar e estruturar clínicas odontológicas que querem crescer com consistência, não com sorte.
+              14+ anos de atuação em marketing, vendas, tecnologia e operações. Especializado em diagnosticar e estruturar clínicas de saúde — odontologia, estética e dermatologia — que querem crescer com consistência, não com sorte.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -991,7 +991,7 @@ function Calculadora() {
         </Reveal>
 
         <p className="mt-8 font-body font-light text-sm text-linho/40">
-          * Dados baseados em clínicas odontológicas estruturadas: 60% de conversão e 65% de retenção. Resultados individuais variam.
+          * Dados baseados em clínicas de saúde estruturadas: 60% de conversão e 65% de retenção. Resultados individuais variam.
         </p>
       </div>
     </section>
@@ -1048,7 +1048,7 @@ function MetricCard({ Icon, title, value }: { Icon: React.ElementType; title: st
 /* ---------- FAQ ---------- */
 function Faq() {
   return (
-    <section className="bg-off-white py-20 md:py-28">
+    <section id="faq" className="bg-off-white py-20 md:py-28">
       <div className="container mx-auto max-w-3xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
