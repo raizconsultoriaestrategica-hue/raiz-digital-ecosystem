@@ -1123,7 +1123,8 @@ function HomeFooter() {
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-linho/60 transition-colors hover:text-dourado">
                 <MessageCircle className="h-5 w-5" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-linho/60 transition-colors hover:text-dourado">
+              {/* TODO: substituir pelo URL real do LinkedIn do Patrick */}
+              <a href="https://www.linkedin.com/in/patrickferreira-consultoria" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-linho/60 transition-colors hover:text-dourado">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
@@ -1132,7 +1133,7 @@ function HomeFooter() {
           <div>
             <div className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-dourado">Navegação</div>
             <ul className="mt-4 space-y-2 font-body font-light text-sm text-linho/60">
-              <li><a href="#problema" className="hover:text-linho">O Diagnóstico</a></li>
+              <li><a href="#problema" className="hover:text-linho">Por que a Raiz?</a></li>
               <li><a href="#founder" className="hover:text-linho">Quem é Patrick</a></li>
               <li><a href="#metodo" className="hover:text-linho">O Método</a></li>
               <li><a href="#diagnostico" className="hover:text-linho">Diagnóstico 360°</a></li>
