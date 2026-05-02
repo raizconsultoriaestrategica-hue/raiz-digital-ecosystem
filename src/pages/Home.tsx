@@ -54,7 +54,7 @@ const STATS = [
   { n: "+R$2M", d: "em faturamento incremental gerado com clientes Raiz" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
   { n: "4", d: "etapas do método Raiz de resultado" },
-  { n: "100%", d: "foco em clínicas de saúde e odontologia" },
+  { n: "100%", d: "dedicado a clínicas de saúde" },
 ];
 
 const ETAPAS = [
@@ -170,7 +170,7 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-3">
           <Button asChild className="hidden bg-dourado text-marrom-raiz hover:bg-dourado/90 md:inline-flex">
-            <Link to="/login">Acessar Plataforma</Link>
+            <a href="https://raiz-hub.lovable.app" target="_blank" rel="noopener noreferrer">Acessar Plataforma</a>
           </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -186,7 +186,7 @@ function Nav() {
                   </a>
                 ))}
                 <Button asChild className="mt-6 bg-dourado text-marrom-raiz hover:bg-dourado/90">
-                  <Link to="/login">Acessar Plataforma</Link>
+                  <a href="https://raiz-hub.lovable.app" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>Acessar Plataforma</a>
                 </Button>
               </nav>
             </SheetContent>
@@ -513,7 +513,7 @@ function Founder() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {["14+ anos", "100+ clínicas", "R$2M+ gerados"].map((p) => (
+              {["14+ anos", "100+ clientes em 14 anos", "R$2M+ gerados"].map((p) => (
                 <span
                   key={p}
                   className="rounded-full border border-verde-raiz/20 bg-linho px-4 py-2 font-body text-sm font-semibold text-verde-raiz"
