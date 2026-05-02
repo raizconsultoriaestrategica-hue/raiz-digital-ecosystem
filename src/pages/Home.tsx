@@ -75,7 +75,7 @@ const PILARES = [
 ];
 
 const PARA_VOCE = [
-  "Fatura entre R$15k e R$60k/mês e quer crescer",
+  "Fatura entre R$15k e R$90k/mês e quer crescer com previsibilidade",
   "Está disposto a implementar processos e abrir o financeiro",
   "Quer parar de ser o gargalo da própria operação",
   "Investe em marketing mas não mede o retorno",
@@ -102,7 +102,7 @@ const FAQ = [
   { q: "Preciso abrir o financeiro da clínica?", a: "Sim. Sem os números reais da clínica, como faturamento, ticket médio e inadimplência, não tem como identificar onde o dinheiro está vazando. Tudo o que você compartilhar fica restrito à consultoria." },
   { q: "O Diagnóstico 360° tem compromisso de contratação?", a: "Não. É uma sessão de análise sem compromisso nenhum. Você recebe o relatório completo e o plano de ação. Depois, você decide se quer a Raiz do seu lado ou prefere tocar por conta própria." },
   { q: "Já contratei consultoria antes e não funcionou. Por que seria diferente?", a: "A maioria das consultorias entrega um relatório e some. A Raiz fica. Acompanhamos a execução ao lado do seu time, com reuniões periódicas, metas documentadas e portal com KPIs em tempo real. O resultado é rastreado, não prometido." },
-  { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si é gratuito e sem compromisso de contratação." },
+  { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si não tem custo e não tem compromisso de contratação." },
   { q: "Funciona para médicos estetas e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estetas e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
 ];
 
@@ -788,7 +788,7 @@ function Planos() {
         <Reveal>
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/15 p-5 text-amber-800">
             <p className="font-body text-sm md:text-base">
-              ⏰ <strong>Vagas limitadas para novas clínicas em Abril/2026</strong>. Apenas 4 vagas disponíveis neste ciclo.{" "}
+              ⏰ <strong>Vagas limitadas para novas clínicas em Maio/2026</strong>. Apenas 4 vagas disponíveis neste ciclo.{" "}
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-amber-900">
                 Garantir minha vaga →
               </a>
@@ -984,7 +984,7 @@ function Calculadora() {
             </p>
             <div className="mt-4">
               <Button asChild className="bg-dourado px-8 py-5 text-marrom-raiz hover:bg-dourado/90">
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Agendar Diagnóstico Gratuito</a>
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico 360°</a>
               </Button>
             </div>
           </div>
@@ -1089,11 +1089,11 @@ function CtaFinal() {
             Você já sabe que algo precisa mudar. <em className="text-dourado not-italic">O primeiro passo é entender exatamente o quê.</em>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl font-body font-light text-lg text-linho/75">
-            O Diagnóstico 360° é gratuito, dura até 60 minutos e não tem compromisso de contratação. Você sai com um raio-x real da clínica, independente de qualquer decisão.
+            O Diagnóstico 360° não tem custo, dura até 60 minutos e não tem compromisso de contratação. Você sai com um raio-x real da clínica, independente de qualquer decisão.
           </p>
           <div className="mt-10">
             <Button asChild className="h-auto bg-dourado px-10 py-4 text-lg text-marrom-raiz hover:bg-dourado/90">
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico Gratuito</a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico 360°</a>
             </Button>
           </div>
           <p className="mt-6 font-body font-light text-sm text-linho/50">
