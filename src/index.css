@@ -96,8 +96,18 @@
   }
   p, li, blockquote, figcaption, dd, dt {
     text-wrap: pretty;
-    hyphens: auto;
-    -webkit-hyphens: auto;
+    hyphens: none;
+    -webkit-hyphens: none;
+  }
+  body {
+    hyphens: none;
+    -webkit-hyphens: none;
+    -ms-hyphens: none;
+  }
+  * {
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
   }
   span, small, strong, em, label, button, a {
     text-wrap: pretty;
