@@ -718,8 +718,13 @@ function Resultados() {
                 <p className="font-display text-2xl italic leading-snug text-linho md:text-3xl">
                   "Em 4 meses, a Raiz identificou onde eu estava perdendo dinheiro sem saber. Reestruturamos o atendimento, ajustamos a precificação e o faturamento cresceu 3 vezes com a mesma quantidade de pacientes."
                 </p>
-                <div className="mt-6 font-body text-sm text-linho/70">
-                  Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
+                <div className="mt-6 flex items-center gap-4">
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-linho/20 ring-2 ring-dourado/40">
+                    <User className="h-8 w-8 text-linho/60" />
+                  </div>
+                  <div className="font-body text-sm text-linho/70">
+                    Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
+                  </div>
                 </div>
               </div>
             </div>
