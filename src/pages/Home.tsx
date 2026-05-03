@@ -1098,7 +1098,8 @@ function CtaFinal() {
             O próximo passo é simples
           </span>
           <h2 className="mt-6 font-display text-4xl text-linho md:text-5xl">
-            Você já sabe que algo precisa mudar.<br /> <em className="text-dourado not-italic">O primeiro passo é entender exatamente o quê.</em>
+            <span className="block">Você já sabe que algo precisa mudar.</span>
+            <span className="block text-dourado">O primeiro passo é entender exatamente o quê.</span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl font-body font-light text-lg text-linho/75">
             O Diagnóstico 360° não tem custo, dura até 60 minutos e não tem compromisso de contratação. Você sai com um raio-x real da clínica, independente de qualquer decisão.
