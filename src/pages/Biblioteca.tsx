@@ -71,7 +71,7 @@ PILAR 7. CRESCIMENTO E EXPANSÃO
 - Raiz Escala: R$5.000-7.500/mês | 6 meses | expansão e governança
 
 ICP (Cliente Ideal da Raiz):
-Profissionais de saúde (dentistas, médicos estetas, dermatologistas) faturando R$15k-90k/mês, com baixa maturidade em gestão e marketing, agenda dependente do dono, sem processos documentados.
+Profissionais de saúde (dentistas, médicos estéticos, dermatologistas) faturando R$15k-90k/mês, com baixa maturidade em gestão e marketing, agenda dependente do dono, sem processos documentados.
 
 ---
 
