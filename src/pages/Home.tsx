@@ -224,7 +224,10 @@ function Hero() {
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
-              Dentistas, médicos estetas e dermatologistas que faturam entre R$15k e R$90k/mês trabalham mais do que deveriam para crescer menos do que poderiam. A Raiz encontra o gargalo exato e executa ao seu lado até o resultado aparecer nos números.
+              O problema quase nunca é falta de dedicação. Dentistas, médicos estetas e dermatologistas que faturam entre R$15 mil e R$90 mil por mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
+            </p>
+            <p className="mt-6 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
+              A Raiz entra para olhar o todo, identificar exatamente onde o crescimento está travado e construir, junto com você, um caminho claro para destravar esse resultado.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Button asChild size="lg" className="bg-dourado px-8 py-6 text-marrom-raiz hover:bg-dourado/90">
