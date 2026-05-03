@@ -1094,11 +1094,11 @@ function CtaFinal() {
     <section className="bg-verde-raiz py-20 md:py-28">
       <div className="container mx-auto max-w-4xl px-6 text-center">
         <Reveal>
-          <span className="inline-block rounded-full bg-dourado/20 px-4 py-1.5 font-body text-xs uppercase tracking-[0.22em] text-dourado">
+          <span className="inline-block rounded-full bg-dourado/20 px-8 py-2.5 font-body text-sm uppercase tracking-[0.22em] text-dourado">
             O próximo passo é simples
           </span>
           <h2 className="mt-6 font-display text-4xl text-linho md:text-5xl">
-            Você já sabe que algo precisa mudar. <em className="text-dourado not-italic">O primeiro passo é entender exatamente o quê.</em>
+            Você já sabe que algo precisa mudar.<br /> <em className="text-dourado not-italic">O primeiro passo é entender exatamente o quê.</em>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl font-body font-light text-lg text-linho/75">
             O Diagnóstico 360° não tem custo, dura até 60 minutos e não tem compromisso de contratação. Você sai com um raio-x real da clínica, independente de qualquer decisão.
