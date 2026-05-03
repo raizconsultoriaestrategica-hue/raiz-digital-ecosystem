@@ -122,3 +122,13 @@
     @apply font-body uppercase tracking-[0.22em] text-xs text-verde-musgo;
   }
 }
+
+#lovable-badge,
+#lovable-badge-cta,
+#lovable-badge-text,
+#lovable-badge-close,
+[id^="lovable-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
