@@ -690,7 +690,7 @@ function Resultados() {
 
             <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
               <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-linho/85">
+              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-verde-raiz">
                 {depois.map((i) => (
                   <li key={i} className="flex items-start gap-3">
                     <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-dourado" />
