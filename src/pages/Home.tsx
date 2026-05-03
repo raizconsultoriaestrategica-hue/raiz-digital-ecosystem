@@ -11,6 +11,7 @@ import {
   Target,
   RefreshCw,
   Sparkles,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -689,7 +690,7 @@ function Resultados() {
 
             <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
               <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-linho/85">
+              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-verde-raiz">
                 {depois.map((i) => (
                   <li key={i} className="flex items-start gap-3">
                     <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-dourado" />
@@ -717,8 +718,13 @@ function Resultados() {
                 <p className="font-display text-2xl italic leading-snug text-linho md:text-3xl">
                   "Em 4 meses, a Raiz identificou onde eu estava perdendo dinheiro sem saber. Reestruturamos o atendimento, ajustamos a precificação e o faturamento cresceu 3 vezes com a mesma quantidade de pacientes."
                 </p>
-                <div className="mt-6 font-body text-sm text-linho/70">
-                  Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
+                <div className="mt-6 flex items-center gap-4">
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-linho/20 ring-2 ring-dourado/40">
+                    <User className="h-8 w-8 text-linho/60" />
+                  </div>
+                  <div className="font-body text-sm text-linho/70">
+                    Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
+                  </div>
                 </div>
               </div>
             </div>
