@@ -1129,8 +1129,7 @@ function HomeFooter() {
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-linho/60 transition-colors hover:text-dourado">
                 <MessageCircle className="h-5 w-5" />
               </a>
-              {/* TODO: substituir pelo URL real do LinkedIn do Patrick */}
-              <a href="https://www.linkedin.com/in/patrickferreira-consultoria" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-linho/60 transition-colors hover:text-dourado">
+              <a href="https://www.linkedin.com/in/patrick-ferreira05/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-linho/60 transition-colors hover:text-dourado">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
