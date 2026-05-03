@@ -170,7 +170,7 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-3">
           <Button asChild className="hidden bg-dourado text-marrom-raiz hover:bg-dourado/90 md:inline-flex">
-            <a href="https://raiz-hub.lovable.app" target="_blank" rel="noopener noreferrer">Acessar Plataforma</a>
+            <a href="https://raizconsultoriaestrategica.com.br/login" target="_blank" rel="noopener noreferrer">Acessar Plataforma</a>
           </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -186,7 +186,7 @@ function Nav() {
                   </a>
                 ))}
                 <Button asChild className="mt-6 bg-dourado text-marrom-raiz hover:bg-dourado/90">
-                  <a href="https://raiz-hub.lovable.app" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>Acessar Plataforma</a>
+                  <a href="https://raizconsultoriaestrategica.com.br/login" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>Acessar Plataforma</a>
                 </Button>
               </nav>
             </SheetContent>
