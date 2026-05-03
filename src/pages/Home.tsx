@@ -103,7 +103,7 @@ const FAQ = [
   { q: "O Diagnóstico 360° tem compromisso de contratação?", a: "Não. É uma sessão de análise sem compromisso nenhum. Você recebe o relatório completo e o plano de ação. Depois, você decide se quer a Raiz do seu lado ou prefere tocar por conta própria." },
   { q: "Já contratei consultoria antes e não funcionou. Por que seria diferente?", a: "A maioria das consultorias entrega um relatório e some. A Raiz fica. Acompanhamos a execução ao lado do seu time, com reuniões periódicas, metas documentadas e portal com KPIs em tempo real. O resultado é rastreado, não prometido." },
   { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si não tem custo e não tem compromisso de contratação." },
-  { q: "Funciona para médicos estetas e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estetas e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
+  { q: "Funciona para médicos estéticos e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estéticos e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
 ];
 
 const fmtBRL = (v: number) =>
@@ -224,7 +224,7 @@ function Hero() {
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
-              O problema quase nunca é falta de dedicação. Dentistas, médicos estetas e dermatologistas que faturam entre R$15 mil e R$90 mil por mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
+              O problema quase nunca é falta de dedicação. Dentistas, médicos estéticos e dermatologistas que faturam entre R$15 mil e R$90 mil por mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
             </p>
             <p className="mt-6 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
               A Raiz entra para olhar o todo, identificar exatamente onde o crescimento está travado e construir, junto com você, um caminho claro para destravar esse resultado.
@@ -1120,7 +1120,7 @@ function HomeFooter() {
           <div>
             <div className="font-display text-2xl text-linho">Raiz Consultoria Estratégica</div>
             <p className="mt-4 font-body font-light text-sm leading-relaxed text-linho/50" style={{ hyphens: "none", WebkitHyphens: "none", wordBreak: "normal", overflowWrap: "normal" }}>
-              Consultoria estratégica para dentistas, médicos estetas e dermatologistas. Metodologia própria. Resultado documentado. Sem pacote genérico.
+              Consultoria estratégica para dentistas, médicos estéticos e dermatologistas. Metodologia própria. Resultado documentado. Sem pacote genérico.
             </p>
             <div className="mt-6 flex items-center gap-4">
               <a href="https://instagram.com/consult.raiz" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-linho/60 transition-colors hover:text-dourado">
