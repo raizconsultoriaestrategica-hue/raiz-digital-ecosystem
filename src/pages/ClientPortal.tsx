@@ -148,7 +148,12 @@ export default function ClientPortal() {
             .eq("cliente_id", cli.id),
         ]);
 
-        setDiagnostico(diag);
+        let diagFinal: any = diag;
+        if (!diagFinal) {
+          // Fallback: o Diagnóstico 360° é salvo em dashboard_data
+          diagFinal = await loadDiagnosticoFromDashboardData(cli.id);
+        }
+        setDiagnostico(diagFinal);
         setOrcamento(orc);
         setDiagFin(dfin);
         setPrecificacao(prec);
