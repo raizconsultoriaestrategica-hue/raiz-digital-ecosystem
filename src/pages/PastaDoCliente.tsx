@@ -189,7 +189,12 @@ export default function PastaDoCliente() {
       } catch { /* tabela inexistente */ }
 
       if (!active) return;
-      setDiagnostico(diagData?.[0] ?? null);
+      let diagFinal: any = diagData?.[0] ?? null;
+      if (!diagFinal) {
+        // Fallback: ferramenta de Diagnóstico 360° grava em dashboard_data
+        diagFinal = await loadDiagnosticoFromDashboardData(cid);
+      }
+      setDiagnostico(diagFinal);
       setOrcamento(orcData?.[0] ?? null);
       setDiagFin(dfData?.[0] ?? null);
       setSimulacao(simData?.[0] ?? null);
