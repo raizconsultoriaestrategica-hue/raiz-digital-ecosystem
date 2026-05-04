@@ -11,6 +11,7 @@ import {
   CalendarDays, FolderOpen, Download, FileSpreadsheet, FileType2,
   CheckCircle2, ArrowRight, Circle,
 } from "lucide-react";
+import { loadDiagnosticoFromDashboardData } from "@/features/diagnostico/loadFromDashboardData";
 
 // ---------- helpers ----------
 const fmtBRL = (n: number) =>
