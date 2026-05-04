@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, ArrowRight, Circle, Download, Loader2 } from "lucide-react";
+import { loadDiagnosticoFromDashboardData } from "@/features/diagnostico/loadFromDashboardData";
 
 const PILARES: Record<string, string> = {
   marketing_digital: "Marketing Digital",
