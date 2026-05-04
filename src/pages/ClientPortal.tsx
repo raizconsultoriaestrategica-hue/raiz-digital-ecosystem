@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Check, ArrowRight, Circle, Download, Loader2 } from "lucide-react";
+import { loadDiagnosticoFromDashboardData } from "@/features/diagnostico/loadFromDashboardData";
 
 const PILARES: Record<string, string> = {
   marketing_digital: "Marketing Digital",
@@ -147,7 +148,12 @@ export default function ClientPortal() {
             .eq("cliente_id", cli.id),
         ]);
 
-        setDiagnostico(diag);
+        let diagFinal: any = diag;
+        if (!diagFinal) {
+          // Fallback: o Diagnóstico 360° é salvo em dashboard_data
+          diagFinal = await loadDiagnosticoFromDashboardData(cli.id);
+        }
+        setDiagnostico(diagFinal);
         setOrcamento(orc);
         setDiagFin(dfin);
         setPrecificacao(prec);
@@ -187,9 +193,26 @@ export default function ClientPortal() {
   }
 
   // ---- Diagnóstico 360° ----
-  const scoresObj: Record<string, number> = (diagnostico?.scores as Record<string, number>) || {};
+  // scores podem vir como p01..p07 (array de 0-3 por questão) OU como mapa semântico
+  const rawScores: Record<string, any> = (diagnostico?.scores as Record<string, any>) || {};
   const recomendacoes: Record<string, string> = (diagnostico?.recomendacoes as Record<string, string>) || {};
   const pilarKeys = Object.keys(PILARES);
+  const pctFromAny = (raw: any): number => {
+    if (Array.isArray(raw)) {
+      const arr = raw.filter((n) => typeof n === "number") as number[];
+      if (!arr.length) return 0;
+      return Math.round((arr.reduce((s, n) => s + n, 0) / (arr.length * 3)) * 100);
+    }
+    if (typeof raw === "number") return raw <= 3 ? Math.round((raw / 3) * 100) : Math.round(raw);
+    return 0;
+  };
+  const scoresObj: Record<string, number> = {};
+  pilarKeys.forEach((k, i) => {
+    const candidates = [k, `p0${i + 1}`, `p${i + 1}`];
+    let raw: any = null;
+    for (const c of candidates) if (rawScores[c] !== undefined) { raw = rawScores[c]; break; }
+    scoresObj[k] = pctFromAny(raw);
+  });
   const pilarValues = pilarKeys.map((k) => Number(scoresObj[k] ?? 0));
   const scoreMedio =
     pilarValues.length && pilarValues.some((v) => v > 0)

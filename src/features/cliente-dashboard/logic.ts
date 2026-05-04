@@ -36,8 +36,14 @@ export function parseConfig(rows: DashboardRow[]): ClienteCfg {
       case "nome_clinica": cfg.nome_clinica = v; break;
       case "especialidade": cfg.especialidade = v; break;
       case "cidade": cfg.cidade = v; break;
-      case "faturamento_inicial": cfg.faturamento_inicial = num(v) ?? undefined; break;
-      case "meta_faturamento": cfg.meta_faturamento = num(v) ?? undefined; break;
+      case "faturamento_inicial":
+      // Alias salvo pela ferramenta de Diagnóstico 360° (kpisIniciais.fat)
+      case "orcamento_inicial":
+        cfg.faturamento_inicial = num(v) ?? undefined; break;
+      case "meta_faturamento":
+      // Alias salvo pela ferramenta de Diagnóstico 360° (kpisIniciais.meta_fat)
+      case "meta_faturamento_6m":
+        cfg.meta_faturamento = num(v) ?? undefined; break;
       case "inicio_consultoria": cfg.inicio_consultoria = v; break;
       case "mes_referencia": cfg.mes_referencia = v; break;
       case "ramo": cfg.ramo = v; break;
