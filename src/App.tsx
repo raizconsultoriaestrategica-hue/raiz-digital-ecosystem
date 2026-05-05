@@ -25,7 +25,6 @@ import VisaoGeral from "./pages/financeiro/VisaoGeral";
 import Contratos from "./pages/financeiro/Contratos";
 import Pagamentos from "./pages/financeiro/Pagamentos";
 import ContasPagar from "./pages/financeiro/ContasPagar";
-import ClientPortal from "./pages/ClientPortal";
 import PastaDoCliente from "./pages/PastaDoCliente";
 
 const queryClient = new QueryClient();
@@ -71,7 +70,7 @@ const App = () => (
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/painel" element={<ClientPortal />} />
+              <Route path="/painel" element={<Navigate to="/dashboard" replace />} />
               <Route path="/pasta-do-cliente" element={<PastaDoCliente />} />
             </Route>
 

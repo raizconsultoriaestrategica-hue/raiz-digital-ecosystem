@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -128,8 +128,24 @@ type EditState = {
   valor_mensalidade: string;
 };
 
+// Estado do formulário de novo cliente (campos mínimos viáveis - Fase 1)
+type NovoClienteForm = {
+  nome_cliente: string;
+  nome_clinica: string;
+  plano: string;
+  status: StatusCarteira;
+};
+
+const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
+  nome_cliente: "",
+  nome_clinica: "",
+  plano: "",
+  status: "lead",
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [linhas, setLinhas] = useState<LinhaPainel[]>([]);
   const [search, setSearch] = useState("");
@@ -138,6 +154,21 @@ export default function AdminDashboard() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [orcamentosOpen, setOrcamentosOpen] = useState<{ id: string; nome: string } | null>(null);
+
+  // Modal Novo Cliente
+  const [novoClienteOpen, setNovoClienteOpen] = useState(false);
+  const [novoClienteForm, setNovoClienteForm] = useState<NovoClienteForm>(NOVO_CLIENTE_INITIAL);
+  const [savingNovoCliente, setSavingNovoCliente] = useState(false);
+
+  // Abre modal automaticamente quando URL contém ?novo=1
+  useEffect(() => {
+    if (searchParams.get("novo") === "1") {
+      setNovoClienteOpen(true);
+      setNovoClienteForm(NOVO_CLIENTE_INITIAL);
+      // Remove o param da URL sem adicionar ao histórico
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const load = async () => {
     setLoading(true);
@@ -287,6 +318,36 @@ export default function AdminDashboard() {
       orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
       valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
     });
+  };
+
+  const handleCriarCliente = async () => {
+    if (!novoClienteForm.nome_cliente.trim()) {
+      toast.error("Nome do responsável é obrigatório.");
+      return;
+    }
+    setSavingNovoCliente(true);
+    try {
+      const { data, error } = await supabase
+        .from("clientes")
+        .insert({
+          nome_cliente: novoClienteForm.nome_cliente.trim(),
+          nome_clinica: novoClienteForm.nome_clinica.trim() || null,
+          plano: novoClienteForm.plano.trim() || null,
+          status: novoClienteForm.status,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      toast.success("Cliente criado com sucesso.");
+      setNovoClienteOpen(false);
+      setNovoClienteForm(NOVO_CLIENTE_INITIAL);
+      navigate(`/consultor/clientes/${data.id}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao criar cliente";
+      toast.error(msg);
+    } finally {
+      setSavingNovoCliente(false);
+    }
   };
 
   const saveEdit = async () => {
@@ -554,6 +615,95 @@ export default function AdminDashboard() {
           )}
         </>
       )}
+
+      {/* ===== Modal: Novo Cliente (campos mínimos - Fase 1) ===== */}
+      <Dialog
+        open={novoClienteOpen}
+        onOpenChange={(o) => {
+          if (!o) { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo Cliente</DialogTitle>
+            <DialogDescription>
+              Campos essenciais. Os demais serão preenchidos na Fase 2 (migração de schema).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>
+                Nome do responsável <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="ex.: Dra. Ana Lima"
+                value={novoClienteForm.nome_cliente}
+                onChange={(e) =>
+                  setNovoClienteForm((f) => ({ ...f, nome_cliente: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Nome da clínica</Label>
+              <Input
+                placeholder="ex.: Clínica OdontoVida"
+                value={novoClienteForm.nome_clinica}
+                onChange={(e) =>
+                  setNovoClienteForm((f) => ({ ...f, nome_clinica: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Plano</Label>
+              <Input
+                placeholder="ex.: Raiz de Crescimento"
+                value={novoClienteForm.plano}
+                onChange={(e) =>
+                  setNovoClienteForm((f) => ({ ...f, plano: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status inicial</Label>
+              <Select
+                value={novoClienteForm.status}
+                onValueChange={(v) =>
+                  setNovoClienteForm((f) => ({ ...f, status: v as StatusCarteira }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {STATUS_LABEL[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}
+              disabled={savingNovoCliente}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCriarCliente}
+              disabled={savingNovoCliente || !novoClienteForm.nome_cliente.trim()}
+              className="bg-verde-raiz hover:bg-verde-raiz/90"
+            >
+              {savingNovoCliente ? "Criando…" : "Criar cliente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== Modal: Editar projeto ===== */}
       <Dialog open={!!editState} onOpenChange={(o) => !o && setEditState(null)}>
