@@ -27,12 +27,12 @@ export function DiagScreen({
   const progress = ((currentPilar) / activePilares.length) * 100;
   const auto = isAutonomo(selOpts);
 
+  const unanswered = countUnanswered(scores, p.id);
+  const answered = aq.length - unanswered;
+  const allAnswered = unanswered === 0;
+
   const handleNext = () => {
-    const unanswered = countUnanswered(scores, p.id);
-    if (unanswered > 0) {
-      const ok = window.confirm(`Há ${unanswered} pergunta(s) sem resposta neste pilar. Continuar mesmo assim?`);
-      if (!ok) return;
-    }
+    if (!allAnswered) return; // botão já está disabled, mas garante bloqueio
     onFillNullWithZero(p.id);
     onNext();
   };
@@ -46,7 +46,9 @@ export function DiagScreen({
             <span className="text-[11px] uppercase tracking-wider text-linho/50">
               Pilar {p.num} de {activePilares.length}
             </span>
-            <span className="text-[11px] text-linho/40">{aq.length} questões</span>
+            <span className={`text-[11px] font-semibold ${allAnswered ? "text-dourado" : "text-linho/60"}`}>
+              Respondidas {answered} de {aq.length}
+            </span>
           </div>
           <h2 className="mt-1 font-body text-lg font-semibold text-linho md:text-xl">{p.name}</h2>
           <div className="mt-3 h-1 overflow-hidden rounded-full bg-linho/15">
@@ -95,7 +97,12 @@ export function DiagScreen({
           <Button variant="outline" onClick={onPrev} disabled={isFirst} className="disabled:opacity-30">
             ← Anterior
           </Button>
-          <Button onClick={handleNext} className="flex-1 bg-verde-raiz text-linho hover:bg-verde-musgo">
+          <Button
+            onClick={handleNext}
+            disabled={!allAnswered}
+            title={!allAnswered ? `Responda as ${unanswered} pergunta(s) restante(s) para continuar` : undefined}
+            className="flex-1 bg-verde-raiz text-linho hover:bg-verde-musgo disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             {isLast ? "Ver Diagnóstico →" : "Próximo Pilar →"}
           </Button>
         </div>
