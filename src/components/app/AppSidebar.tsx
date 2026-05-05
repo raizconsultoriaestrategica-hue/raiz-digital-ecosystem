@@ -3,6 +3,7 @@ import {
   Wrench,
   Stethoscope,
   Calculator,
+  Folder,
   LogOut,
   BookOpen,
   Users,
@@ -141,6 +142,28 @@ export default function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Pasta do Cliente: item de navegação rápida para o cliente */}
+        {role === "cliente" && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/pasta-do-cliente"
+                      className="hover:bg-sidebar-accent"
+                      activeClassName="bg-sidebar-accent text-dourado"
+                    >
+                      <Folder className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Pasta do Cliente</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {role === "admin" && (
           <SidebarGroup>
