@@ -99,7 +99,11 @@ export default function GestaoCliente() {
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [analises, setAnalises] = useState<AnaliseMensal[]>([]);
   const meses = useMemo(() => gerarMeses(), []);
-  const mesDefault = meses[0];
+  // Mês corrente no formato MM/YYYY, independente da ordem do array de dropdown
+  const mesDefault = useMemo(() => {
+    const hoje = new Date();
+    return `${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
+  }, []);
 
   // Aba 1
   const [mesRef, setMesRef] = useState<string>(mesDefault);
