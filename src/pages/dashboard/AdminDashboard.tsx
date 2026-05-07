@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +19,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -202,6 +205,38 @@ export default function AdminDashboard() {
   const [novoClienteOpen, setNovoClienteOpen] = useState(false);
   const [novoClienteForm, setNovoClienteForm] = useState<NovoClienteForm>(NOVO_CLIENTE_INITIAL);
   const [savingNovoCliente, setSavingNovoCliente] = useState(false);
+
+  // Especialidades (tabela de referência, estável — staleTime infinito)
+  const { data: especialidades = [] } = useQuery({
+    queryKey: ["especialidades"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("especialidades")
+        .select("id, ramo, nome, ordem")
+        .eq("ativo", true)
+        .order("ramo")
+        .order("ordem");
+      if (error) throw error;
+      return data as { id: string; ramo: string; nome: string; ordem: number }[];
+    },
+    staleTime: Infinity,
+  });
+
+  const RAMO_LABEL: Record<string, string> = {
+    odontologia: "Odontologia",
+    medicina: "Medicina",
+    estetica: "Estética",
+    outros: "Outros",
+  };
+
+  const especialidadesPorRamo = useMemo(() => {
+    const map: Record<string, typeof especialidades> = {};
+    for (const e of especialidades) {
+      if (!map[e.ramo]) map[e.ramo] = [];
+      map[e.ramo].push(e);
+    }
+    return map;
+  }, [especialidades]);
 
   // Abre modal automaticamente quando URL contém ?novo=1
   useEffect(() => {
@@ -885,11 +920,24 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Especialidade clínica</Label>
-                    <Input
-                      placeholder="ex.: Implantodontia"
+                    <Select
                       value={novoClienteForm.especialidade_clinica}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, especialidade_clinica: e.target.value }))}
-                    />
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, especialidade_clinica: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a especialidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(especialidadesPorRamo).map(([ramo, items]) => (
+                          <SelectGroup key={ramo}>
+                            <SelectLabel>{RAMO_LABEL[ramo] ?? ramo}</SelectLabel>
+                            {items.map((e) => (
+                              <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
