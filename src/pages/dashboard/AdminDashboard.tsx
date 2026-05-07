@@ -54,6 +54,7 @@ import {
   Trash2,
   Briefcase,
   FolderOpen,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -397,6 +398,13 @@ export default function AdminDashboard() {
             Carteira completa: funil, MRR, projetos ativos e ticket médio.
           </p>
         </div>
+        <Button
+          onClick={() => { setNovoClienteOpen(true); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}
+          className="bg-verde-raiz hover:bg-verde-raiz/90"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Cliente
+        </Button>
       </div>
 
       {loading ? (
