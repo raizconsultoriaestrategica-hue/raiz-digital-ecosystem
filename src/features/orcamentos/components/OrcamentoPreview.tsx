@@ -66,13 +66,53 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       .map((p) => ({ ...p, pctFallback: p.pct ?? 50 }))
       .sort((a, b) => a.pctFallback - b.pctFallback);
 
-    const timeline = [
+    // Cronograma dinâmico: agrupa módulos selecionados por mes_execucao
+    const timelineFromModules = (() => {
+      if (selectedMods.length === 0) return null;
+
+      // Distribuir módulos por mês (mesma lógica de storage.ts/distribuirMesesExecucao)
+      const f1 = selectedMods.filter((m) => m.fase === 1);
+      const f2 = selectedMods.filter((m) => m.fase === 2);
+      const f3 = selectedMods.filter((m) => m.fase === 3);
+
+      type ModComMes = ModuloDb & { mes_execucao: number };
+      const distribuidos: ModComMes[] = [];
+
+      const meio = Math.ceil(f1.length / 2);
+      f1.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: i < meio ? 1 : 2 }));
+      f2.forEach((m) => distribuidos.push({ ...m, mes_execucao: 3 }));
+      f3.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: Math.min(4 + i, 12) }));
+
+      // Agrupar por mês
+      const porMes = new Map<number, ModComMes[]>();
+      for (const m of distribuidos) {
+        if (!porMes.has(m.mes_execucao)) porMes.set(m.mes_execucao, []);
+        porMes.get(m.mes_execucao)!.push(m);
+      }
+
+      const mesesOrdenados = [...porMes.keys()].sort((a, b) => a - b);
+      return mesesOrdenados.map((mes, idx) => {
+        const mods = porMes.get(mes)!;
+        const nomes = mods.map((m) => `${m.codigo} ${m.nome}`).join(", ");
+        return {
+          n: String(idx + 1),
+          period: `Mês ${mes}`,
+          title: mods.length === 1 ? mods[0].nome : `${mods.length} módulos`,
+          desc: nomes,
+        };
+      });
+    })();
+
+    // Fallback genérico (quando nenhum módulo está selecionado)
+    const timelineFallback = [
       { n: "1", period: "Semanas 1–2", title: "Diagnóstico Profundo & Kickoff", desc: "Onboarding completo, mapeamento detalhado de processos, definição de metas, indicadores e cronograma de execução." },
       { n: "2", period: "Meses 1–2", title: `Estruturação: ${pilarSorted[0].name.split("&")[0].trim()}`, desc: "Implementação dos processos prioritários, criação de scripts e templates, primeiro treinamento de equipe." },
       { n: "3", period: "Mês 2–3", title: `Ativação: ${(pilarSorted[1] || pilarSorted[0]).name.split("&")[0].trim()}`, desc: "Lançamento de estratégias de captação e conversão. Acompanhamento semanal de métricas e ajustes." },
       { n: "4", period: "Mês 3+", title: "Aceleração & Consolidação", desc: "Otimização dos resultados, ajuste de estratégias e escalonamento do que está funcionando." },
       { n: "5", period: "Resultado Final", title: "Faturamento em Trajetória", desc: "Meta: " + (meta ? fmtMoney(meta) : "faturamento crescente") + " com processos documentados e negócio com menos dependência do dono." },
     ];
+
+    const timeline = timelineFromModules ?? timelineFallback;
 
     const roiAbs = fat && meta
       ? `potencial de +${fmtMoney(meta - fat)}/mês no faturamento`
