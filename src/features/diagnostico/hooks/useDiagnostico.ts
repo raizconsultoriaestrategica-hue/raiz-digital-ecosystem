@@ -36,6 +36,18 @@ const initialState: State = {
   clienteId: null,
 };
 
+/** Payload para pre-carregar diagnostico anterior de um cliente. */
+export interface PreviousDiagPayload {
+  clienteId: string;
+  ramo: Ramo;
+  client: ClientData;
+  selOpts: SelOpts;
+  scores: ScoresMap;
+  notas: string;
+  analise: string;
+  kpisIniciais: KpisIniciaisData;
+}
+
 type Action =
   | { type: "GO"; step: Step }
   | { type: "SET_RAMO"; ramo: Ramo }
@@ -49,6 +61,7 @@ type Action =
   | { type: "SET_SCORE"; pid: string; qi: number; score: number }
   | { type: "FILL_NULL_WITH_ZERO"; pid: string }
   | { type: "SET_CURRENT_PILAR"; index: number }
+  | { type: "LOAD_PREVIOUS"; payload: PreviousDiagPayload }
   | { type: "RESET" };
 
 function reducer(state: State, action: Action): State {
@@ -102,6 +115,21 @@ function reducer(state: State, action: Action): State {
     }
     case "SET_CURRENT_PILAR":
       return { ...state, currentPilar: action.index };
+    case "LOAD_PREVIOUS": {
+      const p = action.payload;
+      return {
+        ...state,
+        clienteId: p.clienteId,
+        ramo: p.ramo,
+        client: p.client,
+        selOpts: p.selOpts,
+        scores: p.scores,
+        kpisIniciais: p.kpisIniciais,
+        notas: p.notas,
+        analise: p.analise,
+        currentPilar: 0,
+      };
+    }
     case "RESET":
       return initialState;
     default:
@@ -138,6 +166,10 @@ export function useDiagnostico() {
   const fillNullWithZero = useCallback((pid: string) => dispatch({ type: "FILL_NULL_WITH_ZERO", pid }), []);
   const setCurrentPilar = useCallback((index: number) => dispatch({ type: "SET_CURRENT_PILAR", index }), []);
   const reset = useCallback(() => dispatch({ type: "RESET" }), []);
+  const loadPrevious = useCallback(
+    (payload: PreviousDiagPayload) => dispatch({ type: "LOAD_PREVIOUS", payload }),
+    [],
+  );
 
   return {
     state,
@@ -155,5 +187,6 @@ export function useDiagnostico() {
     fillNullWithZero,
     setCurrentPilar,
     reset,
+    loadPrevious,
   };
 }

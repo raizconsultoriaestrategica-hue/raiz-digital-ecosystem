@@ -69,6 +69,7 @@ export default function Diagnostico() {
               onRamoChange={dx.setRamo}
               onKpiChange={dx.setKpi}
               onClienteIdChange={(id) => dx.setClienteId(id)}
+              onLoadPrevious={dx.loadPrevious}
               onBack={() => dx.goTo("intro")}
               onNext={() => dx.startDiag()}
             />

@@ -9,12 +9,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SelectOpts } from "../components/SelectOpts";
 import { ClienteSelector } from "../components/ClienteSelector";
+import { supabase } from "@/integrations/supabase/client";
 import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
   OPT_CADEIRAS, OPT_CONVENIO, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET,
   OPT_TIPO_DENT, OPT_TIPO_MED, ESPECIALIDADES_DENT, ESPECIALIDADES_MED, KPI_INIT_FIELDS,
 } from "../data";
-import type { ClientData, KpisIniciaisData, Ramo, SelOpts } from "../types";
+import type { ClientData, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "../types";
+import type { PreviousDiagPayload } from "../hooks/useDiagnostico";
 
 interface DadosScreenProps {
   client: ClientData;
@@ -27,13 +29,14 @@ interface DadosScreenProps {
   onRamoChange: (ramo: Ramo) => void;
   onKpiChange: (key: keyof KpisIniciaisData, value: string) => void;
   onClienteIdChange: (id: string | null, c?: { nome_cliente: string; cidade: string | null }) => void;
+  onLoadPrevious?: (payload: PreviousDiagPayload) => void;
   onBack: () => void;
   onNext: () => void;
 }
 
 export function DadosScreen({
   client, selOpts, ramo, kpisIniciais, clienteId,
-  onClientField, onSel, onRamoChange, onKpiChange, onClienteIdChange, onBack, onNext,
+  onClientField, onSel, onRamoChange, onKpiChange, onClienteIdChange, onLoadPrevious, onBack, onNext,
 }: DadosScreenProps) {
   const canProceed = client.name.trim().length > 0;
   const isMed = ramo === "medico";
@@ -87,11 +90,41 @@ export function DadosScreen({
 
           <ClienteSelector
             value={clienteId}
-            onChange={(id, c) => {
+            onChange={async (id, c) => {
               onClienteIdChange(id, c);
               if (c) {
                 if (!client.name) onClientField("name", c.nome_cliente);
                 if (!client.cidade && c.cidade) onClientField("cidade", c.cidade);
+              }
+              // Pre-carga do ultimo diagnostico do cliente
+              if (id && onLoadPrevious) {
+                try {
+                  const { data: prev } = await supabase
+                    .from("diagnostics")
+                    .select("*")
+                    .eq("client_id", id)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                  if (prev) {
+                    const cd = (prev.client_data ?? {}) as Record<string, unknown>;
+                    const prevClient = (cd.client as ClientData) ?? undefined;
+                    const prevSelOpts = (cd.selOpts as SelOpts) ?? {};
+                    onLoadPrevious({
+                      clienteId: id,
+                      ramo: (prev.ramo as Ramo) || "dentista",
+                      client: prevClient ?? client,
+                      selOpts: prevSelOpts,
+                      scores: (prev.scores ?? {}) as ScoresMap,
+                      notas: "",
+                      analise: "",
+                      kpisIniciais: {},
+                    });
+                    toast.success("Diagnostico anterior carregado. Revise os dados antes de prosseguir.");
+                  }
+                } catch {
+                  // Silencioso: pre-carga e best-effort
+                }
               }
             }}
           />
