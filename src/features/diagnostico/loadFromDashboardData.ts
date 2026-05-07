@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * o consultor publicou pela ferramenta.
  */
 export interface ClienteDiagResumo {
-  scores: Record<string, any>;
+  scores: Record<string, unknown>;
   total_score: number;
   total_max: number;
   total_pct: number; // 0..100
@@ -33,7 +33,7 @@ export async function loadDiagnosticoFromDashboardData(
   const map = new Map(data.map((r) => [r.campo, r] as const));
 
   const scoresJson = map.get("SCORES_JSON")?.valor;
-  let scores: Record<string, any> = {};
+  let scores: Record<string, unknown> = {};
   if (scoresJson) {
     try { scores = JSON.parse(scoresJson); } catch { /* noop */ }
   }

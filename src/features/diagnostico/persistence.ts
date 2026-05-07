@@ -361,7 +361,107 @@ function reconstructSnapshot(
 }
 
 export async function loadDiagnosticosFromSupabase(): Promise<StoredDiagnostico[]> {
-  // 1) Busca todos os registros de diagnóstico
+  // Prefere tabela tipada diagnostics (fonte canonica desde Fase 2 dual-write).
+  // Fallback para EAV apenas se diagnostics estiver vazia.
+  const typed = await loadDiagnosticosFromTypedTable();
+  if (typed.length > 0) return typed;
+
+  return loadDiagnosticosFromEAV();
+}
+
+/**
+ * Le diagnosticos da tabela tipada `diagnostics` + dados do cliente.
+ * Reconstroi StoredDiagnostico sem passar pelo EAV.
+ */
+async function loadDiagnosticosFromTypedTable(): Promise<StoredDiagnostico[]> {
+  const { data: rows, error } = await supabase
+    .from("diagnostics")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  if (!rows || rows.length === 0) return [];
+
+  const clienteIds = rows.map((r) => r.client_id).filter((id): id is string => !!id);
+  if (clienteIds.length === 0) return [];
+
+  const { data: clientes, error: cErr } = await supabase
+    .from("clientes")
+    .select("id, nome_cliente, nome_clinica, cidade, especialidade")
+    .in("id", [...new Set(clienteIds)]);
+  if (cErr) throw cErr;
+
+  const clienteMap = new Map((clientes || []).map((c) => [c.id, c as ClienteRow]));
+
+  const out: StoredDiagnostico[] = [];
+  for (const row of rows) {
+    if (!row.client_id) continue;
+    const cliente = clienteMap.get(row.client_id);
+    if (!cliente) continue;
+
+    const ramo: Ramo = (row.ramo as Ramo) || "dentista";
+    const pilaresList = getPilaresByRamo(ramo);
+    const planosList = getPlanosByRamo(ramo);
+
+    const scores = (row.scores ?? {}) as ScoresMap;
+    const totalScore = row.total_score;
+    const totalMax = row.total_max;
+    const totalPct = totalMax > 0 ? totalScore / totalMax : 0;
+
+    const classif =
+      CLASSIFS.find((c) => totalPct < c.max) ?? CLASSIFS[CLASSIFS.length - 1];
+    const plano =
+      planosList.find((pl) => pl.trigger(totalPct)) ?? planosList[planosList.length - 1];
+
+    // Sorted pilar ids por pct (menor primeiro)
+    const pctById = new Map<string, number>();
+    pilaresList.forEach((p) => {
+      const arr = scores[p.id] || [];
+      let t = 0, m = 0;
+      p.questions.forEach((_q, i) => {
+        const v = arr[i];
+        if (v === "SKIP") return;
+        t += typeof v === "number" ? v : 0;
+        m += 3;
+      });
+      if (m > 0) pctById.set(p.id, t / m);
+    });
+    const sortedIds = [...pctById.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
+
+    const clientData = (row.client_data ?? {}) as Record<string, unknown>;
+    const client = (clientData.client as ClientData) ?? {
+      name: cliente.nome_cliente,
+      cidade: cliente.cidade || "",
+      proc: "", objetivo: "", dor: "", meta: "", data: "",
+      fat: "", tipo: "", func: "", ticket: "", cadeiras: "", tempo: "", pacientes: "",
+    };
+    const selOpts = (clientData.selOpts as SelOpts) ?? {};
+
+    const timestamp = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+
+    out.push({
+      client,
+      selOpts,
+      scores,
+      totalScore,
+      totalMax,
+      totalPct,
+      classif,
+      plano,
+      sortedIds,
+      notas: "",
+      analise: "",
+      ramo,
+      timestamp,
+      cliente_id: row.client_id,
+      clienteNomeClinica: cliente.nome_clinica,
+    });
+  }
+
+  return out;
+}
+
+/** Fallback: le diagnosticos do EAV (dashboard_data). Usado apenas para dados pre-dual-write. */
+async function loadDiagnosticosFromEAV(): Promise<StoredDiagnostico[]> {
   const { data: rows, error } = await supabase
     .from("dashboard_data")
     .select("cliente_id, campo, valor, benchmark, created_at")
@@ -370,7 +470,6 @@ export async function loadDiagnosticosFromSupabase(): Promise<StoredDiagnostico[
   if (error) throw error;
   if (!rows || rows.length === 0) return [];
 
-  // 2) Busca dados dos clientes referenciados
   const clienteIds = Array.from(new Set(rows.map((r) => r.cliente_id).filter((id): id is string => !!id)));
   if (clienteIds.length === 0) return [];
 
@@ -382,7 +481,6 @@ export async function loadDiagnosticosFromSupabase(): Promise<StoredDiagnostico[
 
   const clienteMap = new Map((clientes || []).map((c) => [c.id, c as ClienteRow]));
 
-  // 3) Agrupa rows por cliente_id
   const byCliente = new Map<string, typeof rows>();
   rows.forEach((r) => {
     if (!r.cliente_id) return;
@@ -399,7 +497,6 @@ export async function loadDiagnosticosFromSupabase(): Promise<StoredDiagnostico[
     if (snap) out.push(snap);
   });
 
-  // Mais recentes primeiro
   out.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
   return out;
 }
