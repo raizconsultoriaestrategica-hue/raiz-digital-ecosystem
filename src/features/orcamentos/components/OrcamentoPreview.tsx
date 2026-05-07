@@ -1,6 +1,8 @@
 import { useMemo } from "react";
-import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor } from "../data";
+import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor, type PlanoKey } from "../data";
 import { ANCORAGENS, calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
+
+const DURACAO_MESES: Record<PlanoKey, number> = { base: 4, crescimento: 5, expansao: 6 };
 
 interface Props {
   form: OrcamentoForm;
@@ -41,12 +43,23 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     const valorFinal =
       !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
 
+    const duracao = DURACAO_MESES[form.plano] ?? 5;
+    const valorTotal = valorFinal * duracao;
+
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
           day: "2-digit",
           month: "long",
           year: "numeric",
         })
+      : "—";
+
+    const validadeDate = form.data
+      ? (() => {
+          const d = new Date(form.data + "T12:00");
+          d.setDate(d.getDate() + 15);
+          return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+        })()
       : "—";
 
     const pilarSorted = [...pilares]
@@ -74,7 +87,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
-      valorCalculado, valorFinal, ancoragemFrase,
+      valorCalculado, valorFinal, valorTotal, duracao, validadeDate, ancoragemFrase,
     };
   }, [form, modulosDb]);
 
@@ -203,7 +216,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
             <div className="px-6 py-5 bg-white">
               <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
-                Investimento Mensal
+                Investimento
               </div>
               <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
                 {fmtMoney(data.valorFinal)}/mês
@@ -216,6 +229,35 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                   </span>
                 )}
               </div>
+
+              {/* Valor total e parcelas */}
+              <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">
+                <div>
+                  <span className="text-[#718096]">Valor total do contrato:</span>
+                </div>
+                <div className="text-right font-semibold text-verde-raiz">
+                  {fmtMoney(data.valorTotal)}
+                </div>
+                <div>
+                  <span className="text-[#718096]">Parcelas:</span>
+                </div>
+                <div className="text-right font-semibold text-quase-preto">
+                  {data.duracao}x de {fmtMoney(data.valorFinal)}
+                </div>
+                <div>
+                  <span className="text-[#718096]">Formas de pagamento:</span>
+                </div>
+                <div className="text-right text-quase-preto">
+                  PIX, Boleto ou Cartão em até 12x
+                </div>
+                <div>
+                  <span className="text-[#718096]">Validade da proposta:</span>
+                </div>
+                <div className="text-right font-semibold text-quase-preto">
+                  {data.validadeDate}
+                </div>
+              </div>
+
               {data.ancoragemFrase && (
                 <div
                   className="mt-3 pt-3 border-t border-[#EFE9DD] text-[12px] italic leading-[1.55]"
