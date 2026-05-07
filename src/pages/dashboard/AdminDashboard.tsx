@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +19,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -54,6 +58,7 @@ import {
   Trash2,
   Briefcase,
   FolderOpen,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +114,19 @@ const STATUS_BADGE: Record<StatusCarteira, string> = {
   encerrado: "bg-destructive/15 text-destructive hover:bg-destructive/20",
 };
 
+const PLANO_OPCOES = [
+  { value: "Raiz Essencial", label: "Raiz Essencial" },
+  { value: "Raiz de Crescimento", label: "Raiz de Crescimento" },
+  { value: "Raiz de Expansão", label: "Raiz de Expansão" },
+] as const;
+
+const FORMA_PAGAMENTO_OPCOES = [
+  { value: "pix", label: "PIX" },
+  { value: "boleto", label: "Boleto" },
+  { value: "cartao", label: "Cartão" },
+  { value: "transferencia", label: "Transferência" },
+] as const;
+
 const formatBRL = (v: number | null | undefined) =>
   v == null
     ? "—"
@@ -128,19 +146,47 @@ type EditState = {
   valor_mensalidade: string;
 };
 
-// Estado do formulário de novo cliente (campos mínimos viáveis - Fase 1)
+// Estado do formulário de novo cliente (todos os campos M1)
 type NovoClienteForm = {
   nome_cliente: string;
   nome_clinica: string;
+  cidade: string;
+  especialidade: string;
   plano: string;
   status: StatusCarteira;
+  meta_faturamento: string;
+  consultor: string;
+  telefone: string;
+  email_cliente: string;
+  cpf_cnpj: string;
+  endereco: string;
+  data_nascimento: string;
+  instagram: string;
+  observacoes_relacionamento: string;
+  dia_vencimento: string;
+  forma_pagamento: string;
+  especialidade_clinica: string;
 };
 
 const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
   nome_cliente: "",
   nome_clinica: "",
+  cidade: "",
+  especialidade: "",
   plano: "",
   status: "lead",
+  meta_faturamento: "",
+  consultor: "",
+  telefone: "",
+  email_cliente: "",
+  cpf_cnpj: "",
+  endereco: "",
+  data_nascimento: "",
+  instagram: "",
+  observacoes_relacionamento: "",
+  dia_vencimento: "",
+  forma_pagamento: "",
+  especialidade_clinica: "",
 };
 
 export default function AdminDashboard() {
@@ -159,6 +205,38 @@ export default function AdminDashboard() {
   const [novoClienteOpen, setNovoClienteOpen] = useState(false);
   const [novoClienteForm, setNovoClienteForm] = useState<NovoClienteForm>(NOVO_CLIENTE_INITIAL);
   const [savingNovoCliente, setSavingNovoCliente] = useState(false);
+
+  // Especialidades (tabela de referência, estável — staleTime infinito)
+  const { data: especialidades = [] } = useQuery({
+    queryKey: ["especialidades"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("especialidades")
+        .select("id, ramo, nome, ordem")
+        .eq("ativo", true)
+        .order("ramo")
+        .order("ordem");
+      if (error) throw error;
+      return data as { id: string; ramo: string; nome: string; ordem: number }[];
+    },
+    staleTime: Infinity,
+  });
+
+  const RAMO_LABEL: Record<string, string> = {
+    odontologia: "Odontologia",
+    medicina: "Medicina",
+    estetica: "Estética",
+    outros: "Outros",
+  };
+
+  const especialidadesPorRamo = useMemo(() => {
+    const map: Record<string, typeof especialidades> = {};
+    for (const e of especialidades) {
+      if (!map[e.ramo]) map[e.ramo] = [];
+      map[e.ramo].push(e);
+    }
+    return map;
+  }, [especialidades]);
 
   // Abre modal automaticamente quando URL contém ?novo=1
   useEffect(() => {
@@ -327,13 +405,31 @@ export default function AdminDashboard() {
     }
     setSavingNovoCliente(true);
     try {
+      const toNum = (s: string) => {
+        const n = Number(s.replace(",", "."));
+        return s.trim() !== "" && Number.isFinite(n) ? n : null;
+      };
       const { data, error } = await supabase
         .from("clientes")
         .insert({
           nome_cliente: novoClienteForm.nome_cliente.trim(),
           nome_clinica: novoClienteForm.nome_clinica.trim() || null,
-          plano: novoClienteForm.plano.trim() || null,
+          cidade: novoClienteForm.cidade.trim() || null,
+          especialidade: novoClienteForm.especialidade.trim() || null,
+          plano: novoClienteForm.plano || null,
           status: novoClienteForm.status,
+          meta_faturamento: toNum(novoClienteForm.meta_faturamento),
+          consultor: novoClienteForm.consultor.trim() || null,
+          telefone: novoClienteForm.telefone.trim() || null,
+          email_cliente: novoClienteForm.email_cliente.trim() || null,
+          cpf_cnpj: novoClienteForm.cpf_cnpj.trim() || null,
+          endereco: novoClienteForm.endereco.trim() || null,
+          data_nascimento: novoClienteForm.data_nascimento || null,
+          instagram: novoClienteForm.instagram.trim() || null,
+          observacoes_relacionamento: novoClienteForm.observacoes_relacionamento.trim() || null,
+          dia_vencimento: toNum(novoClienteForm.dia_vencimento),
+          forma_pagamento: novoClienteForm.forma_pagamento || null,
+          especialidade_clinica: novoClienteForm.especialidade_clinica.trim() || null,
         })
         .select("id")
         .single();
@@ -397,6 +493,13 @@ export default function AdminDashboard() {
             Carteira completa: funil, MRR, projetos ativos e ticket médio.
           </p>
         </div>
+        <Button
+          onClick={() => { setNovoClienteOpen(true); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}
+          className="bg-verde-raiz hover:bg-verde-raiz/90"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Cliente
+        </Button>
       </div>
 
       {loading ? (
@@ -616,77 +719,248 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {/* ===== Modal: Novo Cliente (campos mínimos - Fase 1) ===== */}
+      {/* ===== Modal: Novo Cliente ===== */}
       <Dialog
         open={novoClienteOpen}
         onOpenChange={(o) => {
           if (!o) { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
           <DialogHeader>
             <DialogTitle>Novo Cliente</DialogTitle>
             <DialogDescription>
-              Campos essenciais. Os demais serão preenchidos na Fase 2 (migração de schema).
+              Preencha os dados do cliente. Apenas o nome do responsável é obrigatório.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>
-                Nome do responsável <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="ex.: Dra. Ana Lima"
-                value={novoClienteForm.nome_cliente}
-                onChange={(e) =>
-                  setNovoClienteForm((f) => ({ ...f, nome_cliente: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Nome da clínica</Label>
-              <Input
-                placeholder="ex.: Clínica OdontoVida"
-                value={novoClienteForm.nome_clinica}
-                onChange={(e) =>
-                  setNovoClienteForm((f) => ({ ...f, nome_clinica: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Plano</Label>
-              <Input
-                placeholder="ex.: Raiz de Crescimento"
-                value={novoClienteForm.plano}
-                onChange={(e) =>
-                  setNovoClienteForm((f) => ({ ...f, plano: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status inicial</Label>
-              <Select
-                value={novoClienteForm.status}
-                onValueChange={(v) =>
-                  setNovoClienteForm((f) => ({ ...f, status: v as StatusCarteira }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {STATUS_LABEL[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="flex-1 overflow-y-auto pr-1">
+            <div className="space-y-5 py-2">
+              {/* Seção: Identificação */}
+              <div>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Identificação
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Nome do responsável <span className="text-destructive">*</span></Label>
+                    <Input
+                      placeholder="ex.: Dra. Ana Lima"
+                      value={novoClienteForm.nome_cliente}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, nome_cliente: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Nome da clínica</Label>
+                    <Input
+                      placeholder="ex.: Clínica OdontoVida"
+                      value={novoClienteForm.nome_clinica}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, nome_clinica: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Cidade</Label>
+                    <Input
+                      placeholder="ex.: São Paulo"
+                      value={novoClienteForm.cidade}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, cidade: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Especialidade (campo legado)</Label>
+                    <Input
+                      placeholder="ex.: Ortodontia"
+                      value={novoClienteForm.especialidade}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, especialidade: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>CPF / CNPJ</Label>
+                    <Input
+                      placeholder="000.000.000-00"
+                      value={novoClienteForm.cpf_cnpj}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, cpf_cnpj: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Data de nascimento</Label>
+                    <Input
+                      type="date"
+                      value={novoClienteForm.data_nascimento}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, data_nascimento: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção: Contato */}
+              <div>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Contato
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Telefone</Label>
+                    <Input
+                      placeholder="(11) 99999-9999"
+                      value={novoClienteForm.telefone}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, telefone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>E-mail</Label>
+                    <Input
+                      type="email"
+                      placeholder="dra.ana@clinica.com"
+                      value={novoClienteForm.email_cliente}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, email_cliente: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Instagram</Label>
+                    <Input
+                      placeholder="@usuario"
+                      value={novoClienteForm.instagram}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, instagram: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-1">
+                    <Label>Endereço</Label>
+                    <Input
+                      placeholder="Rua, número, bairro"
+                      value={novoClienteForm.endereco}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, endereco: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção: Contrato */}
+              <div>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Contrato
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Plano</Label>
+                    <Select
+                      value={novoClienteForm.plano}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, plano: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLANO_OPCOES.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Status</Label>
+                    <Select
+                      value={novoClienteForm.status}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, status: v as StatusCarteira }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
+                          <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Meta de faturamento (R$/mês)</Label>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={novoClienteForm.meta_faturamento}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Consultor responsável</Label>
+                    <Input
+                      placeholder="Nome do consultor"
+                      value={novoClienteForm.consultor}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, consultor: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Dia de vencimento (1–31)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={31}
+                      placeholder="10"
+                      value={novoClienteForm.dia_vencimento}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, dia_vencimento: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Forma de pagamento</Label>
+                    <Select
+                      value={novoClienteForm.forma_pagamento}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, forma_pagamento: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FORMA_PAGAMENTO_OPCOES.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Especialidade clínica</Label>
+                    <Select
+                      value={novoClienteForm.especialidade_clinica}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, especialidade_clinica: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a especialidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(especialidadesPorRamo).map(([ramo, items]) => (
+                          <SelectGroup key={ramo}>
+                            <SelectLabel>{RAMO_LABEL[ramo] ?? ramo}</SelectLabel>
+                            {items.map((e) => (
+                              <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção: Relacionamento */}
+              <div>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Relacionamento
+                </p>
+                <div className="space-y-1.5">
+                  <Label>Observações de relacionamento</Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Preferências, pontos de atenção, contexto relevante…"
+                    value={novoClienteForm.observacoes_relacionamento}
+                    onChange={(e) => setNovoClienteForm((f) => ({ ...f, observacoes_relacionamento: e.target.value }))}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-4 border-t pt-4">
             <Button
               variant="outline"
               onClick={() => { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}

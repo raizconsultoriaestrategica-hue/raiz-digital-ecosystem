@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -35,6 +38,17 @@ interface Cliente {
   meta_faturamento: number | null;
   consultor: string | null;
   pilares_foco: string | null;
+  // M1
+  telefone: string | null;
+  email_cliente: string | null;
+  cpf_cnpj: string | null;
+  endereco: string | null;
+  data_nascimento: string | null;
+  instagram: string | null;
+  observacoes_relacionamento: string | null;
+  dia_vencimento: number | null;
+  forma_pagamento: string | null;
+  especialidade_clinica: string | null;
 }
 
 interface DashboardRow {
@@ -71,6 +85,19 @@ const STATUS_OPCOES = [
   { value: "encerrado", label: "Inativo" },
 ];
 
+const PLANO_OPCOES = [
+  { value: "Raiz Essencial", label: "Raiz Essencial" },
+  { value: "Raiz de Crescimento", label: "Raiz de Crescimento" },
+  { value: "Raiz de Expansão", label: "Raiz de Expansão" },
+] as const;
+
+const FORMA_PAGAMENTO_OPCOES = [
+  { value: "pix", label: "PIX" },
+  { value: "boleto", label: "Boleto" },
+  { value: "cartao", label: "Cartão" },
+  { value: "transferencia", label: "Transferência" },
+] as const;
+
 // Gera lista de meses (MM/YYYY). 12 últimos + 6 futuros
 function gerarMeses(): string[] {
   const out: string[] = [];
@@ -96,6 +123,38 @@ export default function GestaoCliente() {
 
   const [loading, setLoading] = useState(true);
   const [cliente, setCliente] = useState<Cliente | null>(null);
+
+  // Especialidades (tabela de referência, estável — staleTime infinito)
+  const { data: especialidades = [] } = useQuery({
+    queryKey: ["especialidades"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("especialidades")
+        .select("id, ramo, nome, ordem")
+        .eq("ativo", true)
+        .order("ramo")
+        .order("ordem");
+      if (error) throw error;
+      return data as { id: string; ramo: string; nome: string; ordem: number }[];
+    },
+    staleTime: Infinity,
+  });
+
+  const RAMO_LABEL: Record<string, string> = {
+    odontologia: "Odontologia",
+    medicina: "Medicina",
+    estetica: "Estética",
+    outros: "Outros",
+  };
+
+  const especialidadesPorRamo = useMemo(() => {
+    const map: Record<string, typeof especialidades> = {};
+    for (const e of especialidades) {
+      if (!map[e.ramo]) map[e.ramo] = [];
+      map[e.ramo].push(e);
+    }
+    return map;
+  }, [especialidades]);
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [analises, setAnalises] = useState<AnaliseMensal[]>([]);
   const meses = useMemo(() => gerarMeses(), []);
@@ -121,6 +180,16 @@ export default function GestaoCliente() {
     status: "lead",
     meta_faturamento: "",
     consultor: "",
+    telefone: "",
+    email_cliente: "",
+    cpf_cnpj: "",
+    endereco: "",
+    data_nascimento: "",
+    instagram: "",
+    observacoes_relacionamento: "",
+    dia_vencimento: "",
+    forma_pagamento: "",
+    especialidade_clinica: "",
   });
   const [salvandoCadastro, setSalvandoCadastro] = useState(false);
 
@@ -136,7 +205,7 @@ export default function GestaoCliente() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, consultor, pilares_foco",
+            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, consultor, pilares_foco, telefone, email_cliente, cpf_cnpj, endereco, data_nascimento, instagram, observacoes_relacionamento, dia_vencimento, forma_pagamento, especialidade_clinica",
           )
           .eq("id", clienteId)
           .maybeSingle(),
@@ -163,6 +232,16 @@ export default function GestaoCliente() {
         status: c.status ?? "lead",
         meta_faturamento: c.meta_faturamento != null ? String(c.meta_faturamento) : "",
         consultor: c.consultor ?? "",
+        telefone: c.telefone ?? "",
+        email_cliente: c.email_cliente ?? "",
+        cpf_cnpj: c.cpf_cnpj ?? "",
+        endereco: c.endereco ?? "",
+        data_nascimento: c.data_nascimento ?? "",
+        instagram: c.instagram ?? "",
+        observacoes_relacionamento: c.observacoes_relacionamento ?? "",
+        dia_vencimento: c.dia_vencimento != null ? String(c.dia_vencimento) : "",
+        forma_pagamento: c.forma_pagamento ?? "",
+        especialidade_clinica: c.especialidade_clinica ?? "",
       });
 
       const dRows = (dash ?? []) as DashboardRow[];
@@ -385,8 +464,10 @@ export default function GestaoCliente() {
     if (!clienteId) return;
     setSalvandoCadastro(true);
     try {
-      const meta = cadastroForm.meta_faturamento.trim();
-      const metaNum = meta ? Number(meta.replace(",", ".")) : null;
+      const toNum = (s: string) => {
+        const n = Number(s.replace(",", "."));
+        return s.trim() !== "" && Number.isFinite(n) ? n : null;
+      };
       const { error } = await supabase
         .from("clientes")
         .update({
@@ -394,10 +475,20 @@ export default function GestaoCliente() {
           nome_clinica: cadastroForm.nome_clinica.trim() || null,
           cidade: cadastroForm.cidade.trim() || null,
           especialidade: cadastroForm.especialidade.trim() || null,
-          plano: cadastroForm.plano.trim() || null,
+          plano: cadastroForm.plano || null,
           status: cadastroForm.status,
-          meta_faturamento: metaNum && Number.isFinite(metaNum) ? metaNum : null,
+          meta_faturamento: toNum(cadastroForm.meta_faturamento),
           consultor: cadastroForm.consultor.trim() || null,
+          telefone: cadastroForm.telefone.trim() || null,
+          email_cliente: cadastroForm.email_cliente.trim() || null,
+          cpf_cnpj: cadastroForm.cpf_cnpj.trim() || null,
+          endereco: cadastroForm.endereco.trim() || null,
+          data_nascimento: cadastroForm.data_nascimento || null,
+          instagram: cadastroForm.instagram.trim() || null,
+          observacoes_relacionamento: cadastroForm.observacoes_relacionamento.trim() || null,
+          dia_vencimento: toNum(cadastroForm.dia_vencimento),
+          forma_pagamento: cadastroForm.forma_pagamento || null,
+          especialidade_clinica: cadastroForm.especialidade_clinica.trim() || null,
         })
         .eq("id", clienteId);
       if (error) throw error;
@@ -550,88 +641,218 @@ export default function GestaoCliente() {
         {/* ============ ABA 2 ============ */}
         <TabsContent value="cadastro" className="mt-6">
           <Card>
-            <CardContent className="space-y-4 p-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>Nome do responsável</Label>
-                  <Input
-                    value={cadastroForm.nome_cliente}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, nome_cliente: e.target.value }))
-                    }
-                  />
+            <CardContent className="space-y-6 p-5">
+              {/* Identificação */}
+              <div>
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Identificação
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Nome do responsável</Label>
+                    <Input
+                      value={cadastroForm.nome_cliente}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, nome_cliente: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Nome da clínica</Label>
+                    <Input
+                      value={cadastroForm.nome_clinica}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, nome_clinica: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Cidade</Label>
+                    <Input
+                      value={cadastroForm.cidade}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, cidade: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Especialidade (campo legado)</Label>
+                    <Input
+                      value={cadastroForm.especialidade}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, especialidade: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>CPF / CNPJ</Label>
+                    <Input
+                      placeholder="000.000.000-00"
+                      value={cadastroForm.cpf_cnpj}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, cpf_cnpj: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Data de nascimento</Label>
+                    <Input
+                      type="date"
+                      value={cadastroForm.data_nascimento}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, data_nascimento: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Nome da clínica</Label>
-                  <Input
-                    value={cadastroForm.nome_clinica}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, nome_clinica: e.target.value }))
-                    }
-                  />
+              </div>
+
+              {/* Contato */}
+              <div>
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Contato
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Telefone</Label>
+                    <Input
+                      placeholder="(11) 99999-9999"
+                      value={cadastroForm.telefone}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, telefone: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>E-mail</Label>
+                    <Input
+                      type="email"
+                      value={cadastroForm.email_cliente}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, email_cliente: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Instagram</Label>
+                    <Input
+                      placeholder="@usuario"
+                      value={cadastroForm.instagram}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, instagram: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Endereço</Label>
+                    <Input
+                      value={cadastroForm.endereco}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, endereco: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Cidade</Label>
-                  <Input
-                    value={cadastroForm.cidade}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, cidade: e.target.value }))
-                    }
-                  />
+              </div>
+
+              {/* Contrato */}
+              <div>
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Contrato
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Plano</Label>
+                    <Select
+                      value={cadastroForm.plano}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, plano: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue placeholder="Selecione o plano" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLANO_OPCOES.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select
+                      value={cadastroForm.status}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, status: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPCOES.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Meta de faturamento (R$/mês)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={cadastroForm.meta_faturamento}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Consultor responsável</Label>
+                    <Input
+                      value={cadastroForm.consultor}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, consultor: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Dia de vencimento (1–31)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={31}
+                      placeholder="10"
+                      value={cadastroForm.dia_vencimento}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, dia_vencimento: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Forma de pagamento</Label>
+                    <Select
+                      value={cadastroForm.forma_pagamento}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, forma_pagamento: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FORMA_PAGAMENTO_OPCOES.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Especialidade clínica</Label>
+                    <Select
+                      value={cadastroForm.especialidade_clinica}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, especialidade_clinica: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue placeholder="Selecione a especialidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(especialidadesPorRamo).map(([ramo, items]) => (
+                          <SelectGroup key={ramo}>
+                            <SelectLabel>{RAMO_LABEL[ramo] ?? ramo}</SelectLabel>
+                            {items.map((e) => (
+                              <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+              </div>
+
+              {/* Relacionamento */}
+              <div>
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Relacionamento
+                </h3>
                 <div>
-                  <Label>Especialidade</Label>
-                  <Input
-                    value={cadastroForm.especialidade}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, especialidade: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Plano</Label>
-                  <Input
-                    value={cadastroForm.plano}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, plano: e.target.value }))
-                    }
-                    placeholder="ex.: Crescimento, Premium…"
-                  />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select
-                    value={cadastroForm.status}
-                    onValueChange={(v) => setCadastroForm((f) => ({ ...f, status: v }))}
-                  >
-                    <SelectTrigger className="mt-0.5">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPCOES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Meta de faturamento (R$ /mês)</Label>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={cadastroForm.meta_faturamento}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, meta_faturamento: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Consultor responsável</Label>
-                  <Input
-                    value={cadastroForm.consultor}
-                    onChange={(e) =>
-                      setCadastroForm((f) => ({ ...f, consultor: e.target.value }))
-                    }
+                  <Label>Observações de relacionamento</Label>
+                  <Textarea
+                    rows={4}
+                    placeholder="Preferências, pontos de atenção, contexto relevante…"
+                    value={cadastroForm.observacoes_relacionamento}
+                    onChange={(e) => setCadastroForm((f) => ({ ...f, observacoes_relacionamento: e.target.value }))}
+                    className="mt-1"
                   />
                 </div>
               </div>

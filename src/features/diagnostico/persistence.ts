@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CLASSIFS, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS } from "./data";
 import type { ClientData, DiagnosticoSnapshot, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "./types";
+import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Persiste o diagnóstico em dashboard_data:
@@ -120,6 +121,38 @@ export async function saveDiagnosticoToSupabase(
 
   const { error } = await supabase.from("dashboard_data").insert(rows);
   if (error) throw error;
+
+  // Dual-write: tabela diagnostics (tipada)
+  // Garante que novos diagnósticos apareçam no auto-fill da Máquina de
+  // Orçamentos e na view v_cliente_completo. Usa delete+insert porque
+  // client_id não tem constraint UNIQUE (ON CONFLICT não funciona).
+  // Não bloqueia o fluxo principal se falhar.
+  try {
+    const totalPctForDb = snapshot.totalMax > 0
+      ? Math.round((snapshot.totalScore / snapshot.totalMax) * 10000) / 100
+      : 0;
+
+    await supabase.from("diagnostics").delete().eq("client_id", clienteId);
+
+    const { error: diagErr } = await supabase.from("diagnostics").insert({
+      client_id: clienteId,
+      ramo: ramo as string,
+      total_score: snapshot.totalScore,
+      total_max: snapshot.totalMax,
+      total_pct: totalPctForDb,
+      classif_label: snapshot.classif.label,
+      plano_name: snapshot.plano.name,
+      scores: snapshot.scores as unknown as Json,
+      client_data: {
+        client: snapshot.client,
+        selOpts: snapshot.selOpts,
+      } as unknown as Json,
+    });
+
+    if (diagErr) throw diagErr;
+  } catch (e) {
+    console.warn("[saveDiagnosticoToSupabase] dual-write diagnostics falhou:", e);
+  }
 
   // Também persiste configs (fat, meta, dor, especialidade) para reuso por outras ferramentas (ex.: Orçamentos)
   await saveClienteConfigToSupabase(clienteId, {

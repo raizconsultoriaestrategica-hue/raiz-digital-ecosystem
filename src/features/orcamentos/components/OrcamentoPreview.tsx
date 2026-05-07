@@ -1,6 +1,8 @@
 import { useMemo } from "react";
-import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor } from "../data";
+import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor, type PlanoKey } from "../data";
 import { ANCORAGENS, calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
+
+const DURACAO_MESES: Record<PlanoKey, number> = { base: 4, crescimento: 5, expansao: 6 };
 
 interface Props {
   form: OrcamentoForm;
@@ -41,6 +43,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     const valorFinal =
       !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
 
+    const duracao = DURACAO_MESES[form.plano] ?? 5;
+    const valorTotal = valorFinal * duracao;
+
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
           day: "2-digit",
@@ -49,17 +54,65 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         })
       : "—";
 
+    const validadeDate = form.data
+      ? (() => {
+          const d = new Date(form.data + "T12:00");
+          d.setDate(d.getDate() + 15);
+          return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+        })()
+      : "—";
+
     const pilarSorted = [...pilares]
       .map((p) => ({ ...p, pctFallback: p.pct ?? 50 }))
       .sort((a, b) => a.pctFallback - b.pctFallback);
 
-    const timeline = [
+    // Cronograma dinâmico: agrupa módulos selecionados por mes_execucao
+    const timelineFromModules = (() => {
+      if (selectedMods.length === 0) return null;
+
+      // Distribuir módulos por mês (mesma lógica de storage.ts/distribuirMesesExecucao)
+      const f1 = selectedMods.filter((m) => m.fase === 1);
+      const f2 = selectedMods.filter((m) => m.fase === 2);
+      const f3 = selectedMods.filter((m) => m.fase === 3);
+
+      type ModComMes = ModuloDb & { mes_execucao: number };
+      const distribuidos: ModComMes[] = [];
+
+      const meio = Math.ceil(f1.length / 2);
+      f1.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: i < meio ? 1 : 2 }));
+      f2.forEach((m) => distribuidos.push({ ...m, mes_execucao: 3 }));
+      f3.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: Math.min(4 + i, 12) }));
+
+      // Agrupar por mês
+      const porMes = new Map<number, ModComMes[]>();
+      for (const m of distribuidos) {
+        if (!porMes.has(m.mes_execucao)) porMes.set(m.mes_execucao, []);
+        porMes.get(m.mes_execucao)!.push(m);
+      }
+
+      const mesesOrdenados = [...porMes.keys()].sort((a, b) => a - b);
+      return mesesOrdenados.map((mes, idx) => {
+        const mods = porMes.get(mes)!;
+        const nomes = mods.map((m) => `${m.codigo} ${m.nome}`).join(", ");
+        return {
+          n: String(idx + 1),
+          period: `Mês ${mes}`,
+          title: mods.length === 1 ? mods[0].nome : `${mods.length} módulos`,
+          desc: nomes,
+        };
+      });
+    })();
+
+    // Fallback genérico (quando nenhum módulo está selecionado)
+    const timelineFallback = [
       { n: "1", period: "Semanas 1–2", title: "Diagnóstico Profundo & Kickoff", desc: "Onboarding completo, mapeamento detalhado de processos, definição de metas, indicadores e cronograma de execução." },
       { n: "2", period: "Meses 1–2", title: `Estruturação: ${pilarSorted[0].name.split("&")[0].trim()}`, desc: "Implementação dos processos prioritários, criação de scripts e templates, primeiro treinamento de equipe." },
       { n: "3", period: "Mês 2–3", title: `Ativação: ${(pilarSorted[1] || pilarSorted[0]).name.split("&")[0].trim()}`, desc: "Lançamento de estratégias de captação e conversão. Acompanhamento semanal de métricas e ajustes." },
       { n: "4", period: "Mês 3+", title: "Aceleração & Consolidação", desc: "Otimização dos resultados, ajuste de estratégias e escalonamento do que está funcionando." },
       { n: "5", period: "Resultado Final", title: "Faturamento em Trajetória", desc: "Meta: " + (meta ? fmtMoney(meta) : "faturamento crescente") + " com processos documentados e negócio com menos dependência do dono." },
     ];
+
+    const timeline = timelineFromModules ?? timelineFallback;
 
     const roiAbs = fat && meta
       ? `potencial de +${fmtMoney(meta - fat)}/mês no faturamento`
@@ -74,7 +127,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
-      valorCalculado, valorFinal, ancoragemFrase,
+      valorCalculado, valorFinal, valorTotal, duracao, validadeDate, ancoragemFrase,
     };
   }, [form, modulosDb]);
 
@@ -203,7 +256,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
             <div className="px-6 py-5 bg-white">
               <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
-                Investimento Mensal
+                Investimento
               </div>
               <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
                 {fmtMoney(data.valorFinal)}/mês
@@ -216,6 +269,35 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                   </span>
                 )}
               </div>
+
+              {/* Valor total e parcelas */}
+              <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">
+                <div>
+                  <span className="text-[#718096]">Valor total do contrato:</span>
+                </div>
+                <div className="text-right font-semibold text-verde-raiz">
+                  {fmtMoney(data.valorTotal)}
+                </div>
+                <div>
+                  <span className="text-[#718096]">Parcelas:</span>
+                </div>
+                <div className="text-right font-semibold text-quase-preto">
+                  {data.duracao}x de {fmtMoney(data.valorFinal)}
+                </div>
+                <div>
+                  <span className="text-[#718096]">Formas de pagamento:</span>
+                </div>
+                <div className="text-right text-quase-preto">
+                  PIX, Boleto ou Cartão em até 12x
+                </div>
+                <div>
+                  <span className="text-[#718096]">Validade da proposta:</span>
+                </div>
+                <div className="text-right font-semibold text-quase-preto">
+                  {data.validadeDate}
+                </div>
+              </div>
+
               {data.ancoragemFrase && (
                 <div
                   className="mt-3 pt-3 border-t border-[#EFE9DD] text-[12px] italic leading-[1.55]"
