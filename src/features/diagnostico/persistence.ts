@@ -123,31 +123,32 @@ export async function saveDiagnosticoToSupabase(
   if (error) throw error;
 
   // Dual-write: tabela diagnostics (tipada)
-  // Garante que novos diagnósticos apareçam no auto-fill da Máquina de
-  // Orçamentos e na view v_cliente_completo. Usa delete+insert porque
-  // client_id não tem constraint UNIQUE (ON CONFLICT não funciona).
-  // Não bloqueia o fluxo principal se falhar.
+  // Garante que novos diagnosticos aparecam no auto-fill da Maquina de
+  // Orcamentos e na view v_cliente_completo.
+  // Usa upsert com onConflict (UNIQUE constraint em client_id, M8).
+  // Nao bloqueia o fluxo principal se falhar.
   try {
     const totalPctForDb = snapshot.totalMax > 0
       ? Math.round((snapshot.totalScore / snapshot.totalMax) * 10000) / 100
       : 0;
 
-    await supabase.from("diagnostics").delete().eq("client_id", clienteId);
-
-    const { error: diagErr } = await supabase.from("diagnostics").insert({
-      client_id: clienteId,
-      ramo: ramo as string,
-      total_score: snapshot.totalScore,
-      total_max: snapshot.totalMax,
-      total_pct: totalPctForDb,
-      classif_label: snapshot.classif.label,
-      plano_name: snapshot.plano.name,
-      scores: snapshot.scores as unknown as Json,
-      client_data: {
-        client: snapshot.client,
-        selOpts: snapshot.selOpts,
-      } as unknown as Json,
-    });
+    const { error: diagErr } = await supabase.from("diagnostics").upsert(
+      {
+        client_id: clienteId,
+        ramo: ramo as string,
+        total_score: snapshot.totalScore,
+        total_max: snapshot.totalMax,
+        total_pct: totalPctForDb,
+        classif_label: snapshot.classif.label,
+        plano_name: snapshot.plano.name,
+        scores: snapshot.scores as unknown as Json,
+        client_data: {
+          client: snapshot.client,
+          selOpts: snapshot.selOpts,
+        } as unknown as Json,
+      },
+      { onConflict: "client_id" },
+    );
 
     if (diagErr) throw diagErr;
   } catch (e) {
