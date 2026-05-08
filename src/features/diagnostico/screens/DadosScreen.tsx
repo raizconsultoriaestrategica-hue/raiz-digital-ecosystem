@@ -93,8 +93,8 @@ export function DadosScreen({
             onChange={async (id, c) => {
               onClienteIdChange(id, c);
               if (c) {
-                if (!client.name) onClientField("name", c.nome_cliente);
-                if (!client.cidade && c.cidade) onClientField("cidade", c.cidade);
+                onClientField("name", c.nome_cliente);
+                if (c.cidade) onClientField("cidade", c.cidade);
               }
               // Pre-carga do ultimo diagnostico do cliente
               if (id && onLoadPrevious) {
