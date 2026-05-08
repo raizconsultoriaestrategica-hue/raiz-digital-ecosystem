@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { initialForm, OrcamentoForm, ModuloDb } from "../types";
 import { PILARES } from "../data";
+import type { ClienteCompleto } from "@/hooks/useClienteCompleto";
 
 export interface ClienteOpt {
   id: string;
@@ -10,22 +11,6 @@ export interface ClienteOpt {
   nome_clinica: string | null;
   cidade: string | null;
   especialidade: string | null;
-}
-
-function toNumeric(raw: string | number | null | undefined): number | null {
-  if (raw == null) return null;
-  let s = String(raw).trim();
-  if (!s) return null;
-  s = s.replace(/[^\d.,-]/g, "");
-  if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
-  else if (s.includes(",")) s = s.replace(",", ".");
-  const n = parseFloat(s);
-  return isNaN(n) ? null : Math.round(n);
-}
-
-/** Pilar id "p01" → número 1 */
-function pilarIdToNum(pid: string): number {
-  return parseInt(pid.replace(/\D/g, ""), 10);
 }
 
 export function useOrcamento() {
@@ -92,108 +77,82 @@ export function useOrcamento() {
     return sel;
   }
 
-  // Selecionar cliente → pré-preenche dados + busca diagnóstico
+  // Selecionar cliente: query unica via v_cliente_completo
   const selectCliente = async (id: string) => {
     setClienteId(id);
     if (!id) return;
 
     setLoadingDiag(true);
 
-    // 1. Dados completos do cliente da tabela clientes
-    const [cliFullRes, diagRes, fatRes] = await Promise.all([
-      supabase
-        .from("clientes")
-        .select(
-          "nome_cliente, nome_clinica, especialidade, ramo, cidade, orcamento_inicial, meta_faturamento, pilares_foco"
-        )
-        .eq("id", id)
-        .maybeSingle(),
-      // 2. Scores dos pilares no diagnóstico
-      supabase
-        .from("dashboard_data")
-        .select("campo, valor, benchmark")
-        .eq("cliente_id", id)
-        .eq("tipo", "PILAR")
-        .eq("mes", "Diagnóstico"),
-      // 3. Faturamento bruto mais recente em dashboard_data
-      supabase
-        .from("dashboard_data")
-        .select("valor, created_at, updated_at")
-        .eq("cliente_id", id)
-        .eq("campo", "faturamento_bruto")
-        .order("created_at", { ascending: false })
-        .order("updated_at", { ascending: false })
-        .limit(1),
-    ]);
+    const { data: cli, error } = await supabase
+      .from("v_cliente_completo" as any)
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
     setLoadingDiag(false);
 
-    if (cliFullRes.error) {
-      toast.error("Erro ao buscar cliente: " + cliFullRes.error.message);
+    if (error) {
+      toast.error("Erro ao buscar cliente: " + error.message);
       return;
     }
-    if (diagRes.error) {
-      toast.error("Erro ao buscar diagnóstico: " + diagRes.error.message);
-    }
+    if (!cli) return;
 
-    const cli = cliFullRes.data;
+    const vc = cli as unknown as ClienteCompleto;
     const updates: Partial<OrcamentoForm> = {};
 
-    if (cli) {
-      updates.nomeCliente = cli.nome_cliente || "";
-      updates.nomeClinica = cli.nome_clinica || "";
-      // Especialidade vem de "ramo" (especialidade está nulo na maioria dos casos)
-      updates.especialidade = cli.ramo || cli.especialidade || "";
-      updates.cidade = cli.cidade || "";
+    updates.nomeCliente = vc.nome_cliente || "";
+    updates.nomeClinica = vc.nome_clinica || "";
+    updates.especialidade = vc.ramo || vc.especialidade || "";
+    updates.cidade = vc.cidade || "";
 
-      // Faturamento Atual: vem de dashboard_data (faturamento_bruto), não de orcamento_inicial
-      const fatRow = (fatRes.data || [])[0];
-      const fatValor = toNumeric(fatRow?.valor ?? null);
-      updates.faturamento = fatValor != null ? String(fatValor) : "";
+    // Faturamento: prefere kpis_mensais (view), senao orcamento_inicial
+    updates.faturamento =
+      vc.faturamento_atual != null ? String(vc.faturamento_atual) :
+      vc.orcamento_inicial != null ? String(vc.orcamento_inicial) : "";
 
-      // Meta: somente se preenchida no cadastro
-      updates.meta =
-        cli.meta_faturamento != null ? String(cli.meta_faturamento) : "";
+    updates.meta =
+      vc.meta_faturamento != null ? String(vc.meta_faturamento) : "";
 
-      // Dor principal: preenchimento manual pelo consultor
-      updates.dor = "";
+    // Dor principal: preenchimento manual pelo consultor
+    updates.dor = "";
 
-      // Pilares em foco (campo separado, se existir no form)
-      if ("pilaresFoco" in (form as object)) {
-        (updates as Record<string, unknown>).pilaresFoco = cli.pilares_foco || "";
-      }
-    }
-
-    // 3. Mapear scores por pilar (apenas campos começando com p0)
+    // Scores por pilar: extraidos de ultimo_diagnostico_scores (ScoresMap JSON)
     const pilarScores: Record<string, string> = {};
     let scoreTotal = 0;
     let benchTotal = 0;
 
-    (diagRes.data || []).forEach((row) => {
-      const campo = row.campo || "";
-      if (!/^p0\d/i.test(campo)) return;
+    if (vc.ultimo_diagnostico_scores && typeof vc.ultimo_diagnostico_scores === "object") {
+      const scoresMap = vc.ultimo_diagnostico_scores as Record<string, unknown>;
 
-      const v = parseFloat(row.valor || "");
-      const b = parseFloat(row.benchmark || "");
-      if (!isNaN(v) && !isNaN(b) && b > 0) {
-        // Match por id (p01..p07); match case-insensitive
-        const pilar =
-          PILARES.find((p) => p.id.toLowerCase() === campo.toLowerCase()) ?? null;
-        if (pilar) {
-          pilarScores[pilar.id] = String(Math.round((v / b) * 100));
-          scoreTotal += v;
-          benchTotal += b;
+      for (const pilar of PILARES) {
+        const arr = scoresMap[pilar.id];
+        if (!Array.isArray(arr)) continue;
+
+        let total = 0;
+        let max = 0;
+        for (const v of arr) {
+          if (v === "SKIP") continue;
+          if (typeof v === "number") { total += v; max += 3; }
+        }
+        if (max > 0) {
+          pilarScores[pilar.id] = String(Math.round((total / max) * 100));
+          scoreTotal += total;
+          benchTotal += max;
         }
       }
-    });
+    }
 
     updates.pilarScores = pilarScores;
     if (benchTotal > 0) {
       updates.score = String(Math.round(scoreTotal));
       updates.scoreMax = String(Math.round(benchTotal));
+    } else if (vc.ultimo_diagnostico_score_absoluto != null && vc.ultimo_diagnostico_score_max != null) {
+      updates.score = String(vc.ultimo_diagnostico_score_absoluto);
+      updates.scoreMax = String(vc.ultimo_diagnostico_score_max);
     }
 
-    // 4. Auto-seleção inteligente de módulos (pilares com score < 50%)
+    // Auto-selecao de modulos (pilares com score < 50%)
     if (modulosDb.length > 0 && Object.keys(pilarScores).length > 0) {
       updates.modulos = autoSelecionarModulos(pilarScores, modulosDb);
     }
