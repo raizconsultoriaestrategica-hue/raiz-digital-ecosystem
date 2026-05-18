@@ -132,6 +132,56 @@ export type Database = {
           },
         ]
       }
+      custos_clinica: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          cliente_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          tipo: string
+          updated_at: string
+          valor: number
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          cliente_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          updated_at?: string
+          valor?: number
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          cliente_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custos_clinica_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           cidade: string | null
@@ -580,6 +630,77 @@ export type Database = {
           ramo?: string
         }
         Relationships: []
+      }
+      kpis_mensais: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          faturamento_bruto: number | null
+          faturamento_convenios: number | null
+          id: string
+          investimento_marketing: number | null
+          margem_liquida: number | null
+          mes_referencia: string
+          observacoes: string | null
+          ocupacao_cadeiras: number | null
+          pacientes_novos: number | null
+          pct_recebido_vista: number | null
+          preenchido_por: string | null
+          taxa_conversao: number | null
+          taxa_inadimplencia: number | null
+          taxa_no_show: number | null
+          ticket_medio: number | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          faturamento_bruto?: number | null
+          faturamento_convenios?: number | null
+          id?: string
+          investimento_marketing?: number | null
+          margem_liquida?: number | null
+          mes_referencia: string
+          observacoes?: string | null
+          ocupacao_cadeiras?: number | null
+          pacientes_novos?: number | null
+          pct_recebido_vista?: number | null
+          preenchido_por?: string | null
+          taxa_conversao?: number | null
+          taxa_inadimplencia?: number | null
+          taxa_no_show?: number | null
+          ticket_medio?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          faturamento_bruto?: number | null
+          faturamento_convenios?: number | null
+          id?: string
+          investimento_marketing?: number | null
+          margem_liquida?: number | null
+          mes_referencia?: string
+          observacoes?: string | null
+          ocupacao_cadeiras?: number | null
+          pacientes_novos?: number | null
+          pct_recebido_vista?: number | null
+          preenchido_por?: string | null
+          taxa_conversao?: number | null
+          taxa_inadimplencia?: number | null
+          taxa_no_show?: number | null
+          ticket_medio?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpis_mensais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       modulos: {
         Row: {
