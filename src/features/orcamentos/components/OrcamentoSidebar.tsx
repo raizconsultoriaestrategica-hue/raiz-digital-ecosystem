@@ -563,7 +563,7 @@ export function OrcamentoSidebar(p: Props) {
         <label className={labelCls}>E-mail</label>
         <input
           className={inputCls}
-          placeholder="patrick@raizconsultoria.com.br"
+          placeholder="raizconsultoriaestrategica@gmail.com"
           value={p.form.email}
           onChange={(e) => {
             setEmailEdited(true);

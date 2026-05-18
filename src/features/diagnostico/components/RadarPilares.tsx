@@ -42,7 +42,7 @@ export function RadarPilares({ pilares, pcts, clientName }: RadarPilaresProps) {
         max: 100,
         ticks: { display: false },
         grid: { color: "#DDD8D0" },
-        pointLabels: { font: { size: 11, family: "Lato" }, color: "#718096" },
+        pointLabels: { font: { size: 11, family: "Inter" }, color: "#718096" },
       },
     },
     plugins: { legend: { display: false } },

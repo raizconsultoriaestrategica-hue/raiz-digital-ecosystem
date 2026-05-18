@@ -53,7 +53,7 @@ function semaforoColor(s: string) {
 function EmptyState({ msg }: { msg: string }) {
   return (
     <div className="rounded-lg border border-dashed border-gray-300 bg-white py-10 text-center">
-      <p className="text-gray-500" style={{ fontFamily: "Lato, sans-serif" }}>
+      <p className="text-gray-500" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
         {msg}
       </p>
     </div>
@@ -67,7 +67,7 @@ function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: stri
         {children}
       </h2>
       {sub && (
-        <p className="mt-1 text-sm text-gray-500" style={{ fontFamily: "Lato, sans-serif" }}>
+        <p className="mt-1 text-sm text-gray-500" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
           {sub}
         </p>
       )}
@@ -183,7 +183,7 @@ export default function ClientPortal() {
       <div className="flex min-h-screen items-center justify-center bg-[#f5f5f3] p-6">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
-            <p className="text-gray-700" style={{ fontFamily: "Lato, sans-serif" }}>
+            <p className="text-gray-700" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
               Não encontramos seu cadastro de cliente. Entre em contato com seu consultor.
             </p>
           </CardContent>
@@ -262,7 +262,7 @@ export default function ClientPortal() {
   const pctMods = totalMods ? Math.round((concluidos / totalMods) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[#f5f5f3]" style={{ fontFamily: "Lato, sans-serif" }}>
+    <div className="min-h-screen bg-[#f5f5f3]" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
       {/* CABEÇALHO */}
       <header className="bg-[#1a2e1a] text-white">
         <div className="mx-auto max-w-6xl px-6 py-12">

@@ -90,7 +90,7 @@ export const PILARES: Pilar[] = [
  * ============================================================ */
 export const PILARES_MEDICO: Pilar[] = [
   {
-    id: "p01", num: "01", name: "Marketing & Posicionamento", max: 15,
+    id: "p01", num: "01", name: "Marketing Digital", max: 15,
     desc: "Avalia especialização, presença digital, posicionamento como autoridade e capacidade de atrair pacientes respeitando as diretrizes éticas.",
     questions: [
       { text: "O médico tem especialidade/nicho de atendimento claramente definido e comunicado estrategicamente ao mercado?", labels: ["Atende tudo sem especialização", "Tem especialidade, mas não comunica", "Comunica a especialidade sem estratégia", "Nicho definido + comunicação estratégica consistente"] },
@@ -101,7 +101,7 @@ export const PILARES_MEDICO: Pilar[] = [
     ],
   },
   {
-    id: "p02", num: "02", name: "Captação & Novos Pacientes", max: 15,
+    id: "p02", num: "02", name: "Captação & Tráfego", max: 15,
     desc: "Mede como novos pacientes chegam, se há estratégia ativa de captação, a qualidade dos leads e o processo de conversão de contatos em consultas.",
     questions: [
       { text: "Qual é a principal fonte de novos pacientes hoje?", labels: ["Apenas espera passiva — sem estratégia", "Indicação por acaso", "Indicação + redes sociais orgânicas", "Múltiplos canais ativos e estruturados"] },
@@ -180,9 +180,9 @@ export const PLANOS: Plano[] = [
 ];
 
 export const PLANOS_MEDICO: Plano[] = [
-  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base · Saúde", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing & Posicionamento"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
-  { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento · Saúde", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de particulares, marketing médico ético e gestão financeira para acelerar faturamento com consistência.", modulos: ["Captação & Novos Pacientes", "Marketing & Posicionamento", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
-  { trigger: () => true, badge: "FASE 2–3 · ESCALA", name: "Raiz de Escala · Saúde", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing & Posicionamento", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
+  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base · Saúde", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing Digital"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
+  { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento · Saúde", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de particulares, marketing médico ético e gestão financeira para acelerar faturamento com consistência.", modulos: ["Captação & Tráfego", "Marketing Digital", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
+  { trigger: () => true, badge: "FASE 2–3 · EXPANSÃO", name: "Raiz de Expansão · Saúde", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing Digital", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
 ];
 
 export function getPlanosByRamo(ramo: Ramo): Plano[] {
