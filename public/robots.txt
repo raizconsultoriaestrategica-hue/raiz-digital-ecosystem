@@ -12,3 +12,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /pasta-do-cliente
+Disallow: /biblioteca
+Disallow: /ferramentas
+Disallow: /consultor
+Disallow: /financeiro-raiz
+Disallow: /trocar-senha
+Disallow: /nova-senha
+
+Sitemap: https://raizconsultoriaestrategica.com.br/sitemap.xml

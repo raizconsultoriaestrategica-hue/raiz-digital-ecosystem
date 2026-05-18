@@ -70,7 +70,7 @@ export default {
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', "serif"],
-        body: ["Lato", "sans-serif"],
+        body: ["Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

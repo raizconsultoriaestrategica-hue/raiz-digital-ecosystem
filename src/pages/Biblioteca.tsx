@@ -66,9 +66,9 @@ PILAR 7. CRESCIMENTO E EXPANSÃO
 - M7.3: Governança e Liderança para Escala
 
 3 PLANOS COMERCIAIS:
-- Raiz Estrutura: R$2.500-3.500/mês | 3 meses | foco nos pilares críticos
-- Raiz Crescimento: R$3.500-5.000/mês | 4-6 meses | visão completa
-- Raiz Escala: R$5.000-7.500/mês | 6 meses | expansão e governança
+- Raiz de Base: R$2.500-3.500/mês | 3 meses | foco nos pilares críticos
+- Raiz de Crescimento: R$3.500-5.000/mês | 4-6 meses | visão completa
+- Raiz de Expansão: R$5.000-7.500/mês | 6 meses | expansão e governança
 
 ICP (Cliente Ideal da Raiz):
 Profissionais de saúde (dentistas, médicos estéticos, dermatologistas) faturando R$15k-90k/mês, com baixa maturidade em gestão e marketing, agenda dependente do dono, sem processos documentados.
@@ -347,7 +347,7 @@ export default function Biblioteca() {
             <Placeholder title="Glossário" description="Termos técnicos da consultoria estratégica. Em breve." />
           </TabsContent>
           <TabsContent value="planos" className="mt-6">
-            <Placeholder title="Planos" description="Raiz Estrutura, Crescimento e Escala. Em breve." />
+            <Placeholder title="Planos" description="Raiz de Base, Raiz de Crescimento e Raiz de Expansão. Em breve." />
           </TabsContent>
         </Tabs>
       </div>

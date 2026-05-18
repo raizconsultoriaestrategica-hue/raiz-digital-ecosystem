@@ -93,9 +93,9 @@ const NAO_VOCE = [
 ];
 
 const PLANOS = [
-  { nome: "PLANO RAIZ", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas que precisam de base antes de escalar", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","2 reuniões mensais","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz", destaque: false },
-  { nome: "PLANO CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas com potencial claro e gargalo identificado", itens: ["Tudo do Plano Raiz + 4 reuniões + visita presencial trimestral","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Crescimento", destaque: true },
-  { nome: "PLANO EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas que querem crescer com um sócio estratégico ativo", itens: ["Tudo do Plano Crescimento + Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz","Consultoria presencial sob demanda"], cta: "Falar sobre o Plano Expansão", destaque: false },
+  { nome: "PLANO RAIZ DE BASE", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas que precisam de base antes de escalar", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","Reuniões quinzenais de 1h","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz de Base", destaque: false },
+  { nome: "PLANO RAIZ DE CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas com potencial claro e gargalo identificado", itens: ["Tudo do Plano Raiz de Base + reuniões semanais de 1h30","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Raiz de Crescimento", destaque: true },
+  { nome: "PLANO RAIZ DE EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas que querem crescer com um sócio estratégico ativo", itens: ["Tudo do Plano Raiz de Crescimento + presencial mensal","Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz"], cta: "Falar sobre o Plano Raiz de Expansão", destaque: false },
 ];
 
 const FAQ = [
@@ -603,8 +603,9 @@ function SeteP() {
 
             <ul className="mt-8 grid gap-3">
               {[
-                "Sessão estruturada de 2 a 3 horas",
-                "Relatório com pontuação por pilar",
+                "35 perguntas estruturadas nos 7 pilares",
+                "Sessão de 2 a 3 horas, online ou presencial",
+                "Relatório com pontuação por pilar e semáforo de risco",
                 "Plano de ação personalizado de 90 dias",
                 "Sem compromisso de contratação",
               ].map((b) => (
@@ -1157,7 +1158,16 @@ function HomeFooter() {
           <div>
             <div className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-dourado">Contato</div>
             <p className="mt-4 font-body font-light text-sm leading-relaxed text-linho/60">
-              (44) 99999-3334<br />@consult.raiz<br />Maringá, Paraná. Atendimento em todo o Brasil
+              <a href="mailto:raizconsultoriaestrategica@gmail.com" className="hover:text-linho transition-colors">
+                raizconsultoriaestrategica@gmail.com
+              </a><br />
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-linho transition-colors">
+                (44) 99999-3334
+              </a><br />
+              <a href="https://instagram.com/consult.raiz" target="_blank" rel="noopener noreferrer" className="hover:text-linho transition-colors">
+                @consult.raiz
+              </a><br />
+              <span>Maringá, Paraná. Atendimento em todo o Brasil</span>
             </p>
           </div>
         </div>
