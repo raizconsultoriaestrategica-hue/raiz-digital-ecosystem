@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import ReunioesTab from "@/components/consultor/ReunioesTab";
 import ArquivosTab from "@/components/consultor/ArquivosTab";
+import ModulosTab from "@/components/consultor/ModulosTab";
 
 // ============================================================
 // Tipos
@@ -537,9 +538,10 @@ export default function GestaoCliente() {
       </div>
 
       <Tabs defaultValue="mensal" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="mensal">Atualização Mensal</TabsTrigger>
           <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
+          <TabsTrigger value="modulos">Módulos</TabsTrigger>
           <TabsTrigger value="reunioes">Reuniões</TabsTrigger>
           <TabsTrigger value="arquivos">Arquivos</TabsTrigger>
           <TabsTrigger value="historico">
@@ -873,6 +875,11 @@ export default function GestaoCliente() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ============ ABA Módulos ============ */}
+        <TabsContent value="modulos" className="mt-6">
+          <ModulosTab clienteId={clienteId!} />
         </TabsContent>
 
         {/* ============ ABA Reuniões ============ */}
