@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import ReunioesTab from "@/components/consultor/ReunioesTab";
+import ArquivosTab from "@/components/consultor/ArquivosTab";
 
 // ============================================================
 // Tipos
@@ -535,9 +537,11 @@ export default function GestaoCliente() {
       </div>
 
       <Tabs defaultValue="mensal" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="mensal">Atualização Mensal</TabsTrigger>
           <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
+          <TabsTrigger value="reunioes">Reuniões</TabsTrigger>
+          <TabsTrigger value="arquivos">Arquivos</TabsTrigger>
           <TabsTrigger value="historico">
             Histórico {analises.length > 0 ? `(${analises.length})` : ""}
           </TabsTrigger>
@@ -871,7 +875,17 @@ export default function GestaoCliente() {
           </Card>
         </TabsContent>
 
-        {/* ============ ABA 3 ============ */}
+        {/* ============ ABA Reuniões ============ */}
+        <TabsContent value="reunioes" className="mt-6">
+          <ReunioesTab clienteId={clienteId!} />
+        </TabsContent>
+
+        {/* ============ ABA Arquivos ============ */}
+        <TabsContent value="arquivos" className="mt-6">
+          <ArquivosTab clienteId={clienteId!} />
+        </TabsContent>
+
+        {/* ============ ABA Histórico ============ */}
         <TabsContent value="historico" className="mt-6 space-y-3">
           {analises.length === 0 ? (
             <Card>

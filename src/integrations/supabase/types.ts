@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      arquivos_cliente: {
+        Row: {
+          categoria: string
+          cliente_id: string
+          created_at: string
+          enviado_por: string | null
+          id: string
+          modulo_id: string | null
+          nome: string
+          storage_path: string
+          tamanho_bytes: number | null
+          tipo: string | null
+          url: string | null
+        }
+        Insert: {
+          categoria?: string
+          cliente_id: string
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          modulo_id?: string | null
+          nome: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          tipo?: string | null
+          url?: string | null
+        }
+        Update: {
+          categoria?: string
+          cliente_id?: string
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          modulo_id?: string | null
+          nome?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          tipo?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arquivos_cliente_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_modulos: {
         Row: {
           cliente_id: string
@@ -79,69 +136,99 @@ export type Database = {
         Row: {
           cidade: string | null
           consultor: string | null
+          cpf_cnpj: string | null
           created_at: string | null
           data_diagnostico: string | null
           data_inicio_projeto: string | null
+          data_nascimento: string | null
+          dia_vencimento: number | null
           duracao_meses: number | null
+          email_cliente: string | null
+          endereco: string | null
           especialidade: string | null
+          especialidade_clinica: string | null
+          forma_pagamento: string | null
           id: string
+          instagram: string | null
           mes_referencia: string | null
           meta_faturamento: number | null
           modulos_ativos: string | null
           nome_cliente: string
           nome_clinica: string | null
+          observacoes_relacionamento: string | null
           orcamento_inicial: number | null
           pilares_foco: string | null
           plano: string | null
           primeiro_acesso: boolean
           ramo: string | null
           status: string | null
+          telefone: string | null
           user_id: string | null
           valor_mensalidade: number | null
         }
         Insert: {
           cidade?: string | null
           consultor?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_diagnostico?: string | null
           data_inicio_projeto?: string | null
+          data_nascimento?: string | null
+          dia_vencimento?: number | null
           duracao_meses?: number | null
+          email_cliente?: string | null
+          endereco?: string | null
           especialidade?: string | null
+          especialidade_clinica?: string | null
+          forma_pagamento?: string | null
           id?: string
+          instagram?: string | null
           mes_referencia?: string | null
           meta_faturamento?: number | null
           modulos_ativos?: string | null
           nome_cliente: string
           nome_clinica?: string | null
+          observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
           status?: string | null
+          telefone?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
         }
         Update: {
           cidade?: string | null
           consultor?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_diagnostico?: string | null
           data_inicio_projeto?: string | null
+          data_nascimento?: string | null
+          dia_vencimento?: number | null
           duracao_meses?: number | null
+          email_cliente?: string | null
+          endereco?: string | null
           especialidade?: string | null
+          especialidade_clinica?: string | null
+          forma_pagamento?: string | null
           id?: string
+          instagram?: string | null
           mes_referencia?: string | null
           meta_faturamento?: number | null
           modulos_ativos?: string | null
           nome_cliente?: string
           nome_clinica?: string | null
+          observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
           status?: string | null
+          telefone?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
         }
@@ -467,6 +554,33 @@ export type Database = {
           },
         ]
       }
+      especialidades: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          ramo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          ramo: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          ramo?: string
+        }
+        Relationships: []
+      }
       modulos: {
         Row: {
           codigo: string
@@ -614,6 +728,65 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos_raiz"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reunioes: {
+        Row: {
+          ata: string | null
+          cliente_id: string
+          created_at: string
+          criado_por: string | null
+          data: string
+          duracao_minutos: number | null
+          hora_inicio: string | null
+          id: string
+          link_meet: string | null
+          proximos_passos: string | null
+          status: string
+          titulo: string | null
+          updated_at: string
+          url_gravacao: string | null
+        }
+        Insert: {
+          ata?: string | null
+          cliente_id: string
+          created_at?: string
+          criado_por?: string | null
+          data: string
+          duracao_minutos?: number | null
+          hora_inicio?: string | null
+          id?: string
+          link_meet?: string | null
+          proximos_passos?: string | null
+          status?: string
+          titulo?: string | null
+          updated_at?: string
+          url_gravacao?: string | null
+        }
+        Update: {
+          ata?: string | null
+          cliente_id?: string
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          duracao_minutos?: number | null
+          hora_inicio?: string | null
+          id?: string
+          link_meet?: string | null
+          proximos_passos?: string | null
+          status?: string
+          titulo?: string | null
+          updated_at?: string
+          url_gravacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reunioes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
