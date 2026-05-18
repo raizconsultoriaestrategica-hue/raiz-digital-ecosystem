@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
-  ArrowLeft, Activity, FileText, Wallet, Calculator, ListChecks,
+  ArrowLeft, Activity, FileText, Wallet, Calculator,
   CalendarDays, FolderOpen, Download, FileSpreadsheet, FileType2,
   CheckCircle2, ArrowRight, Circle,
 } from "lucide-react";
@@ -24,14 +24,6 @@ const fmtDate = (d?: string | null) => {
   } catch {
     return "—";
   }
-};
-
-const parseBRL = (v: any): number => {
-  if (v === null || v === undefined) return 0;
-  if (typeof v === "number") return v;
-  const s = String(v).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
-  const n = parseFloat(s);
-  return isNaN(n) ? 0 : n;
 };
 
 const scoreColor = (pct: number) =>
@@ -120,6 +112,10 @@ interface Cliente {
   especialidade: string | null;
   cidade: string | null;
   ramo: string | null;
+  plano: string | null;
+  status: string | null;
+  data_inicio_projeto: string | null;
+  duracao_meses: number | null;
 }
 
 export default function PastaDoCliente() {
@@ -127,6 +123,7 @@ export default function PastaDoCliente() {
   const [loading, setLoading] = useState(true);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [diagnostico, setDiagnostico] = useState<any | null>(null);
+  const [diagnosticoInicial, setDiagnosticoInicial] = useState<any | null>(null);
   const [orcamento, setOrcamento] = useState<any | null>(null);
   const [diagFin, setDiagFin] = useState<any | null>(null);
   const [simulacao, setSimulacao] = useState<any | null>(null);
@@ -142,7 +139,7 @@ export default function PastaDoCliente() {
 
       const { data: cli } = await supabase
         .from("clientes")
-        .select("id, nome_cliente, nome_clinica, especialidade, cidade, ramo")
+        .select("id, nome_cliente, nome_clinica, especialidade, cidade, ramo, plano, status, data_inicio_projeto, duracao_meses")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(1)
@@ -161,7 +158,7 @@ export default function PastaDoCliente() {
         { data: simData },
         { data: cmData },
       ] = await Promise.all([
-        supabase.from("diagnostics").select("*").eq("client_id", cid).order("created_at", { ascending: false }).limit(1),
+        supabase.from("diagnostics").select("*").eq("client_id", cid).order("created_at", { ascending: false }),
         supabase.from("orcamentos").select("*").eq("cliente_id", cid).order("created_at", { ascending: false }).limit(1),
         supabase.from("diagnosticos_financeiros").select("*").eq("cliente_id", cid).order("created_at", { ascending: false }).limit(1),
         supabase.from("simulacoes_precificacao").select("*").eq("cliente_id", cid).order("created_at", { ascending: false }).limit(1),
@@ -189,12 +186,15 @@ export default function PastaDoCliente() {
       } catch { /* tabela inexistente */ }
 
       if (!active) return;
-      let diagFinal: any = diagData?.[0] ?? null;
+      const diagList = (diagData as any[]) ?? [];
+      let diagFinal: any = diagList[0] ?? null;
       if (!diagFinal) {
         // Fallback: ferramenta de Diagnóstico 360° grava em dashboard_data
         diagFinal = await loadDiagnosticoFromDashboardData(cid);
       }
       setDiagnostico(diagFinal);
+      // Primeiro diagnóstico (mais antigo) pra comparação inicial vs atual
+      setDiagnosticoInicial(diagList.length > 1 ? diagList[diagList.length - 1] : null);
       setOrcamento(orcData?.[0] ?? null);
       setDiagFin(dfData?.[0] ?? null);
       setSimulacao(simData?.[0] ?? null);
@@ -311,7 +311,7 @@ export default function PastaDoCliente() {
   }, [simulacao]);
   const totalFaturamento = procedimentos.reduce((s, p) => s + p.faturamento, 0);
 
-  // ---------- Aba 5: Módulos ----------
+  // ---------- Módulos (usado em "Meu Plano") ----------
   const modulosOrdenados = useMemo(() => {
     return [...modulosCliente].sort((a, b) => {
       const oa = Number(a.modulos?.ordem ?? a.mes_execucao ?? 0);
@@ -322,6 +322,90 @@ export default function PastaDoCliente() {
   const totalMod = modulosOrdenados.length;
   const concluidos = modulosOrdenados.filter((m) => m.status === "concluido").length;
   const pctMod = totalMod ? Math.round((concluidos / totalMod) * 100) : 0;
+
+  // ---------- Aba 2: Meu Plano (derivados) ----------
+  const proximaReuniao = useMemo(() => {
+    const hojeIso = new Date().toISOString().slice(0, 10);
+    return reunioes
+      .filter((r) => r.status === "agendada" && r.data >= hojeIso)
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)))[0] ?? null;
+  }, [reunioes]);
+
+  const moduloEmAndamento = useMemo(
+    () => modulosOrdenados.find((m) => m.status === "em_andamento") ?? null,
+    [modulosOrdenados],
+  );
+
+  const proximoModulo = useMemo(
+    () => modulosOrdenados.find((m) => m.status !== "concluido" && m.status !== "em_andamento") ?? null,
+    [modulosOrdenados],
+  );
+
+  const documentosPlano = useMemo(
+    () => arquivos.filter((a) => a.categoria === "contrato"),
+    [arquivos],
+  );
+
+  const scoreAtual = Math.round(Number(diagnostico?.total_pct ?? 0));
+  const scoreInicial = diagnosticoInicial
+    ? Math.round(Number(diagnosticoInicial.total_pct ?? 0))
+    : null;
+  const scoreDelta = scoreInicial != null ? scoreAtual - scoreInicial : null;
+
+  const pilarMaisForte = useMemo(() => {
+    if (!diagnostico) return null;
+    const scores: Record<string, any> = diagnostico.scores || {};
+    let melhor: { key: string; pct: number } | null = null;
+    PILARES_KEYS.forEach((key, i) => {
+      const possible = [key, `p0${i + 1}`, `p${i + 1}`];
+      let raw: any = null;
+      for (const k of possible) if (scores[k] !== undefined) { raw = scores[k]; break; }
+      let pct = 0;
+      if (Array.isArray(raw)) {
+        const arr = raw.filter((n: any) => typeof n === "number") as number[];
+        if (arr.length) pct = Math.round((arr.reduce((s, n) => s + n, 0) / (arr.length * 3)) * 100);
+      } else if (typeof raw === "number") {
+        pct = raw <= 3 ? Math.round((raw / 3) * 100) : Math.round(raw);
+      }
+      if (pct > 0 && (!melhor || pct > melhor.pct)) melhor = { key, pct };
+    });
+    return melhor as { key: string; pct: number } | null;
+  }, [diagnostico]);
+
+  const pilarPrioritario = useMemo(() => {
+    if (!diagnostico) return null;
+    const scores: Record<string, any> = diagnostico.scores || {};
+    let pior: { key: string; pct: number } | null = null;
+    PILARES_KEYS.forEach((key, i) => {
+      const possible = [key, `p0${i + 1}`, `p${i + 1}`];
+      let raw: any = null;
+      for (const k of possible) if (scores[k] !== undefined) { raw = scores[k]; break; }
+      let pct = -1;
+      if (Array.isArray(raw)) {
+        const arr = raw.filter((n: any) => typeof n === "number") as number[];
+        if (arr.length) pct = Math.round((arr.reduce((s, n) => s + n, 0) / (arr.length * 3)) * 100);
+      } else if (typeof raw === "number") {
+        pct = raw <= 3 ? Math.round((raw / 3) * 100) : Math.round(raw);
+      }
+      if (pct >= 0 && (!pior || pct < pior.pct)) pior = { key, pct };
+    });
+    return pior as { key: string; pct: number } | null;
+  }, [diagnostico]);
+
+  const projetoPosicao = useMemo(() => {
+    if (!cliente?.data_inicio_projeto || !cliente?.duracao_meses) return null;
+    const inicio = new Date(cliente.data_inicio_projeto);
+    if (Number.isNaN(inicio.getTime())) return null;
+    const hoje = new Date();
+    const total = cliente.duracao_meses;
+    const diffMs = hoje.getTime() - inicio.getTime();
+    const mesesPassados = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.4375));
+    const mesAtual = Math.max(1, Math.min(total, mesesPassados + 1));
+    const fim = new Date(inicio);
+    fim.setMonth(fim.getMonth() + total);
+    const pct = Math.max(0, Math.min(100, Math.round((mesesPassados / total) * 100)));
+    return { mesAtual, total, inicio, fim, pct };
+  }, [cliente]);
 
   // ---------- Aba 7: Arquivos ----------
   const fileIcon = (tipo?: string, nome?: string) => {
@@ -380,7 +464,6 @@ export default function PastaDoCliente() {
           <TabsTrigger value="plano"><FileText className="mr-1 h-4 w-4" />Meu Plano</TabsTrigger>
           <TabsTrigger value="diagfin"><Wallet className="mr-1 h-4 w-4" />Financeiro</TabsTrigger>
           <TabsTrigger value="honorarios"><Calculator className="mr-1 h-4 w-4" />Honorários</TabsTrigger>
-          <TabsTrigger value="modulos"><ListChecks className="mr-1 h-4 w-4" />Módulos</TabsTrigger>
           <TabsTrigger value="reunioes"><CalendarDays className="mr-1 h-4 w-4" />Reuniões</TabsTrigger>
           <TabsTrigger value="arquivos"><FolderOpen className="mr-1 h-4 w-4" />Arquivos</TabsTrigger>
         </TabsList>
@@ -427,31 +510,252 @@ export default function PastaDoCliente() {
         </TabsContent>
 
         {/* ABA 2. Meu Plano */}
-        <TabsContent value="plano" className="mt-6">
-          {!orcamento ? (
+        <TabsContent value="plano" className="mt-6 space-y-4">
+          {!orcamento && modulosOrdenados.length === 0 ? (
             <EmptyState icon={FileText} title="Plano em preparação" hint="Assim que o orçamento for emitido, ele aparecerá aqui." />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-display text-verde-raiz">{orcamento.plano_nome || orcamento.plano || "Plano contratado"}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Stat label="Investimento total" value={fmtBRL(Number(orcamento.valor_final_numerico ?? 0) || parseBRL(orcamento.valor))} />
-                  <Stat label="Status" value={"Ativo"} />
-                  <Stat label="Plano" value={orcamento.plano_nome || orcamento.plano || "—"} />
-                </div>
-                {orcamento.dor_principal && (
-                  <div className="rounded-lg border border-border bg-muted/30 p-4">
-                    <div className="text-[11px] font-semibold uppercase tracking-wider text-verde-musgo">Foco principal</div>
-                    <p className="mt-1 text-sm text-quase-preto/80">{orcamento.dor_principal}</p>
+            <>
+              {/* Bloco 1: Onde estamos no projeto */}
+              <Card>
+                <CardContent className="space-y-4 p-5">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-dourado">
+                      Plano contratado
+                    </div>
+                    <h3 className="mt-1 font-display text-2xl text-verde-raiz">
+                      {cliente.plano || orcamento?.plano_nome || orcamento?.plano || "Plano contratado"}
+                    </h3>
                   </div>
-                )}
-                {orcamento.storage_path && (
-                  <PdfDownload bucket="orcamentos" path={orcamento.storage_path} fileName={orcamento.file_name || "orcamento.pdf"} />
-                )}
-              </CardContent>
-            </Card>
+                  {projetoPosicao ? (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                        <span className="text-quase-preto/70">
+                          Mês <strong className="text-verde-raiz">{projetoPosicao.mesAtual}</strong> de{" "}
+                          <strong>{projetoPosicao.total}</strong>
+                        </span>
+                        <span className="text-xs text-quase-preto/55">
+                          Início {fmtDate(projetoPosicao.inicio.toISOString())} · Fim {fmtDate(projetoPosicao.fim.toISOString())}
+                        </span>
+                      </div>
+                      <Progress value={projetoPosicao.pct} className="h-2.5" />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-quase-preto/55">
+                      Data de início e duração do projeto serão informadas após o kickoff.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bloco 2: Evolução + Próximos passos */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardContent className="space-y-3 p-5">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                      Sua evolução
+                    </div>
+                    {diagnostico ? (
+                      <>
+                        <div className="flex items-baseline gap-4">
+                          {scoreInicial != null && (
+                            <div>
+                              <div className="text-[11px] text-quase-preto/55">Inicial</div>
+                              <div className="font-display text-xl text-quase-preto/70">{scoreInicial}</div>
+                            </div>
+                          )}
+                          <div>
+                            <div className="text-[11px] text-quase-preto/55">Atual</div>
+                            <div className={`font-display text-3xl ${scoreColor(scoreAtual)}`}>{scoreAtual}</div>
+                          </div>
+                          {scoreDelta != null && (
+                            <div className="ml-auto">
+                              <div className="text-[11px] text-quase-preto/55">Variação</div>
+                              <div className={`font-display text-xl ${scoreDelta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                {scoreDelta >= 0 ? "↑" : "↓"} {Math.abs(scoreDelta)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {pilarMaisForte && (
+                          <div className="rounded-lg border border-emerald-200/60 bg-emerald-50/50 p-3 text-sm">
+                            <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                              Pilar mais forte
+                            </div>
+                            <div className="mt-0.5 text-quase-preto/85">
+                              {PILARES_LABELS[pilarMaisForte.key]}{" "}
+                              <span className="text-quase-preto/55">· {pilarMaisForte.pct}/100</span>
+                            </div>
+                          </div>
+                        )}
+                        {pilarPrioritario && (
+                          <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 p-3 text-sm">
+                            <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+                              Pilar prioritário
+                            </div>
+                            <div className="mt-0.5 text-quase-preto/85">
+                              {PILARES_LABELS[pilarPrioritario.key]}{" "}
+                              <span className="text-quase-preto/55">· {pilarPrioritario.pct}/100</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-quase-preto/55">
+                        Sua evolução aparecerá aqui após o primeiro Diagnóstico 360°.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="space-y-3 p-5">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                      Próximos passos
+                    </div>
+                    {proximaReuniao ? (
+                      <div className="rounded-lg border border-border bg-card p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <CalendarDays className="h-4 w-4 text-verde-raiz" />
+                          <span className="font-medium text-verde-raiz">
+                            Reunião {fmtDate(proximaReuniao.data)}
+                            {proximaReuniao.hora_inicio ? ` · ${String(proximaReuniao.hora_inicio).slice(0, 5)}` : ""}
+                          </span>
+                        </div>
+                        {proximaReuniao.titulo && (
+                          <p className="mt-1 text-xs text-quase-preto/65">Foco: {proximaReuniao.titulo}</p>
+                        )}
+                        {proximaReuniao.link_meet && (
+                          <a
+                            href={proximaReuniao.link_meet}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 inline-block truncate text-xs text-verde-musgo underline-offset-2 hover:underline"
+                          >
+                            Abrir link da reunião
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-quase-preto/55">Nenhuma reunião agendada no momento.</p>
+                    )}
+                    {moduloEmAndamento ? (
+                      <div className="rounded-lg border border-blue-200/70 bg-blue-50/40 p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <ArrowRight className="h-4 w-4 text-blue-700" />
+                          <span className="font-medium text-blue-900">Módulo em andamento</span>
+                        </div>
+                        <p className="mt-1 text-sm text-quase-preto/85">
+                          {moduloEmAndamento.modulos?.nome || "Módulo"}
+                        </p>
+                        {moduloEmAndamento.data_inicio && (
+                          <p className="text-[11px] text-quase-preto/55">
+                            Iniciado em {fmtDate(moduloEmAndamento.data_inicio)}
+                          </p>
+                        )}
+                      </div>
+                    ) : proximoModulo ? (
+                      <div className="rounded-lg border border-border bg-muted/30 p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Circle className="h-4 w-4 text-quase-preto/50" />
+                          <span className="font-medium text-quase-preto/80">Próximo módulo</span>
+                        </div>
+                        <p className="mt-1 text-sm text-quase-preto/85">
+                          {proximoModulo.modulos?.nome || "Módulo"}
+                        </p>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Bloco 3: Trilha de módulos */}
+              {modulosOrdenados.length > 0 && (
+                <Card>
+                  <CardContent className="space-y-4 p-5">
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                          Trilha de módulos
+                        </div>
+                        <p className="mt-0.5 text-xs text-quase-preto/55">
+                          {concluidos} de {totalMod} concluídos
+                        </p>
+                      </div>
+                      <span className="font-display text-2xl text-verde-raiz">{pctMod}%</span>
+                    </div>
+                    <Progress value={pctMod} className="h-2.5" />
+                    <div className="divide-y divide-border">
+                      {modulosOrdenados.map((m) => {
+                        const status = m.status as string;
+                        const Icon =
+                          status === "concluido" ? CheckCircle2 :
+                          status === "em_andamento" ? ArrowRight :
+                          Circle;
+                        const color =
+                          status === "concluido" ? "text-emerald-600" :
+                          status === "em_andamento" ? "text-blue-600" :
+                          "text-quase-preto/40";
+                        const label =
+                          status === "concluido" ? "Concluído" :
+                          status === "em_andamento" ? "Em andamento" :
+                          "Pendente";
+                        return (
+                          <div key={m.id} className="flex items-center gap-3 py-2.5">
+                            <Icon className={`h-5 w-5 shrink-0 ${color}`} />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium text-verde-raiz">
+                                {m.modulos?.nome || "Módulo"}
+                              </div>
+                              {m.modulos?.pilar_nome && (
+                                <div className="truncate text-xs text-quase-preto/55">
+                                  {m.modulos.pilar_nome}
+                                </div>
+                              )}
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <div className={`text-xs ${color}`}>{label}</div>
+                              {status === "concluido" && m.data_conclusao && (
+                                <div className="text-[10px] text-quase-preto/45">{fmtDate(m.data_conclusao)}</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Bloco 4: Documentos */}
+              {(documentosPlano.length > 0 || orcamento?.storage_path) && (
+                <Card>
+                  <CardContent className="space-y-3 p-5">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                      Documentos do projeto
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {documentosPlano.map((d) => (
+                        <ArquivoBaixar
+                          key={d.id}
+                          bucket="arquivos-cliente"
+                          path={d.storage_path}
+                          nome={d.nome}
+                          rotulo={d.nome.toLowerCase().includes("aditivo") ? "Termo aditivo" : "Contrato"}
+                        />
+                      ))}
+                      {orcamento?.storage_path && (
+                        <ArquivoBaixar
+                          bucket="orcamentos"
+                          path={orcamento.storage_path}
+                          nome={orcamento.file_name || "proposta.pdf"}
+                          rotulo="Proposta inicial"
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
 
@@ -511,52 +815,6 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
 
-        {/* ABA 5. Módulos */}
-        <TabsContent value="modulos" className="mt-6">
-          {modulosOrdenados.length === 0 ? (
-            <EmptyState icon={ListChecks} title="Módulos serão definidos em breve" hint="Sua jornada será publicada após o kickoff." />
-          ) : (
-            <div className="space-y-4">
-              <Card>
-                <CardContent className="space-y-3 p-6">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-quase-preto/70">Progresso geral</span>
-                    <span className="font-display text-2xl text-verde-raiz">{pctMod}%</span>
-                  </div>
-                  <Progress value={pctMod} className="h-2.5" />
-                  <p className="text-xs text-quase-preto/60">{concluidos} de {totalMod} módulos concluídos</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="divide-y divide-border p-0">
-                  {modulosOrdenados.map((m) => {
-                    const status = m.status as string;
-                    const Icon = status === "concluido" ? CheckCircle2 : status === "em_andamento" ? ArrowRight : Circle;
-                    const color =
-                      status === "concluido" ? "text-emerald-600" :
-                      status === "em_andamento" ? "text-blue-600" : "text-quase-preto/40";
-                    const label =
-                      status === "concluido" ? "Concluído" :
-                      status === "em_andamento" ? "Em andamento" : "Pendente";
-                    return (
-                      <div key={m.id} className="flex items-center gap-4 px-4 py-3">
-                        <Icon className={`h-5 w-5 shrink-0 ${color}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate text-sm font-medium text-verde-raiz">{m.modulos?.nome || "Módulo"}</div>
-                          {m.modulos?.pilar_nome && (
-                            <div className="truncate text-xs text-quase-preto/55">{m.modulos.pilar_nome}</div>
-                          )}
-                        </div>
-                        <span className={`shrink-0 text-xs ${color}`}>{label}</span>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
-
         {/* ABA 6. Reuniões */}
         <TabsContent value="reunioes" className="mt-6">
           {reunioes.length === 0 ? (
@@ -607,10 +865,13 @@ export default function PastaDoCliente() {
                         <div className="truncate text-sm font-medium text-quase-preto/85">{a.nome || "Arquivo"}</div>
                         <div className="text-xs text-quase-preto/55">{fmtDate(a.created_at)}</div>
                       </div>
-                      {a.url && (
-                        <Button asChild size="sm" variant="outline" className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5">
-                          <a href={a.url} target="_blank" rel="noreferrer"><Download className="h-4 w-4" />Baixar</a>
-                        </Button>
+                      {a.storage_path && (
+                        <ArquivoBaixar
+                          bucket="arquivos-cliente"
+                          path={a.storage_path}
+                          nome={a.nome || "arquivo"}
+                          variante="compacto"
+                        />
                       )}
                     </div>
                   );
@@ -620,15 +881,6 @@ export default function PastaDoCliente() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-muted/20 p-4">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-verde-musgo">{label}</div>
-      <div className="mt-1 font-display text-xl text-verde-raiz">{value}</div>
     </div>
   );
 }
@@ -648,6 +900,56 @@ function PdfDownload({ bucket, path, fileName }: { bucket: string; path: string;
       <a href={url} download={fileName} target="_blank" rel="noreferrer">
         <Download className="h-4 w-4" /> Baixar PDF do plano
       </a>
+    </Button>
+  );
+}
+
+// Botão de download que gera signed URL on-click.
+// Funciona pra qualquer bucket privado.
+function ArquivoBaixar({
+  bucket,
+  path,
+  nome,
+  rotulo,
+  variante = "padrao",
+}: {
+  bucket: string;
+  path: string;
+  nome: string;
+  rotulo?: string;
+  variante?: "padrao" | "compacto";
+}) {
+  const [loading, setLoading] = useState(false);
+  const handleClick = async () => {
+    setLoading(true);
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
+    setLoading(false);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+  if (variante === "compacto") {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleClick}
+        disabled={loading}
+        className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
+      >
+        <Download className="h-4 w-4" />
+        {loading ? "..." : "Baixar"}
+      </Button>
+    );
+  }
+  return (
+    <Button
+      variant="outline"
+      onClick={handleClick}
+      disabled={loading}
+      className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
+      title={nome}
+    >
+      <FileText className="h-4 w-4" />
+      {loading ? "Gerando link..." : (rotulo || nome)}
     </Button>
   );
 }

@@ -35,6 +35,7 @@ import {
 const CATEGORIAS: { value: ArquivoCliente["categoria"]; label: string }[] = [
   { value: "diagnostico", label: "Diagnóstico" },
   { value: "proposta", label: "Proposta" },
+  { value: "contrato", label: "Contrato / termo aditivo" },
   { value: "ata", label: "Ata" },
   { value: "material_modulo", label: "Material de módulo" },
   { value: "relatorio", label: "Relatório" },
