@@ -22,8 +22,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import patrickEstrategico from "@/assets/patrick-estrategico.jpg";
-import patrickLifestyle from "@/assets/patrick-lifestyle.jpg";
+import patrickEstrategico from "@/assets/patrick-estrategico.webp";
+import patrickLifestyle from "@/assets/patrick-lifestyle.webp";
 import BrandLogo from "@/components/brand/BrandLogo";
 
 const WHATSAPP_URL = "https://wa.me/5544999993334?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
