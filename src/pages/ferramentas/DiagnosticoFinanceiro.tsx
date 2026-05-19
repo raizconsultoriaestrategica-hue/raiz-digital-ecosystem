@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, Calculator, Download, Save, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calculator, Download, Save, AlertTriangle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteSelector } from "@/features/diagnostico/components/ClienteSelector";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,8 @@ import {
   type DiagFinForm, type CalcResult,
 } from "@/features/diagnostico-financeiro/logic";
 import { generateDiagFinPDF } from "@/features/diagnostico-financeiro/pdf";
+import CustosClinicaSection from "@/components/consultor/CustosClinicaSection";
+import { useUltimosKpisMensais } from "@/hooks/useUltimosKpisMensais";
 
 const STEPS = [
   { id: "dados", label: "1. Consultório" },
@@ -68,11 +70,46 @@ export default function DiagnosticoFinanceiro() {
   const [clienteNome, setClienteNome] = useState<string>("");
   const [calc, setCalc] = useState<CalcResult | null>(null);
   const [saving, setSaving] = useState(false);
+  const [kpisHidratados, setKpisHidratados] = useState<string | null>(null);
 
   const stepIdx = STEPS.findIndex((s) => s.id === step);
 
   const update = <K extends keyof DiagFinForm>(k: K, patch: Partial<DiagFinForm[K]>) =>
     setForm((f) => ({ ...f, [k]: { ...(f[k] as object), ...patch } as any }));
+
+  // Auto-fill de receitas a partir do último kpis_mensais do cliente
+  const { data: ultimosKpis } = useUltimosKpisMensais(form.cliente_id);
+  useEffect(() => {
+    if (!form.cliente_id || !ultimosKpis) return;
+    // Só hidrata uma vez por cliente, e só se o consultor ainda não preencheu
+    if (kpisHidratados === form.cliente_id) return;
+    const algumValor =
+      form.receitas.faturamento_bruto > 0 ||
+      form.receitas.ticket_medio > 0 ||
+      form.receitas.taxa_conversao > 0;
+    if (algumValor) {
+      setKpisHidratados(form.cliente_id);
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      receitas: {
+        ...f.receitas,
+        faturamento_bruto: Number(ultimosKpis.faturamento_bruto ?? f.receitas.faturamento_bruto),
+        faturamento_convenios: Number(ultimosKpis.faturamento_convenios ?? f.receitas.faturamento_convenios),
+        ticket_medio: Number(ultimosKpis.ticket_medio ?? f.receitas.ticket_medio),
+        pacientes_novos_mes: Number(ultimosKpis.pacientes_novos ?? f.receitas.pacientes_novos_mes),
+        taxa_conversao: Number(ultimosKpis.taxa_conversao ?? f.receitas.taxa_conversao),
+        taxa_inadimplencia: Number(ultimosKpis.taxa_inadimplencia ?? f.receitas.taxa_inadimplencia),
+        pct_vista: Number(ultimosKpis.pct_recebido_vista ?? f.receitas.pct_vista),
+        investimento_marketing: Number(ultimosKpis.investimento_marketing ?? f.receitas.investimento_marketing),
+        no_show: Number(ultimosKpis.taxa_no_show ?? f.receitas.no_show),
+        ocupacao_agenda: Number(ultimosKpis.ocupacao_cadeiras ?? f.receitas.ocupacao_agenda),
+      },
+    }));
+    setKpisHidratados(form.cliente_id);
+    toast.success(`Receitas carregadas do mês ${ultimosKpis.mes_referencia}`);
+  }, [form.cliente_id, ultimosKpis, kpisHidratados, form.receitas.faturamento_bruto, form.receitas.ticket_medio, form.receitas.taxa_conversao]);
 
   const handleCalcular = () => {
     const r = calcular(form);
@@ -180,6 +217,15 @@ export default function DiagnosticoFinanceiro() {
                 <ClienteSelector
                   value={form.cliente_id}
                   onChange={(id, c) => {
+                    // Mapeia especialidade do cadastro para o enum local
+                    let espMapeada = "";
+                    const espRaw = (c?.especialidade || "").toLowerCase();
+                    if (espRaw.includes("odonto") || espRaw.includes("dentist")) espMapeada = "Odontologia";
+                    else if (espRaw.includes("derma")) espMapeada = "Dermatologia";
+                    else if (espRaw.includes("estét") || espRaw.includes("estet") || espRaw.includes("harmoniz") || espRaw.includes("medicina"))
+                      espMapeada = "Medicina Estética";
+                    else if (c?.especialidade) espMapeada = "Outra";
+
                     setForm((f) => ({
                       ...f,
                       cliente_id: id,
@@ -187,9 +233,11 @@ export default function DiagnosticoFinanceiro() {
                         ...f.dados,
                         nome_profissional: c?.nome_clinica || c?.nome_cliente || f.dados.nome_profissional,
                         cidade: c?.cidade || f.dados.cidade,
+                        especialidade: espMapeada || f.dados.especialidade,
                       },
                     }));
                     setClienteNome(c?.nome_cliente || "");
+                    setKpisHidratados(null); // permite hidratar receitas do novo cliente
                   }}
                 />
 
@@ -251,7 +299,15 @@ export default function DiagnosticoFinanceiro() {
           {/* ETAPA 2 */}
           <TabsContent value="receitas">
             <Card className="mt-6 p-6 md:p-8">
-              <h2 className="font-serif text-xl text-verde-raiz">Receitas & faturamento</h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-serif text-xl text-verde-raiz">Receitas & faturamento</h2>
+                {ultimosKpis && kpisHidratados === form.cliente_id && (
+                  <Badge variant="outline" className="border-verde-raiz/30 text-verde-raiz">
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    Pré-preenchido com KPIs de {ultimosKpis.mes_referencia}
+                  </Badge>
+                )}
+              </div>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <Field label="Faturamento bruto / mês (R$)">
                   <MoneyInput value={form.receitas.faturamento_bruto} onChange={(n) => update("receitas", { faturamento_bruto: n })} />
@@ -290,72 +346,43 @@ export default function DiagnosticoFinanceiro() {
 
           {/* ETAPA 3 */}
           <TabsContent value="custos">
-            <Card className="mt-6 p-6 md:p-8">
-              <h2 className="font-serif text-xl text-verde-raiz">Custos & despesas</h2>
-
-              <h3 className="mt-6 text-sm font-semibold uppercase tracking-wider text-dourado">Custos Fixos</h3>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
-                <Field label="Aluguel / condomínio">
-                  <MoneyInput value={form.custos_fixos.aluguel} onChange={(n) => update("custos_fixos", { aluguel: n })} />
-                </Field>
-                <Field label="Folha de pagamento / salários">
-                  <MoneyInput value={form.custos_fixos.folha} onChange={(n) => update("custos_fixos", { folha: n })} />
-                </Field>
-                <Field label="Pró-labore do titular">
-                  <MoneyInput value={form.custos_fixos.pro_labore} onChange={(n) => update("custos_fixos", { pro_labore: n })} />
-                </Field>
-                <Field label="Contabilidade">
-                  <MoneyInput value={form.custos_fixos.contabilidade} onChange={(n) => update("custos_fixos", { contabilidade: n })} />
-                </Field>
-                <Field label="Energia / água / telefone">
-                  <MoneyInput value={form.custos_fixos.utilities} onChange={(n) => update("custos_fixos", { utilities: n })} />
-                </Field>
-                <Field label="Sistemas / softwares / internet">
-                  <MoneyInput value={form.custos_fixos.software} onChange={(n) => update("custos_fixos", { software: n })} />
-                </Field>
-                <Field label="Outros fixos">
-                  <MoneyInput value={form.custos_fixos.outros_fixos} onChange={(n) => update("custos_fixos", { outros_fixos: n })} />
-                </Field>
+            <div className="mt-6 space-y-4">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-serif text-xl text-verde-raiz">Custos & despesas</h2>
+                {form.cliente_id && (
+                  <p className="text-xs text-quase-preto/55">
+                    <Sparkles className="mr-1 inline h-3 w-3" />
+                    Custos persistidos no cadastro do cliente
+                  </p>
+                )}
               </div>
 
-              <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-dourado">Custos Variáveis</h3>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
-                <Field label="Materiais / insumos">
-                  <MoneyInput value={form.custos_variaveis.materiais} onChange={(n) => update("custos_variaveis", { materiais: n })} />
-                </Field>
-                <Field label="Laboratório / terceirizados">
-                  <MoneyInput value={form.custos_variaveis.laboratorio} onChange={(n) => update("custos_variaveis", { laboratorio: n })} />
-                </Field>
-                <Field label="Comissões">
-                  <MoneyInput value={form.custos_variaveis.comissoes} onChange={(n) => update("custos_variaveis", { comissoes: n })} />
-                </Field>
-                <Field label="Impostos / tributos">
-                  <MoneyInput value={form.custos_variaveis.impostos} onChange={(n) => update("custos_variaveis", { impostos: n })} />
-                </Field>
-                <Field label="Taxas de cartão / maquininha">
-                  <MoneyInput value={form.custos_variaveis.taxas_cartao} onChange={(n) => update("custos_variaveis", { taxas_cartao: n })} />
-                </Field>
-                <Field label="Outros variáveis">
-                  <MoneyInput value={form.custos_variaveis.outros_variaveis} onChange={(n) => update("custos_variaveis", { outros_variaveis: n })} />
-                </Field>
-              </div>
+              <CustosClinicaSection
+                clienteId={form.cliente_id}
+                custosFixos={form.custos_fixos}
+                custosVariaveis={form.custos_variaveis}
+                financiamentos={form.financiamentos}
+                onChange={(patch) => {
+                  setForm((f) => ({
+                    ...f,
+                    custos_fixos: { ...f.custos_fixos, ...(patch.custos_fixos ?? {}) },
+                    custos_variaveis: { ...f.custos_variaveis, ...(patch.custos_variaveis ?? {}) },
+                    financiamentos: { ...f.financiamentos, ...(patch.financiamentos ?? {}) },
+                  }));
+                }}
+              />
 
-              <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-dourado">Financiamentos</h3>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
-                <Field label="Parcelas de equipamentos / financiamentos">
-                  <MoneyInput value={form.financiamentos.parcelas_equipamentos} onChange={(n) => update("financiamentos", { parcelas_equipamentos: n })} />
-                </Field>
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-                <Button variant="outline" onClick={() => setStep("receitas")}>
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-                </Button>
-                <Button onClick={handleCalcular} className="bg-dourado text-verde-raiz hover:bg-dourado/90">
-                  <Calculator className="mr-2 h-4 w-4" /> Calcular Diagnóstico
-                </Button>
-              </div>
-            </Card>
+              <Card className="p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Button variant="outline" onClick={() => setStep("receitas")}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                  </Button>
+                  <Button onClick={handleCalcular} className="bg-dourado text-verde-raiz hover:bg-dourado/90">
+                    <Calculator className="mr-2 h-4 w-4" /> Calcular Diagnóstico
+                  </Button>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* RESULTADO */}
