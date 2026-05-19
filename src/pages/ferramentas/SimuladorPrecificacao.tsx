@@ -25,8 +25,22 @@ import {
   POSICIONAMENTO_LABEL,
   type PrecificacaoForm,
   type Posicionamento,
+  type CustoFixo,
 } from "@/features/precificacao/logic";
 import { generatePrecificacaoPDF, type PoliticaDescontos } from "@/features/precificacao/pdf";
+import { useCustosClinica } from "@/hooks/useCustosClinica";
+
+// Labels amigáveis para categorias persistidas pelo Diagnóstico Financeiro.
+// Mantém compatibilidade entre as duas ferramentas.
+const CATEGORIA_LABEL: Record<string, string> = {
+  aluguel: "Aluguel",
+  folha: "Folha de pagamento",
+  pro_labore: "Pró-labore",
+  contabilidade: "Contabilidade",
+  utilities: "Água / luz / internet",
+  software: "Softwares / SaaS",
+  outros_fixos: "Outros fixos",
+};
 
 function InfoTip({ text }: { text: string }) {
   return (
@@ -125,8 +139,10 @@ export default function SimuladorPrecificacao() {
   const { user } = useAuth();
   const [form, setForm] = useState<PrecificacaoForm>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [savingCustos, setSavingCustos] = useState(false);
   const [analisando, setAnalisando] = useState(false);
   const [analiseIA, setAnaliseIA] = useState<{ analise: string; insights: string[] } | null>(null);
+  const [custosHidratados, setCustosHidratados] = useState<string | null>(null);
 
   // Política descontos via IA
   const [politicaLoading, setPoliticaLoading] = useState(false);
@@ -139,6 +155,73 @@ export default function SimuladorPrecificacao() {
     document.title = "Simulador de Precificação · Raiz Consultoria";
     return () => { document.title = prev; };
   }, []);
+
+  // Auto-fill de custos fixos a partir de custos_clinica
+  const { data: custosBanco = [] } = useCustosClinica(form.cliente_id);
+  useEffect(() => {
+    if (!form.cliente_id) return;
+    if (custosHidratados === form.cliente_id) return;
+    const fixosBanco = custosBanco.filter((c) => c.tipo === "fixo");
+    if (fixosBanco.length === 0) {
+      // Sem custos cadastrados, deixa o form como está
+      setCustosHidratados(form.cliente_id);
+      return;
+    }
+    // Se o consultor já cadastrou algum custo manualmente, não sobrescreve
+    const algumPreenchido = form.custos_fixos.some((c) => c.nome.trim() !== "" || c.valor > 0);
+    if (algumPreenchido) {
+      setCustosHidratados(form.cliente_id);
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      custos_fixos: fixosBanco.map((c) => ({
+        id: c.id,
+        nome: c.descricao || CATEGORIA_LABEL[c.categoria] || c.categoria,
+        valor: Number(c.valor) || 0,
+      })) as CustoFixo[],
+    }));
+    setCustosHidratados(form.cliente_id);
+    toast.success(`${fixosBanco.length} custos carregados do cadastro do cliente`);
+  }, [form.cliente_id, custosBanco, custosHidratados, form.custos_fixos]);
+
+  async function handleSalvarCustosNoCadastro() {
+    if (!form.cliente_id) {
+      toast.error("Selecione um cliente antes de salvar");
+      return;
+    }
+    setSavingCustos(true);
+    try {
+      // Soft-delete dos fixos atuais
+      const { error: delErr } = await supabase
+        .from("custos_clinica")
+        .update({ ativo: false })
+        .eq("cliente_id", form.cliente_id)
+        .eq("tipo", "fixo")
+        .eq("ativo", true);
+      if (delErr) throw delErr;
+
+      // Insere os fixos atuais do form (apenas com nome e valor preenchidos)
+      const linhas = form.custos_fixos
+        .filter((c) => c.nome.trim() !== "" && c.valor > 0)
+        .map((c) => ({
+          cliente_id: form.cliente_id!,
+          tipo: "fixo",
+          categoria: c.nome.trim().toLowerCase().replace(/\s+/g, "_").slice(0, 60),
+          descricao: c.nome.trim(),
+          valor: c.valor,
+        }));
+      if (linhas.length > 0) {
+        const { error: insErr } = await supabase.from("custos_clinica").insert(linhas);
+        if (insErr) throw insErr;
+      }
+      toast.success("Custos salvos no cadastro do cliente");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar custos");
+    } finally {
+      setSavingCustos(false);
+    }
+  }
 
   const calc = useMemo(() => calcular(form), [form]);
 
@@ -387,7 +470,10 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
                     cliente_id: id,
                     nome_clinica: c?.nome_clinica || f.nome_clinica,
                     segmento: segmento || f.segmento,
+                    // Reseta custos pra hidratação do novo cliente acontecer
+                    custos_fixos: id !== f.cliente_id ? [novoCusto()] : f.custos_fixos,
                   }));
+                  setCustosHidratados(null);
                 }}
               />
             </div>
@@ -435,11 +521,33 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
 
         {/* CUSTOS FIXOS */}
         <Card className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-xl text-verde-raiz">Custos fixos mensais</h2>
-            <Button variant="outline" size="sm" onClick={addCusto}>
-              <Plus className="mr-1 h-4 w-4" /> Adicionar custo
-            </Button>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-xl text-verde-raiz">Custos fixos mensais</h2>
+              {form.cliente_id && custosHidratados === form.cliente_id && custosBanco.filter((c) => c.tipo === "fixo").length > 0 && (
+                <Badge variant="outline" className="border-verde-raiz/30 text-verde-raiz">
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  Do cadastro
+                </Badge>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {form.cliente_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSalvarCustosNoCadastro}
+                  disabled={savingCustos}
+                  className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
+                >
+                  <Save className="mr-1 h-4 w-4" />
+                  {savingCustos ? "Salvando..." : "Salvar no cadastro"}
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={addCusto}>
+                <Plus className="mr-1 h-4 w-4" /> Adicionar custo
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             {form.custos_fixos.map((c) => (
