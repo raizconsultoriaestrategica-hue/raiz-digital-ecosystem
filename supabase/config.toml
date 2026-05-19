@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.consultor-ia]
 verify_jwt = false
+
+[functions.send-lembretes-reuniao]
+verify_jwt = true
