@@ -71,6 +71,51 @@ export type Database = {
           },
         ]
       }
+      benchmarks_kpis: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          especialidade: string
+          fonte: string | null
+          id: string
+          kpi: string
+          max: number
+          min: number
+          pilar: string | null
+          polaridade: string
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          especialidade: string
+          fonte?: string | null
+          id?: string
+          kpi: string
+          max: number
+          min: number
+          pilar?: string | null
+          polaridade?: string
+          unidade: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          especialidade?: string
+          fonte?: string | null
+          id?: string
+          kpi?: string
+          max?: number
+          min?: number
+          pilar?: string | null
+          polaridade?: string
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_modulos: {
         Row: {
           cliente_id: string
@@ -1000,6 +1045,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      detectar_gargalos: {
+        Args: {
+          p_cliente_id: string
+          p_mes: string
+        }
+        Returns: {
+          benchmark_max: number
+          benchmark_min: number
+          descricao: string | null
+          fonte: string | null
+          kpi: string
+          pilar: string | null
+          polaridade: string
+          severidade: string
+          status: string
+          unidade: string
+          valor_atual: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
