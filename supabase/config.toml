@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.send-lembretes-reuniao]
 verify_jwt = true
+
+[functions.send-cobranca-vencimento]
+verify_jwt = true
