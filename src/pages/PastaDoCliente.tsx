@@ -12,6 +12,7 @@ import {
   CheckCircle2, ArrowRight, Circle,
 } from "lucide-react";
 import { loadDiagnosticoFromDashboardData } from "@/features/diagnostico/loadFromDashboardData";
+import { AnaliseIACard } from "@/components/pasta-cliente/AnaliseIACard";
 
 // ---------- helpers ----------
 const fmtBRL = (n: number) =>
@@ -667,6 +668,14 @@ export default function PastaDoCliente() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Bloco 2.5: Análise IA dos gargalos */}
+              <AnaliseIACard
+                clienteId={cliente.id}
+                nomeCliente={cliente.nome_cliente}
+                especialidade={cliente.especialidade}
+                ramo={cliente.ramo}
+              />
 
               {/* Bloco 3: Trilha de módulos */}
               {modulosOrdenados.length > 0 && (
