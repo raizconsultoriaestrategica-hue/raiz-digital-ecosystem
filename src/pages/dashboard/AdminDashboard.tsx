@@ -69,6 +69,7 @@ import {
 } from "@/features/diagnostico/persistence";
 import { generatePDF } from "@/features/diagnostico/pdf";
 import { OrcamentosListDialog } from "./OrcamentosListDialog";
+import { useSaudeFinanceiraClientes } from "@/hooks/useSaudeFinanceiraCliente";
 
 type StatusCarteira =
   | "lead"
@@ -294,6 +295,12 @@ export default function AdminDashboard() {
   }, [linhas, search]);
 
   // ====== KPIs de carteira ======
+  const { data: saudeClientes = [] } = useSaudeFinanceiraClientes();
+  const saudeMap = useMemo(
+    () => new Map(saudeClientes.map((s) => [s.cliente_id, s])),
+    [saudeClientes],
+  );
+
   const ativos = linhas.filter((l) => l.cliente.status === "projeto_ativo");
   const comDiagStatus = linhas.filter(
     (l) =>
@@ -302,7 +309,16 @@ export default function AdminDashboard() {
       l.cliente.status === "projeto_ativo" ||
       !!l.diag,
   );
-  const mrr = ativos.reduce((sum, l) => sum + (Number(l.cliente.valor_mensalidade) || 0), 0);
+  // MRR canonico: contratos_raiz via v_saude_financeira_cliente.
+  // Ativos sem contrato cadastrado entram com 0 e aparecem em `ativosSemContrato`.
+  const mrr = ativos.reduce((sum, l) => {
+    const s = saudeMap.get(l.cliente.id);
+    return sum + Number(s?.mrr_atual ?? 0);
+  }, 0);
+  const ativosSemContrato = ativos.filter((l) => {
+    const s = saudeMap.get(l.cliente.id);
+    return !s?.tem_contrato;
+  }).length;
   const totalAtivos = ativos.length;
   const taxaConversao =
     comDiagStatus.length > 0 ? Math.round((totalAtivos / comDiagStatus.length) * 100) : 0;
@@ -518,8 +534,13 @@ export default function AdminDashboard() {
                 </div>
                 <div className="mt-1 font-display text-3xl text-caramelo">{formatBRL(mrr)}</div>
                 <div className="mt-1 font-body text-[11px] text-quase-preto/50">
-                  Receita mensal recorrente
+                  Soma de contratos ativos
                 </div>
+                {ativosSemContrato > 0 && (
+                  <div className="mt-1 font-body text-[11px] text-destructive">
+                    {ativosSemContrato} ativo(s) sem contrato cadastrado
+                  </div>
+                )}
               </CardContent>
             </Card>
             <Card className="border-border/60 shadow-soft">
