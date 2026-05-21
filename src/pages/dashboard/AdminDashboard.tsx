@@ -168,7 +168,6 @@ type NovoClienteForm = {
   nome_cliente: string;
   nome_clinica: string;
   cidade: string;
-  especialidade: string;
   plano: string;
   status: StatusCarteira;
   meta_faturamento: string;
@@ -190,7 +189,6 @@ const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
   nome_cliente: "",
   nome_clinica: "",
   cidade: "",
-  especialidade: "",
   plano: "",
   status: "lead",
   meta_faturamento: "",
@@ -461,7 +459,6 @@ export default function AdminDashboard() {
           nome_cliente: novoClienteForm.nome_cliente.trim(),
           nome_clinica: novoClienteForm.nome_clinica.trim() || null,
           cidade: novoClienteForm.cidade.trim() || null,
-          especialidade: novoClienteForm.especialidade.trim() || null,
           ramo: novoClienteForm.ramo,
           plano: novoClienteForm.plano || null,
           status: novoClienteForm.status,
@@ -842,14 +839,6 @@ export default function AdminDashboard() {
                       placeholder="ex.: São Paulo"
                       value={novoClienteForm.cidade}
                       onChange={(e) => setNovoClienteForm((f) => ({ ...f, cidade: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Especialidade (campo legado)</Label>
-                    <Input
-                      placeholder="ex.: Ortodontia"
-                      value={novoClienteForm.especialidade}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, especialidade: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1.5">
