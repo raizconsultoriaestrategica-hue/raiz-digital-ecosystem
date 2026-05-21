@@ -7,19 +7,36 @@
 --
 -- DEPENDENCIAS:
 --   - clientes (status, created_at)
---   - contratos_raiz (status, valor_mensal)
+--   - contratos_raiz (status)
 --   - pagamentos_raiz (status, data_pagamento, valor)
 --   - diagnostics (created_at)
 --   - diagnosticos_financeiros (created_at)
+--   - v_saude_financeira_cliente (Bloco A): fonte canonica do MRR
+--     por cliente (contrato prioritario ativo > renovacao_pendente).
+--     Usada aqui para garantir consistencia numerica com /dashboard
+--     e /financeiro-raiz (principio 4).
 --
 -- DECISOES:
---   1. "No mes" = no mes corrente segundo date_trunc('month', now()).
---      Sem fuso horario explicito: confia em time zone do servidor.
+--   1. "No mes" = mes corrente no fuso America/Sao_Paulo.
+--      Boundaries calculados com (now() AT TIME ZONE 'America/Sao_Paulo').
+--      Comparacoes com created_at (timestamptz) tambem convertidas para
+--      SP local antes do truncamento.
 --   2. Clientes ativos = clientes.status = 'projeto_ativo'.
---   3. Clientes sem contrato = ativos com 0 contratos onde status='ativo'.
---   4. Taxa de retencao = clientes_ativos / total_clientes * 100.
---      Indicador grosso, util para alerta. Churn detalhado fica para Fase 7.
---   5. Diag 360 e Diag Financeiro contados separadamente: nomenclatura
+--   3. Clientes sem contrato = ativos - clientes_com_contrato_ativo
+--      (clamp >= 0).
+--   4. MRR total, ticket medio e clientes_com_contrato_ativo vem de
+--      v_saude_financeira_cliente (1 contrato prioritario por cliente).
+--      Garantia matematica: SUM(mrr_atual) da view por cliente == MRR
+--      do snapshot.
+--   5. Contratos ativos e em renovacao pendente sao counts de linhas
+--      de contratos_raiz (visibilidade do backlog de contratos, nao
+--      do MRR efetivo). Por isso ficam em CTE separada de mrr/ticket.
+--   6. Taxa de retencao = clientes_ativos / (clientes_ativos +
+--      clientes_encerrados). Denominador eh o funil que ja foi
+--      assinado, nao o cadastro total (que inclui leads e prospects).
+--      Indicador grosso, util para alerta. Churn detalhado fica para
+--      Fase 7.
+--   7. Diag 360 e Diag Financeiro contados separadamente: nomenclatura
 --      do produto trata os dois como diagnosticos distintos.
 --
 -- ============= ALERTA DE SEGURANCA =============
@@ -33,8 +50,8 @@ WITH (security_invoker = true) AS
 WITH
   agora AS (
     SELECT
-      date_trunc('month', now())::DATE AS mes_atual_inicio,
-      (date_trunc('month', now()) + INTERVAL '1 month')::DATE AS mes_atual_fim
+      date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo')::DATE                          AS mes_atual_inicio,
+      (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') + INTERVAL '1 month')::DATE   AS mes_atual_fim
   ),
   clientes_agg AS (
     SELECT
@@ -42,18 +59,26 @@ WITH
       COUNT(*) FILTER (WHERE status = 'projeto_ativo')     AS clientes_ativos,
       COUNT(*) FILTER (WHERE status = 'encerrado')         AS clientes_encerrados,
       COUNT(*) FILTER (
-        WHERE created_at >= (SELECT mes_atual_inicio FROM agora)
-          AND created_at <  (SELECT mes_atual_fim    FROM agora)
+        WHERE (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE >= (SELECT mes_atual_inicio FROM agora)
+          AND (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE <  (SELECT mes_atual_fim    FROM agora)
       )                                                    AS novos_clientes_no_mes
     FROM public.clientes
   ),
-  contratos_agg AS (
+  saude_fin_agg AS (
+    -- MRR canonico vem do Bloco A: 1 contrato prioritario por cliente.
+    -- SUM aqui sempre bate com o somatorio que /dashboard usa.
     SELECT
-      COUNT(DISTINCT cliente_id) FILTER (WHERE status = 'ativo')           AS clientes_com_contrato_ativo,
-      COALESCE(SUM(valor_mensal) FILTER (WHERE status = 'ativo'), 0)::NUMERIC(14,2) AS mrr_total,
-      COALESCE(AVG(valor_mensal) FILTER (WHERE status = 'ativo'), 0)::NUMERIC(12,2) AS ticket_medio_contratos,
-      COUNT(*)        FILTER (WHERE status = 'ativo')                      AS contratos_ativos,
-      COUNT(*)        FILTER (WHERE status = 'renovacao_pendente')         AS contratos_renovacao_pendente
+      COUNT(*) FILTER (WHERE mrr_atual > 0)                                   AS clientes_com_contrato_ativo,
+      COALESCE(SUM(mrr_atual), 0)::NUMERIC(14,2)                              AS mrr_total,
+      COALESCE(AVG(mrr_atual) FILTER (WHERE mrr_atual > 0), 0)::NUMERIC(12,2) AS ticket_medio_contratos
+    FROM public.v_saude_financeira_cliente
+  ),
+  contratos_raw AS (
+    -- Contagem direta de linhas em contratos_raiz para visibilidade
+    -- do backlog. NAO usado para MRR (que vem de saude_fin_agg).
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'ativo')              AS contratos_ativos,
+      COUNT(*) FILTER (WHERE status = 'renovacao_pendente') AS contratos_renovacao_pendente
     FROM public.contratos_raiz
     WHERE cliente_id IS NOT NULL
   ),
@@ -72,15 +97,15 @@ WITH
     SELECT
       COUNT(*) AS diag_360_no_mes
     FROM public.diagnostics
-    WHERE created_at >= (SELECT mes_atual_inicio FROM agora)
-      AND created_at <  (SELECT mes_atual_fim    FROM agora)
+    WHERE (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE >= (SELECT mes_atual_inicio FROM agora)
+      AND (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE <  (SELECT mes_atual_fim    FROM agora)
   ),
   diag_fin_agg AS (
     SELECT
       COUNT(*) AS diag_fin_no_mes
     FROM public.diagnosticos_financeiros
-    WHERE created_at >= (SELECT mes_atual_inicio FROM agora)
-      AND created_at <  (SELECT mes_atual_fim    FROM agora)
+    WHERE (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE >= (SELECT mes_atual_inicio FROM agora)
+      AND (created_at AT TIME ZONE 'America/Sao_Paulo')::DATE <  (SELECT mes_atual_fim    FROM agora)
   )
 SELECT
   (SELECT mes_atual_inicio FROM agora)                   AS mes_referencia,
@@ -90,14 +115,14 @@ SELECT
   c.clientes_ativos,
   c.clientes_encerrados,
   c.novos_clientes_no_mes,
-  GREATEST(c.clientes_ativos - co.clientes_com_contrato_ativo, 0) AS clientes_ativos_sem_contrato,
+  GREATEST(c.clientes_ativos - sf.clientes_com_contrato_ativo, 0) AS clientes_ativos_sem_contrato,
 
-  -- Contratos e MRR
-  co.clientes_com_contrato_ativo,
-  co.contratos_ativos,
-  co.contratos_renovacao_pendente,
-  co.mrr_total,
-  co.ticket_medio_contratos,
+  -- Contratos e MRR (MRR vem do Bloco A, counts vem de contratos_raw)
+  sf.clientes_com_contrato_ativo,
+  cr.contratos_ativos,
+  cr.contratos_renovacao_pendente,
+  sf.mrr_total,
+  sf.ticket_medio_contratos,
 
   -- Pagamentos
   pa.pagamentos_atrasados,
@@ -108,15 +133,20 @@ SELECT
   d360.diag_360_no_mes,
   dfin.diag_fin_no_mes,
 
-  -- Indicador grosso de retencao
+  -- Retencao: ativos / (ativos + encerrados). Exclui leads e prospects
+  -- do denominador. Proxy honesto de "quem assinou continua".
   CASE
-    WHEN c.total_clientes > 0
-      THEN ROUND((c.clientes_ativos::NUMERIC / c.total_clientes::NUMERIC) * 100, 1)
+    WHEN (c.clientes_ativos + c.clientes_encerrados) > 0
+      THEN ROUND(
+        (c.clientes_ativos::NUMERIC / (c.clientes_ativos + c.clientes_encerrados)::NUMERIC) * 100,
+        1
+      )
     ELSE 0
   END AS taxa_retencao_pct
 
-FROM clientes_agg   c
-CROSS JOIN contratos_agg   co
+FROM clientes_agg    c
+CROSS JOIN saude_fin_agg   sf
+CROSS JOIN contratos_raw   cr
 CROSS JOIN pagamentos_agg  pa
 CROSS JOIN diag_360_agg    d360
 CROSS JOIN diag_fin_agg    dfin;

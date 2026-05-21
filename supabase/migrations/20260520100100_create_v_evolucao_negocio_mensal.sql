@@ -19,9 +19,15 @@
 --      data_pagamento no mes. Espelha o calculo ja usado em
 --      /financeiro-raiz. NAO e MRR retroativo (que exigiria
 --      historico de contratos, fora do escopo).
---   2. Janela = ultimos 12 meses (mes atual + 11 anteriores).
+--   2. Janela = ultimos 12 meses (mes atual + 11 anteriores) no
+--      fuso America/Sao_Paulo. Boundaries calculados com
+--      (now() AT TIME ZONE 'America/Sao_Paulo').
 --   3. generate_series gera os meses, garantindo que meses sem
 --      dados aparecam com zero.
+--   4. data_pagamento eh DATE (sem fuso), comparacao direta funciona.
+--      created_at eh TIMESTAMPTZ, convertido para SP local antes
+--      do truncamento para alinhar o corte mensal com o calendario
+--      do consultor.
 --
 -- ============= ALERTA DE SEGURANCA =============
 -- WITH (security_invoker = true). Apenas admins veem.
@@ -34,8 +40,8 @@ WITH
   meses AS (
     SELECT date_trunc('month', g)::DATE AS mes
     FROM generate_series(
-      date_trunc('month', now() - INTERVAL '11 months'),
-      date_trunc('month', now()),
+      date_trunc('month', (now() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '11 months'),
+      date_trunc('month', (now() AT TIME ZONE 'America/Sao_Paulo')),
       INTERVAL '1 month'
     ) g
   ),
@@ -50,22 +56,22 @@ WITH
   ),
   diag_360_por_mes AS (
     SELECT
-      date_trunc('month', created_at)::DATE AS mes,
-      COUNT(*)::INTEGER                     AS qt
+      date_trunc('month', created_at AT TIME ZONE 'America/Sao_Paulo')::DATE AS mes,
+      COUNT(*)::INTEGER                                                      AS qt
     FROM public.diagnostics
     GROUP BY 1
   ),
   diag_fin_por_mes AS (
     SELECT
-      date_trunc('month', created_at)::DATE AS mes,
-      COUNT(*)::INTEGER                     AS qt
+      date_trunc('month', created_at AT TIME ZONE 'America/Sao_Paulo')::DATE AS mes,
+      COUNT(*)::INTEGER                                                      AS qt
     FROM public.diagnosticos_financeiros
     GROUP BY 1
   ),
   novos_clientes_por_mes AS (
     SELECT
-      date_trunc('month', created_at)::DATE AS mes,
-      COUNT(*)::INTEGER                     AS qt
+      date_trunc('month', created_at AT TIME ZONE 'America/Sao_Paulo')::DATE AS mes,
+      COUNT(*)::INTEGER                                                      AS qt
     FROM public.clientes
     GROUP BY 1
   )
