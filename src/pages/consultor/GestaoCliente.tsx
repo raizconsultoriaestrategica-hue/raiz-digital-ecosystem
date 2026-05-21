@@ -25,6 +25,11 @@ import { Badge } from "@/components/ui/badge";
 import ReunioesTab from "@/components/consultor/ReunioesTab";
 import ArquivosTab from "@/components/consultor/ArquivosTab";
 import ModulosTab from "@/components/consultor/ModulosTab";
+import {
+  validarCadastroClienteEdicao,
+  temErros,
+  type ErrosCadastro,
+} from "@/lib/validacoes-cadastro";
 
 // ============================================================
 // Tipos
@@ -195,6 +200,7 @@ export default function GestaoCliente() {
     especialidade_clinica: "",
   });
   const [salvandoCadastro, setSalvandoCadastro] = useState(false);
+  const [cadastroErros, setCadastroErros] = useState<ErrosCadastro>({});
 
   // Aba 3
   const [expandido, setExpandido] = useState<Record<string, boolean>>({});
@@ -465,6 +471,16 @@ export default function GestaoCliente() {
   // ----- Aba 2: Salvar cadastro -----
   const handleSalvarCadastro = async () => {
     if (!clienteId) return;
+    const erros = validarCadastroClienteEdicao({
+      email_cliente: cadastroForm.email_cliente,
+      telefone: cadastroForm.telefone,
+      dia_vencimento: cadastroForm.dia_vencimento,
+    });
+    setCadastroErros(erros);
+    if (temErros(erros)) {
+      toast.error("Corrija os campos destacados antes de salvar.");
+      return;
+    }
     setSalvandoCadastro(true);
     try {
       const toNum = (s: string) => {
@@ -712,16 +728,38 @@ export default function GestaoCliente() {
                     <Input
                       placeholder="(11) 99999-9999"
                       value={cadastroForm.telefone}
-                      onChange={(e) => setCadastroForm((f) => ({ ...f, telefone: e.target.value }))}
+                      aria-invalid={!!cadastroErros.telefone}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCadastroForm((f) => ({ ...f, telefone: v }));
+                        if (cadastroErros.telefone) setCadastroErros((er) => ({ ...er, telefone: undefined }));
+                      }}
                     />
+                    {cadastroErros.telefone && (
+                      <p className="mt-1 text-xs text-destructive">{cadastroErros.telefone}</p>
+                    )}
                   </div>
                   <div>
-                    <Label>E-mail</Label>
+                    <Label>
+                      E-mail <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="email"
                       value={cadastroForm.email_cliente}
-                      onChange={(e) => setCadastroForm((f) => ({ ...f, email_cliente: e.target.value }))}
+                      aria-invalid={!!cadastroErros.email_cliente}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCadastroForm((f) => ({ ...f, email_cliente: v }));
+                        if (cadastroErros.email_cliente) setCadastroErros((er) => ({ ...er, email_cliente: undefined }));
+                      }}
                     />
+                    {cadastroErros.email_cliente ? (
+                      <p className="mt-1 text-xs text-destructive">{cadastroErros.email_cliente}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-quase-preto/50">
+                        Obrigatório. Sem email, as automações Resend não disparam.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label>Instagram</Label>
@@ -796,15 +834,23 @@ export default function GestaoCliente() {
                     />
                   </div>
                   <div>
-                    <Label>Dia de vencimento (1–31)</Label>
+                    <Label>Dia de vencimento (1 a 31)</Label>
                     <Input
                       type="number"
                       min={1}
                       max={31}
                       placeholder="10"
                       value={cadastroForm.dia_vencimento}
-                      onChange={(e) => setCadastroForm((f) => ({ ...f, dia_vencimento: e.target.value }))}
+                      aria-invalid={!!cadastroErros.dia_vencimento}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCadastroForm((f) => ({ ...f, dia_vencimento: v }));
+                        if (cadastroErros.dia_vencimento) setCadastroErros((er) => ({ ...er, dia_vencimento: undefined }));
+                      }}
                     />
+                    {cadastroErros.dia_vencimento && (
+                      <p className="mt-1 text-xs text-destructive">{cadastroErros.dia_vencimento}</p>
+                    )}
                   </div>
                   <div>
                     <Label>Forma de pagamento</Label>
