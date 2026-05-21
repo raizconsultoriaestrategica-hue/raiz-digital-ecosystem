@@ -59,7 +59,14 @@ import {
   Briefcase,
   FolderOpen,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -70,6 +77,11 @@ import {
 import { generatePDF } from "@/features/diagnostico/pdf";
 import { OrcamentosListDialog } from "./OrcamentosListDialog";
 import { useSaudeFinanceiraClientes } from "@/hooks/useSaudeFinanceiraCliente";
+import {
+  validarCadastroClienteNovo,
+  temErros,
+  type ErrosCadastro,
+} from "@/lib/validacoes-cadastro";
 
 type StatusCarteira =
   | "lead"
@@ -88,6 +100,7 @@ type Cliente = {
   status: StatusCarteira | null;
   orcamento_inicial: number | null;
   data_diagnostico: string | null;
+  email_cliente: string | null;
   data_inicio_projeto: string | null;
   duracao_meses: number | null;
   valor_mensalidade: number | null;
@@ -206,6 +219,7 @@ export default function AdminDashboard() {
   const [novoClienteOpen, setNovoClienteOpen] = useState(false);
   const [novoClienteForm, setNovoClienteForm] = useState<NovoClienteForm>(NOVO_CLIENTE_INITIAL);
   const [savingNovoCliente, setSavingNovoCliente] = useState(false);
+  const [novoClienteErros, setNovoClienteErros] = useState<ErrosCadastro>({});
 
   // Especialidades (tabela de referência, estável — staleTime infinito)
   const { data: especialidades = [] } = useQuery({
@@ -243,7 +257,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (searchParams.get("novo") === "1") {
       setNovoClienteOpen(true);
-      setNovoClienteForm(NOVO_CLIENTE_INITIAL);
+      setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({});
       // Remove o param da URL sem adicionar ao histórico
       setSearchParams({}, { replace: true });
     }
@@ -256,7 +270,7 @@ export default function AdminDashboard() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_diagnostico, data_inicio_projeto, duracao_meses, valor_mensalidade",
+            "id, nome_cliente, nome_clinica, cidade, plano, created_at, status, orcamento_inicial, data_diagnostico, data_inicio_projeto, duracao_meses, valor_mensalidade, email_cliente",
           )
           .order("created_at", { ascending: false }),
         loadDiagnosticosFromSupabase(),
@@ -419,6 +433,16 @@ export default function AdminDashboard() {
       toast.error("Nome do responsável é obrigatório.");
       return;
     }
+    const erros = validarCadastroClienteNovo({
+      email_cliente: novoClienteForm.email_cliente,
+      telefone: novoClienteForm.telefone,
+      dia_vencimento: novoClienteForm.dia_vencimento,
+    });
+    setNovoClienteErros(erros);
+    if (temErros(erros)) {
+      toast.error("Corrija os campos destacados antes de salvar.");
+      return;
+    }
     setSavingNovoCliente(true);
     try {
       const toNum = (s: string) => {
@@ -452,7 +476,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       toast.success("Cliente criado com sucesso.");
       setNovoClienteOpen(false);
-      setNovoClienteForm(NOVO_CLIENTE_INITIAL);
+      setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({});
       navigate(`/consultor/clientes/${data.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao criar cliente";
@@ -510,7 +534,7 @@ export default function AdminDashboard() {
           </p>
         </div>
         <Button
-          onClick={() => { setNovoClienteOpen(true); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}
+          onClick={() => { setNovoClienteOpen(true); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }}
           className="bg-verde-raiz hover:bg-verde-raiz/90"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -620,12 +644,31 @@ export default function AdminDashboard() {
                       return (
                         <TableRow key={l.cliente.id}>
                           <TableCell className="font-medium">
-                            <Link
-                              to={`/consultor/clientes/${l.cliente.id}`}
-                              className="text-verde-raiz hover:text-dourado hover:underline"
-                            >
-                              {l.cliente.nome_cliente}
-                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                to={`/consultor/clientes/${l.cliente.id}`}
+                                className="text-verde-raiz hover:text-dourado hover:underline"
+                              >
+                                {l.cliente.nome_cliente}
+                              </Link>
+                              {!l.cliente.email_cliente && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge
+                                        className="cursor-help bg-amber-100 text-amber-900 hover:bg-amber-100"
+                                      >
+                                        <AlertTriangle className="mr-1 h-3 w-3" />
+                                        Sem email
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Automações Resend (lembrete de reunião, cobrança e resumo mensal) não disparam sem email cadastrado.
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>{l.cliente.nome_clinica ?? "—"}</TableCell>
                           <TableCell>{l.cliente.cidade ?? "—"}</TableCell>
@@ -744,7 +787,7 @@ export default function AdminDashboard() {
       <Dialog
         open={novoClienteOpen}
         onOpenChange={(o) => {
-          if (!o) { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }
+          if (!o) { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }
         }}
       >
         <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
@@ -821,21 +864,41 @@ export default function AdminDashboard() {
                 </p>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>Telefone</Label>
+                    <Label>
+                      Telefone <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       placeholder="(11) 99999-9999"
                       value={novoClienteForm.telefone}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, telefone: e.target.value }))}
+                      aria-invalid={!!novoClienteErros.telefone}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNovoClienteForm((f) => ({ ...f, telefone: v }));
+                        if (novoClienteErros.telefone) setNovoClienteErros((er) => ({ ...er, telefone: undefined }));
+                      }}
                     />
+                    {novoClienteErros.telefone && (
+                      <p className="text-xs text-destructive">{novoClienteErros.telefone}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label>E-mail</Label>
+                    <Label>
+                      E-mail <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="email"
                       placeholder="dra.ana@clinica.com"
                       value={novoClienteForm.email_cliente}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, email_cliente: e.target.value }))}
+                      aria-invalid={!!novoClienteErros.email_cliente}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNovoClienteForm((f) => ({ ...f, email_cliente: v }));
+                        if (novoClienteErros.email_cliente) setNovoClienteErros((er) => ({ ...er, email_cliente: undefined }));
+                      }}
                     />
+                    {novoClienteErros.email_cliente && (
+                      <p className="text-xs text-destructive">{novoClienteErros.email_cliente}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Instagram</Label>
@@ -913,15 +976,25 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Dia de vencimento (1–31)</Label>
+                    <Label>
+                      Dia de vencimento (1 a 31) <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="number"
                       min={1}
                       max={31}
                       placeholder="10"
                       value={novoClienteForm.dia_vencimento}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, dia_vencimento: e.target.value }))}
+                      aria-invalid={!!novoClienteErros.dia_vencimento}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNovoClienteForm((f) => ({ ...f, dia_vencimento: v }));
+                        if (novoClienteErros.dia_vencimento) setNovoClienteErros((er) => ({ ...er, dia_vencimento: undefined }));
+                      }}
                     />
+                    {novoClienteErros.dia_vencimento && (
+                      <p className="text-xs text-destructive">{novoClienteErros.dia_vencimento}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Forma de pagamento</Label>
@@ -984,7 +1057,7 @@ export default function AdminDashboard() {
           <DialogFooter className="mt-4 border-t pt-4">
             <Button
               variant="outline"
-              onClick={() => { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); }}
+              onClick={() => { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }}
               disabled={savingNovoCliente}
             >
               Cancelar
