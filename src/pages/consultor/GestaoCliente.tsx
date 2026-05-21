@@ -514,8 +514,15 @@ export default function GestaoCliente() {
       toast.success("Cadastro atualizado.");
       await recarregar();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao salvar cadastro";
-      toast.error(msg);
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      const partes = [
+        err?.message ?? "Falha ao salvar cadastro",
+        err?.code ? `(${err.code})` : null,
+        err?.details ?? null,
+        err?.hint ?? null,
+      ].filter(Boolean);
+      toast.error(partes.join(" · "));
+      console.error("[Salvar Cadastro] Erro do Supabase:", err);
     } finally {
       setSalvandoCadastro(false);
     }

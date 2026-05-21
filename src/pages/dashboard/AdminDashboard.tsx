@@ -479,8 +479,15 @@ export default function AdminDashboard() {
       setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({});
       navigate(`/consultor/clientes/${data.id}`);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao criar cliente";
-      toast.error(msg);
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      const partes = [
+        err?.message ?? "Falha ao criar cliente",
+        err?.code ? `(${err.code})` : null,
+        err?.details ?? null,
+        err?.hint ?? null,
+      ].filter(Boolean);
+      toast.error(partes.join(" · "));
+      console.error("[Novo Cliente] Erro do Supabase:", err);
     } finally {
       setSavingNovoCliente(false);
     }
