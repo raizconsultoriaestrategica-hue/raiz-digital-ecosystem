@@ -26,6 +26,7 @@ import Contratos from "./pages/financeiro/Contratos";
 import Pagamentos from "./pages/financeiro/Pagamentos";
 import ContasPagar from "./pages/financeiro/ContasPagar";
 import PastaDoCliente from "./pages/PastaDoCliente";
+import SaudePlataforma from "./pages/admin/SaudePlataforma";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,8 @@ const App = () => (
                 <Route path="pagamentos" element={<Pagamentos />} />
                 <Route path="contas-pagar" element={<ContasPagar />} />
               </Route>
+
+              <Route path="/saude-plataforma" element={<SaudePlataforma />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

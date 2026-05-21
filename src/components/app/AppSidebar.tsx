@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Sparkles,
   ChevronDown,
+  HeartPulse,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BrandLogo from "@/components/brand/BrandLogo";
@@ -157,6 +158,28 @@ export default function AppSidebar() {
                     >
                       <Folder className="mr-2 h-4 w-4" />
                       {!collapsed && <span>Pasta do Cliente</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Saúde da plataforma: visão executiva do admin, acesso rápido */}
+        {role === "admin" && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/saude-plataforma"
+                      className="hover:bg-sidebar-accent"
+                      activeClassName="bg-sidebar-accent text-dourado"
+                    >
+                      <HeartPulse className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Saúde da plataforma</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
