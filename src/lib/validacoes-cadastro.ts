@@ -1,12 +1,32 @@
-export type CampoCadastro = "email_cliente" | "telefone" | "dia_vencimento";
+export type CampoCadastro = "email_cliente" | "telefone" | "dia_vencimento" | "ramo";
 
 export type ErrosCadastro = Partial<Record<CampoCadastro, string>>;
+
+export const RAMOS_VALIDOS = ["odontologia", "medicina", "estetica", "outros"] as const;
+export type Ramo = (typeof RAMOS_VALIDOS)[number];
+
+export const RAMO_LABEL: Record<Ramo, string> = {
+  odontologia: "Odontologia",
+  medicina: "Medicina",
+  estetica: "Estética",
+  outros: "Outros",
+};
 
 export type CadastroClienteValidavel = {
   email_cliente?: string | null;
   telefone?: string | null;
   dia_vencimento?: string | null;
+  ramo?: string | null;
 };
+
+export function validarRamo(valor: string | null | undefined): string | null {
+  const v = (valor ?? "").trim();
+  if (!v) return "Ramo é obrigatório.";
+  if (!(RAMOS_VALIDOS as readonly string[]).includes(v)) {
+    return `Ramo inválido. Use: ${RAMOS_VALIDOS.join(", ")}.`;
+  }
+  return null;
+}
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,6 +69,8 @@ export function validarCadastroClienteNovo(form: CadastroClienteValidavel): Erro
   if (eTel) erros.telefone = eTel;
   const eDia = validarDiaVencimento(form.dia_vencimento, true);
   if (eDia) erros.dia_vencimento = eDia;
+  const eRamo = validarRamo(form.ramo);
+  if (eRamo) erros.ramo = eRamo;
   return erros;
 }
 
@@ -60,6 +82,8 @@ export function validarCadastroClienteEdicao(form: CadastroClienteValidavel): Er
   if (eTel) erros.telefone = eTel;
   const eDia = validarDiaVencimento(form.dia_vencimento, false);
   if (eDia) erros.dia_vencimento = eDia;
+  const eRamo = validarRamo(form.ramo);
+  if (eRamo) erros.ramo = eRamo;
   return erros;
 }
 
