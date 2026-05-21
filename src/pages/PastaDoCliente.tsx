@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { loadDiagnosticoFromDashboardData } from "@/features/diagnostico/loadFromDashboardData";
 import { AnaliseIACard } from "@/components/pasta-cliente/AnaliseIACard";
+import { AtualizacaoMensalCard } from "@/components/pasta-cliente/AtualizacaoMensalCard";
 
 // ---------- helpers ----------
 const fmtBRL = (n: number) =>
@@ -512,6 +513,8 @@ export default function PastaDoCliente() {
 
         {/* ABA 2. Meu Plano */}
         <TabsContent value="plano" className="mt-6 space-y-4">
+          <AtualizacaoMensalCard clienteId={cliente.id} />
+
           {!orcamento && modulosOrdenados.length === 0 ? (
             <EmptyState icon={FileText} title="Plano em preparação" hint="Assim que o orçamento for emitido, ele aparecerá aqui." />
           ) : (
