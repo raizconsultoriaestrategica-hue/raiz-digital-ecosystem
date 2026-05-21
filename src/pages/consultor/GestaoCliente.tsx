@@ -28,7 +28,10 @@ import ModulosTab from "@/components/consultor/ModulosTab";
 import {
   validarCadastroClienteEdicao,
   temErros,
+  RAMOS_VALIDOS,
+  RAMO_LABEL as RAMO_LABEL_LIB,
   type ErrosCadastro,
+  type Ramo,
 } from "@/lib/validacoes-cadastro";
 
 // ============================================================
@@ -179,7 +182,27 @@ export default function GestaoCliente() {
   const [salvandoMensal, setSalvandoMensal] = useState(false);
 
   // Aba 2
-  const [cadastroForm, setCadastroForm] = useState({
+  const [cadastroForm, setCadastroForm] = useState<{
+    nome_cliente: string;
+    nome_clinica: string;
+    cidade: string;
+    especialidade: string;
+    plano: string;
+    status: string;
+    meta_faturamento: string;
+    consultor: string;
+    telefone: string;
+    email_cliente: string;
+    cpf_cnpj: string;
+    endereco: string;
+    data_nascimento: string;
+    instagram: string;
+    observacoes_relacionamento: string;
+    dia_vencimento: string;
+    forma_pagamento: string;
+    ramo: Ramo;
+    especialidade_clinica: string;
+  }>({
     nome_cliente: "",
     nome_clinica: "",
     cidade: "",
@@ -197,6 +220,7 @@ export default function GestaoCliente() {
     observacoes_relacionamento: "",
     dia_vencimento: "",
     forma_pagamento: "",
+    ramo: "odontologia",
     especialidade_clinica: "",
   });
   const [salvandoCadastro, setSalvandoCadastro] = useState(false);
@@ -250,6 +274,9 @@ export default function GestaoCliente() {
         observacoes_relacionamento: c.observacoes_relacionamento ?? "",
         dia_vencimento: c.dia_vencimento != null ? String(c.dia_vencimento) : "",
         forma_pagamento: c.forma_pagamento ?? "",
+        ramo: (RAMOS_VALIDOS as readonly string[]).includes(c.ramo ?? "")
+          ? (c.ramo as Ramo)
+          : "odontologia",
         especialidade_clinica: c.especialidade_clinica ?? "",
       });
 
@@ -475,6 +502,7 @@ export default function GestaoCliente() {
       email_cliente: cadastroForm.email_cliente,
       telefone: cadastroForm.telefone,
       dia_vencimento: cadastroForm.dia_vencimento,
+      ramo: cadastroForm.ramo,
     });
     setCadastroErros(erros);
     if (temErros(erros)) {
@@ -494,6 +522,7 @@ export default function GestaoCliente() {
           nome_clinica: cadastroForm.nome_clinica.trim() || null,
           cidade: cadastroForm.cidade.trim() || null,
           especialidade: cadastroForm.especialidade.trim() || null,
+          ramo: cadastroForm.ramo,
           plano: cadastroForm.plano || null,
           status: cadastroForm.status,
           meta_faturamento: toNum(cadastroForm.meta_faturamento),
@@ -876,6 +905,39 @@ export default function GestaoCliente() {
                     </Select>
                   </div>
                   <div>
+                    <Label>
+                      Ramo <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={cadastroForm.ramo}
+                      onValueChange={(v) => {
+                        const novoRamo = v as Ramo;
+                        setCadastroForm((f) => ({
+                          ...f,
+                          ramo: novoRamo,
+                          especialidade_clinica:
+                            f.especialidade_clinica &&
+                            especialidades.find((e) => e.nome === f.especialidade_clinica)?.ramo === novoRamo
+                              ? f.especialidade_clinica
+                              : "",
+                        }));
+                        if (cadastroErros.ramo) setCadastroErros((er) => ({ ...er, ramo: undefined }));
+                      }}
+                    >
+                      <SelectTrigger className="mt-0.5" aria-invalid={!!cadastroErros.ramo}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RAMOS_VALIDOS.map((r) => (
+                          <SelectItem key={r} value={r}>{RAMO_LABEL_LIB[r]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {cadastroErros.ramo && (
+                      <p className="mt-1 text-xs text-destructive">{cadastroErros.ramo}</p>
+                    )}
+                  </div>
+                  <div>
                     <Label>Especialidade clínica</Label>
                     <Select
                       value={cadastroForm.especialidade_clinica}
@@ -885,13 +947,8 @@ export default function GestaoCliente() {
                         <SelectValue placeholder="Selecione a especialidade" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(especialidadesPorRamo).map(([ramo, items]) => (
-                          <SelectGroup key={ramo}>
-                            <SelectLabel>{RAMO_LABEL[ramo] ?? ramo}</SelectLabel>
-                            {items.map((e) => (
-                              <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
-                            ))}
-                          </SelectGroup>
+                        {(especialidadesPorRamo[cadastroForm.ramo] ?? []).map((e) => (
+                          <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
