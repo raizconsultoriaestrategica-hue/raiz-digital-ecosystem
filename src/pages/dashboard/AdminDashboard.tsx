@@ -80,7 +80,10 @@ import { useSaudeFinanceiraClientes } from "@/hooks/useSaudeFinanceiraCliente";
 import {
   validarCadastroClienteNovo,
   temErros,
+  RAMOS_VALIDOS,
+  RAMO_LABEL as RAMO_LABEL_LIB,
   type ErrosCadastro,
+  type Ramo,
 } from "@/lib/validacoes-cadastro";
 
 type StatusCarteira =
@@ -179,6 +182,7 @@ type NovoClienteForm = {
   observacoes_relacionamento: string;
   dia_vencimento: string;
   forma_pagamento: string;
+  ramo: Ramo;
   especialidade_clinica: string;
 };
 
@@ -200,6 +204,7 @@ const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
   observacoes_relacionamento: "",
   dia_vencimento: "",
   forma_pagamento: "",
+  ramo: "odontologia",
   especialidade_clinica: "",
 };
 
@@ -437,6 +442,7 @@ export default function AdminDashboard() {
       email_cliente: novoClienteForm.email_cliente,
       telefone: novoClienteForm.telefone,
       dia_vencimento: novoClienteForm.dia_vencimento,
+      ramo: novoClienteForm.ramo,
     });
     setNovoClienteErros(erros);
     if (temErros(erros)) {
@@ -456,6 +462,7 @@ export default function AdminDashboard() {
           nome_clinica: novoClienteForm.nome_clinica.trim() || null,
           cidade: novoClienteForm.cidade.trim() || null,
           especialidade: novoClienteForm.especialidade.trim() || null,
+          ramo: novoClienteForm.ramo,
           plano: novoClienteForm.plano || null,
           status: novoClienteForm.status,
           meta_faturamento: toNum(novoClienteForm.meta_faturamento),
@@ -1020,6 +1027,39 @@ export default function AdminDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
+                    <Label>
+                      Ramo <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={novoClienteForm.ramo}
+                      onValueChange={(v) => {
+                        const novoRamo = v as Ramo;
+                        setNovoClienteForm((f) => ({
+                          ...f,
+                          ramo: novoRamo,
+                          especialidade_clinica:
+                            f.especialidade_clinica &&
+                            especialidades.find((e) => e.nome === f.especialidade_clinica)?.ramo === novoRamo
+                              ? f.especialidade_clinica
+                              : "",
+                        }));
+                        if (novoClienteErros.ramo) setNovoClienteErros((er) => ({ ...er, ramo: undefined }));
+                      }}
+                    >
+                      <SelectTrigger aria-invalid={!!novoClienteErros.ramo}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RAMOS_VALIDOS.map((r) => (
+                          <SelectItem key={r} value={r}>{RAMO_LABEL_LIB[r]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {novoClienteErros.ramo && (
+                      <p className="text-xs text-destructive">{novoClienteErros.ramo}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
                     <Label>Especialidade clínica</Label>
                     <Select
                       value={novoClienteForm.especialidade_clinica}
@@ -1029,13 +1069,8 @@ export default function AdminDashboard() {
                         <SelectValue placeholder="Selecione a especialidade" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(especialidadesPorRamo).map(([ramo, items]) => (
-                          <SelectGroup key={ramo}>
-                            <SelectLabel>{RAMO_LABEL[ramo] ?? ramo}</SelectLabel>
-                            {items.map((e) => (
-                              <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
-                            ))}
-                          </SelectGroup>
+                        {(especialidadesPorRamo[novoClienteForm.ramo] ?? []).map((e) => (
+                          <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
