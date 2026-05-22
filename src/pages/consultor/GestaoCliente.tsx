@@ -728,13 +728,6 @@ export default function GestaoCliente() {
                     />
                   </div>
                   <div>
-                    <Label>Especialidade (campo legado)</Label>
-                    <Input
-                      value={cadastroForm.especialidade}
-                      onChange={(e) => setCadastroForm((f) => ({ ...f, especialidade: e.target.value }))}
-                    />
-                  </div>
-                  <div>
                     <Label>CPF / CNPJ</Label>
                     <Input
                       placeholder="000.000.000-00"
