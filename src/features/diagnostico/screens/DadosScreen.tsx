@@ -95,6 +95,11 @@ export function DadosScreen({
               if (c) {
                 onClientField("name", c.nome_cliente);
                 if (c.cidade) onClientField("cidade", c.cidade);
+                const espCadastro = c.especialidade_clinica || c.especialidade;
+                if (espCadastro) {
+                  onClientField("especialidade", espCadastro);
+                  onClientField("proc", espCadastro);
+                }
               }
               // Pre-carga do ultimo diagnostico do cliente
               if (id && onLoadPrevious) {
