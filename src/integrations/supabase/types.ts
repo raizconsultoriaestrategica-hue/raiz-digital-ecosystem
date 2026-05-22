@@ -63,6 +63,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arquivos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arquivos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
+          {
             foreignKeyName: "arquivos_cliente_modulo_id_fkey"
             columns: ["modulo_id"]
             isOneToOne: false
@@ -162,6 +176,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cliente_modulos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_modulos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
+          {
             foreignKeyName: "cliente_modulos_modulo_id_fkey"
             columns: ["modulo_id"]
             isOneToOne: false
@@ -173,56 +201,6 @@ export type Database = {
             columns: ["orcamento_id"]
             isOneToOne: false
             referencedRelation: "orcamentos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      custos_clinica: {
-        Row: {
-          ativo: boolean
-          categoria: string
-          cliente_id: string
-          created_at: string
-          descricao: string | null
-          id: string
-          tipo: string
-          updated_at: string
-          valor: number
-          vigencia_fim: string | null
-          vigencia_inicio: string | null
-        }
-        Insert: {
-          ativo?: boolean
-          categoria: string
-          cliente_id: string
-          created_at?: string
-          descricao?: string | null
-          id?: string
-          tipo: string
-          updated_at?: string
-          valor?: number
-          vigencia_fim?: string | null
-          vigencia_inicio?: string | null
-        }
-        Update: {
-          ativo?: boolean
-          categoria?: string
-          cliente_id?: string
-          created_at?: string
-          descricao?: string | null
-          id?: string
-          tipo?: string
-          updated_at?: string
-          valor?: number
-          vigencia_fim?: string | null
-          vigencia_inicio?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "custos_clinica_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
         ]
@@ -446,6 +424,84 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_raiz_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_raiz_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
+        ]
+      }
+      custos_clinica: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          cliente_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          tipo: string
+          updated_at: string
+          valor: number
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          cliente_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          updated_at?: string
+          valor?: number
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          cliente_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custos_clinica_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custos_clinica_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custos_clinica_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
         ]
       }
       dashboard_data: {
@@ -489,6 +545,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_data_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_data_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
           },
         ]
       }
@@ -597,6 +667,20 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "diagnosticos_financeiros_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnosticos_financeiros_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
         ]
       }
       diagnostics: {
@@ -643,9 +727,23 @@ export type Database = {
           {
             foreignKeyName: "diagnostics_client_id_fkey"
             columns: ["client_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
           },
         ]
       }
@@ -745,6 +843,20 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "kpis_mensais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpis_mensais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
         ]
       }
       modulos: {
@@ -793,14 +905,18 @@ export type Database = {
           cliente_id: string
           created_at: string
           created_by: string | null
+          diagnostic_id: string | null
           dor_principal: string | null
           file_name: string | null
+          forma_pagamento_oferecida: string | null
           id: string
+          parcelas_oferecidas: number | null
           plano: string
           plano_nome: string | null
           score: number | null
           score_max: number | null
           storage_path: string | null
+          validade_proposta: string | null
           valor: string | null
           valor_final_numerico: number | null
         }
@@ -810,14 +926,18 @@ export type Database = {
           cliente_id: string
           created_at?: string
           created_by?: string | null
+          diagnostic_id?: string | null
           dor_principal?: string | null
           file_name?: string | null
+          forma_pagamento_oferecida?: string | null
           id?: string
+          parcelas_oferecidas?: number | null
           plano: string
           plano_nome?: string | null
           score?: number | null
           score_max?: number | null
           storage_path?: string | null
+          validade_proposta?: string | null
           valor?: string | null
           valor_final_numerico?: number | null
         }
@@ -827,14 +947,18 @@ export type Database = {
           cliente_id?: string
           created_at?: string
           created_by?: string | null
+          diagnostic_id?: string | null
           dor_principal?: string | null
           file_name?: string | null
+          forma_pagamento_oferecida?: string | null
           id?: string
+          parcelas_oferecidas?: number | null
           plano?: string
           plano_nome?: string | null
           score?: number | null
           score_max?: number | null
           storage_path?: string | null
+          validade_proposta?: string | null
           valor?: string | null
           valor_final_numerico?: number | null
         }
@@ -845,6 +969,34 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
+          {
+            foreignKeyName: "orcamentos_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["ultimo_diagnostico_id"]
           },
         ]
       }
@@ -895,6 +1047,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "contratos_raiz"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_raiz_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["contrato_id"]
           },
         ]
       }
@@ -954,6 +1113,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunioes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunioes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
           },
         ]
       }
@@ -1017,6 +1190,20 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "simulacoes_precificacao_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_cliente_completo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulacoes_precificacao_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_saude_financeira_cliente"
+            referencedColumns: ["cliente_id"]
+          },
         ]
       }
       user_roles: {
@@ -1042,21 +1229,140 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_cliente_completo: {
+        Row: {
+          cidade: string | null
+          cliente_created_at: string | null
+          conversao_atual: number | null
+          cpf_cnpj: string | null
+          data_inicio_projeto: string | null
+          dia_vencimento: number | null
+          duracao_meses: number | null
+          email_cliente: string | null
+          endereco: string | null
+          especialidade: string | null
+          especialidade_clinica: string | null
+          faturamento_atual: number | null
+          forma_pagamento: string | null
+          id: string | null
+          inadimplencia_atual: number | null
+          instagram: string | null
+          investimento_marketing_atual: number | null
+          kpi_mes_referencia: string | null
+          margem_atual: number | null
+          meta_faturamento: number | null
+          no_show_atual: number | null
+          nome_cliente: string | null
+          nome_clinica: string | null
+          observacoes_relacionamento: string | null
+          ocupacao_atual: number | null
+          orcamento_inicial: number | null
+          plano: string | null
+          ramo: string | null
+          status: string | null
+          telefone: string | null
+          ticket_atual: number | null
+          ultimo_diagnostico_classif: string | null
+          ultimo_diagnostico_data: string | null
+          ultimo_diagnostico_id: string | null
+          ultimo_diagnostico_plano_sugerido: string | null
+          ultimo_diagnostico_score: number | null
+          ultimo_diagnostico_score_absoluto: number | null
+          ultimo_diagnostico_score_max: number | null
+          ultimo_diagnostico_scores: Json | null
+          user_id: string | null
+          valor_mensalidade: number | null
+        }
+        Relationships: []
+      }
+      v_evolucao_negocio_mensal: {
+        Row: {
+          diag_360_criados: number | null
+          diag_fin_criados: number | null
+          mes: string | null
+          mes_label: string | null
+          novos_clientes: number | null
+          receita_mensal: number | null
+        }
+        Relationships: []
+      }
+      v_saude_financeira_cliente: {
+        Row: {
+          cidade: string | null
+          cliente_id: string | null
+          cliente_status: string | null
+          contrato_data_fim: string | null
+          contrato_data_inicio: string | null
+          contrato_id: string | null
+          contrato_plano: string | null
+          contrato_status: string | null
+          custo_fixo_total: number | null
+          custo_total: number | null
+          custo_variavel_total: number | null
+          diagnostico_financeiro_data: string | null
+          diagnostico_financeiro_id: string | null
+          especialidade_clinica: string | null
+          faturamento_medio_3m: number | null
+          margem_liquida_3m: number | null
+          meses_preenchidos_3m: number | null
+          mrr_atual: number | null
+          mrr_diverge_cadastro: boolean | null
+          nome_cliente: string | null
+          nome_clinica: string | null
+          pagamentos_atrasados: number | null
+          pagamentos_pendentes: number | null
+          pagamentos_quitados: number | null
+          ramo: string | null
+          tem_contrato: boolean | null
+          tem_diagnostico_financeiro: boolean | null
+          tem_kpis_mensais: boolean | null
+          ticket_medio_3m: number | null
+          total_pago: number | null
+          ultima_margem_liquida: number | null
+          ultima_taxa_conversao: number | null
+          ultima_taxa_inadimplencia: number | null
+          ultimo_faturamento: number | null
+          ultimo_investimento_marketing: number | null
+          ultimo_kpi_mes: string | null
+          ultimo_pagamento_data: string | null
+          ultimo_ticket_medio: number | null
+          valor_mensalidade_cadastro: number | null
+        }
+        Relationships: []
+      }
+      v_saude_plataforma: {
+        Row: {
+          clientes_ativos: number | null
+          clientes_ativos_sem_contrato: number | null
+          clientes_com_contrato_ativo: number | null
+          clientes_encerrados: number | null
+          contratos_ativos: number | null
+          contratos_renovacao_pendente: number | null
+          diag_360_no_mes: number | null
+          diag_fin_no_mes: number | null
+          mes_referencia: string | null
+          mrr_total: number | null
+          novos_clientes_no_mes: number | null
+          pagamentos_atrasados: number | null
+          pagamentos_pendentes: number | null
+          receita_recebida_no_mes: number | null
+          taxa_retencao_pct: number | null
+          ticket_medio_contratos: number | null
+          total_clientes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       detectar_gargalos: {
-        Args: {
-          p_cliente_id: string
-          p_mes: string
-        }
+        Args: { p_cliente_id: string; p_mes: string }
         Returns: {
           benchmark_max: number
           benchmark_min: number
-          descricao: string | null
-          fonte: string | null
+          descricao: string
+          fonte: string
           kpi: string
-          pilar: string | null
+          pilar: string
           polaridade: string
           severidade: string
           status: string
@@ -1206,3 +1512,5 @@ export const Constants = {
     },
   },
 } as const
+A new version of Supabase CLI is available: v2.101.0 (currently installed v2.90.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
