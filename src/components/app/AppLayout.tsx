@@ -1,9 +1,10 @@
 import { Outlet, useNavigation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TopProgress } from "@/components/ui/top-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import AppSidebar from "./AppSidebar";
+import PageSkeleton from "./PageSkeleton";
 
 export default function AppLayout() {
   const { loading } = useAuth();
@@ -37,7 +38,9 @@ export default function AppLayout() {
             <div className="font-body text-sm text-quase-preto/70">Raiz · plataforma</div>
           </header>
           <main className="flex-1 p-6 md:p-10">
-            <Outlet />
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
       </div>
