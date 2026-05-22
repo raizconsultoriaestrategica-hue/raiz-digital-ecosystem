@@ -219,12 +219,12 @@ export default function DiagnosticoFinanceiro() {
                   onChange={(id, c) => {
                     // Mapeia especialidade do cadastro para o enum local
                     let espMapeada = "";
-                    const espRaw = (c?.especialidade || "").toLowerCase();
+                    const espRaw = (c?.especialidade_clinica || c?.especialidade || "").toLowerCase();
                     if (espRaw.includes("odonto") || espRaw.includes("dentist")) espMapeada = "Odontologia";
                     else if (espRaw.includes("derma")) espMapeada = "Dermatologia";
                     else if (espRaw.includes("estét") || espRaw.includes("estet") || espRaw.includes("harmoniz") || espRaw.includes("medicina"))
                       espMapeada = "Medicina Estética";
-                    else if (c?.especialidade) espMapeada = "Outra";
+                    else if (c?.especialidade_clinica || c?.especialidade) espMapeada = "Outra";
 
                     setForm((f) => ({
                       ...f,

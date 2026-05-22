@@ -581,7 +581,7 @@ export default function GestaoCliente() {
           <p className="mt-1 text-sm text-quase-preto/60">
             {cliente.nome_clinica ?? "Clínica não informada"}
             {cliente.cidade ? ` · ${cliente.cidade}` : ""}
-            {cliente.especialidade ? ` · ${cliente.especialidade}` : ""}
+            {(cliente.especialidade_clinica || cliente.especialidade) ? ` · ${cliente.especialidade_clinica || cliente.especialidade}` : ""}
           </p>
         </div>
         <Badge className="bg-verde-raiz/10 text-verde-raiz">

@@ -27,6 +27,7 @@ interface Cliente {
   nome_clinica: string | null;
   cidade: string | null;
   especialidade: string | null;
+  especialidade_clinica: string | null;
   ramo: string | null;
   orcamento_inicial: number | null;
   meta_faturamento: number | null;
@@ -54,7 +55,7 @@ export default function ClienteDashboard() {
       const { data: clientes } = await supabase
         .from("clientes")
         .select(
-          "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos, status",
+          "id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica, ramo, orcamento_inicial, meta_faturamento, data_inicio_projeto, mes_referencia, pilares_foco, modulos_ativos, status",
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
@@ -114,7 +115,7 @@ export default function ClienteDashboard() {
     // Mescla CONFIG (dashboard_data) com dados da tabela clientes
     cliente_nome: cfgFromRows.cliente_nome || cliente?.nome_cliente,
     nome_clinica: cfgFromRows.nome_clinica || cliente?.nome_clinica || undefined,
-    especialidade: cfgFromRows.especialidade || cliente?.especialidade || undefined,
+    especialidade: cfgFromRows.especialidade || cliente?.especialidade_clinica || cliente?.especialidade || undefined,
     cidade: cfgFromRows.cidade || cliente?.cidade || undefined,
     faturamento_inicial: cfgFromRows.faturamento_inicial ?? (cliente?.orcamento_inicial ?? undefined),
     meta_faturamento: cfgFromRows.meta_faturamento ?? (cliente?.meta_faturamento ?? undefined),

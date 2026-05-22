@@ -103,7 +103,7 @@ export function useOrcamento() {
 
     updates.nomeCliente = vc.nome_cliente || "";
     updates.nomeClinica = vc.nome_clinica || "";
-    updates.especialidade = vc.ramo || vc.especialidade || "";
+    updates.especialidade = vc.especialidade_clinica || vc.especialidade || vc.ramo || "";
     updates.cidade = vc.cidade || "";
 
     // Faturamento: prefere kpis_mensais (view), senao orcamento_inicial
