@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,7 +122,7 @@ interface Cliente {
 }
 
 export default function PastaDoCliente() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [loading, setLoading] = useState(true);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [diagnostico, setDiagnostico] = useState<any | null>(null);
@@ -138,6 +138,7 @@ export default function PastaDoCliente() {
     let active = true;
     async function load() {
       if (!user) return;
+      if (role === "admin") return;
       setLoading(true);
 
       const { data: cli } = await supabase
@@ -168,25 +169,20 @@ export default function PastaDoCliente() {
         supabase.from("cliente_modulos").select("*, modulos(nome, ordem, pilar_nome, descricao)").eq("cliente_id", cid),
       ]);
 
-      // Tabelas opcionais. Try/catch defensivo
-      let reunioesData: any[] = [];
-      let arquivosData: any[] = [];
-      try {
-        const r = await (supabase as any)
+      const [r, a] = await Promise.all([
+        supabase
           .from("reunioes")
           .select("*")
           .eq("cliente_id", cid)
-          .order("data", { ascending: false });
-        if (!r.error && Array.isArray(r.data)) reunioesData = r.data;
-      } catch { /* tabela inexistente */ }
-      try {
-        const a = await (supabase as any)
+          .order("data", { ascending: false }),
+        supabase
           .from("arquivos_cliente")
           .select("*")
           .eq("cliente_id", cid)
-          .order("created_at", { ascending: false });
-        if (!a.error && Array.isArray(a.data)) arquivosData = a.data;
-      } catch { /* tabela inexistente */ }
+          .order("created_at", { ascending: false }),
+      ]);
+      const reunioesData = r.error || !Array.isArray(r.data) ? [] : r.data;
+      const arquivosData = a.error || !Array.isArray(a.data) ? [] : a.data;
 
       if (!active) return;
       const diagList = (diagData as any[]) ?? [];
@@ -208,7 +204,7 @@ export default function PastaDoCliente() {
     }
     load();
     return () => { active = false; };
-  }, [user]);
+  }, [user, role]);
 
   // ---------- Aba 1: Diagnóstico 360 ----------
   const diagPilares = useMemo(() => {
@@ -419,6 +415,11 @@ export default function PastaDoCliente() {
   };
 
   // ---------- LOADING / EMPTY cliente ----------
+  // Admin nao tem Pasta do Cliente proprio. Manda pro painel admin (GestaoCliente).
+  if (role === "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
