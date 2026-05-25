@@ -268,9 +268,9 @@ ${procs}`;
     try {
       const prompt = `Analise a precificação estratégica deste consultório e responda APENAS em JSON válido (sem markdown) com dois campos:
 
-1. "analise": texto de 3-4 parágrafos avaliando se os preços estão adequados ao segmento e posicionamento, comparando com benchmarks do mercado brasileiro (odontologia: implante R$3.500-6.000, alinhador R$8.000-18.000, clareamento R$800-1.500; medicina estética: botox R$800-1.800, preenchimento R$1.200-3.000, bioestimulador R$2.500-5.000). Identificar margens insuficientes ou preços abaixo do potencial. Tom direto e consultivo.
+1. "analise": string com texto de 3-4 parágrafos avaliando se os preços estão adequados ao segmento e posicionamento, comparando com benchmarks do mercado brasileiro (odontologia: implante R$3.500-6.000, alinhador R$8.000-18.000, clareamento R$800-1.500; medicina estética: botox R$800-1.800, preenchimento R$1.200-3.000, bioestimulador R$2.500-5.000). Identificar margens insuficientes ou preços abaixo do potencial. Tom direto e consultivo.
 
-2. "insights": array com 3-5 insights acionáveis para melhorar precificação, aumentar margem ou reposicionar procedimentos.
+2. "insights": array de strings (3-5 itens), cada string sendo um insight acionável e direto para melhorar precificação, aumentar margem ou reposicionar procedimentos. NÃO use objetos aninhados.
 
 ${buildCenarioContext()}`;
 
@@ -287,13 +287,35 @@ ${buildCenarioContext()}`;
         (data as any)?.choices?.[0]?.message?.content ?? "";
       const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       const parsed = JSON.parse(cleaned);
+
+      // Normalizacao defensiva: insights podem vir como string OR objeto.
+      // Se vier objeto, tenta extrair texto. Se vier algo inesperado, vira string vazia.
+      const normalizarInsight = (item: unknown): string => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const obj = item as Record<string, unknown>;
+          const candidato =
+            obj.texto || obj.text || obj.descricao || obj.description ||
+            obj.titulo || obj.title || obj.insight;
+          if (typeof candidato === "string") return candidato;
+          try {
+            return JSON.stringify(item);
+          } catch {
+            return "";
+          }
+        }
+        return String(item ?? "");
+      };
+
+      const insightsArr = Array.isArray(parsed.insights) ? parsed.insights : [];
       setAnaliseIA({
-        analise: parsed.analise || "",
-        insights: Array.isArray(parsed.insights) ? parsed.insights : [],
+        analise: typeof parsed.analise === "string" ? parsed.analise : "",
+        insights: insightsArr.map(normalizarInsight).filter((s: string) => s.trim().length > 0),
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("[analisar IA] erro:", e);
-      toast.error("Erro ao analisar com IA: " + (e?.message || "tente novamente"));
+      const msg = e instanceof Error ? e.message : "tente novamente";
+      toast.error("Erro ao analisar com IA: " + msg);
     } finally {
       setAnalisando(false);
     }

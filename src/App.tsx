@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/app/AppLayout";
 import PageSkeleton from "@/components/app/PageSkeleton";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -46,8 +47,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
+          <ErrorBoundary>
+            <Suspense fallback={<PageSkeleton />}>
+              <Routes>
               {/* Home pública */}
               <Route path="/" element={<HomeRoute />} />
 
@@ -116,7 +118,8 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Suspense>
+            </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
