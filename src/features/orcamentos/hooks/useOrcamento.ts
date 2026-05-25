@@ -11,6 +11,7 @@ export interface ClienteOpt {
   nome_clinica: string | null;
   cidade: string | null;
   especialidade: string | null;
+  especialidade_clinica: string | null;
 }
 
 export function useOrcamento() {
@@ -28,7 +29,7 @@ export function useOrcamento() {
       const [cliRes, modRes] = await Promise.all([
         supabase
           .from("clientes")
-          .select("id, nome_cliente, nome_clinica, cidade, especialidade")
+          .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica")
           .order("nome_cliente"),
         supabase
           .from("modulos")
