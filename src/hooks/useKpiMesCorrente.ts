@@ -9,6 +9,13 @@ export interface KpiMesCorrenteInput {
   ticket_medio: number;
   pacientes_novos: number;
   margem_liquida: number;
+  taxa_conversao: number;
+  taxa_inadimplencia: number;
+  pct_recebido_vista: number;
+  investimento_marketing: number;
+  taxa_no_show: number;
+  ocupacao_cadeiras: number;
+  faturamento_convenios: number;
   observacoes: string;
 }
 
@@ -80,10 +87,17 @@ export function useKpiMesCorrente(clienteId: string | null | undefined) {
       const payload = {
         cliente_id: clienteId,
         mes_referencia,
-        faturamento_bruto: input.faturamento_bruto,
-        ticket_medio: input.ticket_medio,
-        pacientes_novos: Math.round(input.pacientes_novos),
-        margem_liquida: input.margem_liquida,
+        faturamento_bruto: input.faturamento_bruto || null,
+        ticket_medio: input.ticket_medio || null,
+        pacientes_novos: input.pacientes_novos ? Math.round(input.pacientes_novos) : null,
+        margem_liquida: input.margem_liquida || null,
+        taxa_conversao: input.taxa_conversao || null,
+        taxa_inadimplencia: input.taxa_inadimplencia || null,
+        pct_recebido_vista: input.pct_recebido_vista || null,
+        investimento_marketing: input.investimento_marketing || null,
+        taxa_no_show: input.taxa_no_show || null,
+        ocupacao_cadeiras: input.ocupacao_cadeiras || null,
+        faturamento_convenios: input.faturamento_convenios || null,
         observacoes: input.observacoes || null,
         preenchido_por: userId,
       };
