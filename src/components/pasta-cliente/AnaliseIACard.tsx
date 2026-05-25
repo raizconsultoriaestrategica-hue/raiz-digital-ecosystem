@@ -102,7 +102,7 @@ Regras de comunicacao:
 
 Formato esperado:
 ## Leitura geral do mes
-(1-2 paragrafos: o que os numeros mostram, o que ja esta bem, onde dueim mais)
+(1-2 paragrafos: o que os numeros mostram, o que ja esta bem, onde doi mais)
 
 ## Plano de acao (proximas 4 semanas)
 (lista priorizada: para cada KPI critico ou em atencao, qual acao, quem executa, o que medir)
