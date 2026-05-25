@@ -370,15 +370,33 @@ export default function AdminDashboard() {
   const handleDeletarCliente = async () => {
     if (!confirmDeleteCliente) return;
     try {
+      const clienteId = confirmDeleteCliente.id;
+
       // Buscar user_id vinculado antes de apagar
       const { data: cli } = await supabase
         .from("clientes")
         .select("user_id")
-        .eq("id", confirmDeleteCliente.id)
+        .eq("id", clienteId)
         .maybeSingle();
       const userId = cli?.user_id ?? null;
 
-      // 1) Tentar apagar do auth.users via edge function. Se falhar, avisa e segue
+      // 1) Limpar arquivos do storage antes do DELETE no banco.
+      // CASCADE no Postgres remove arquivos_cliente.row, mas storage.objects
+      // fica orfao se nao limpar aqui. Best-effort: nao bloqueia o fluxo se falhar.
+      const STORAGE_BUCKETS = ["arquivos-cliente", "orcamentos", "diagnosticos-financeiros"];
+      for (const bucket of STORAGE_BUCKETS) {
+        try {
+          const { data: objs } = await supabase.storage.from(bucket).list(clienteId);
+          if (objs && objs.length > 0) {
+            const paths = objs.map((o) => `${clienteId}/${o.name}`);
+            await supabase.storage.from(bucket).remove(paths);
+          }
+        } catch (storageErr) {
+          console.warn(`[delete cliente] storage cleanup ${bucket} falhou:`, storageErr);
+        }
+      }
+
+      // 2) Tentar apagar do auth.users via edge function. Se falhar, avisa e segue
       let authOk = true;
       if (userId) {
         const { data: authRes, error: authErr } = await supabase.functions.invoke(
@@ -392,9 +410,9 @@ export default function AdminDashboard() {
         }
       }
 
-      // 2) Apagar dados e registro do cliente
-      await supabase.from("dashboard_data").delete().eq("cliente_id", confirmDeleteCliente.id);
-      const { error } = await supabase.from("clientes").delete().eq("id", confirmDeleteCliente.id);
+      // 3) Apagar dados e registro do cliente (CASCADE limpa tabelas dependentes)
+      await supabase.from("dashboard_data").delete().eq("cliente_id", clienteId);
+      const { error } = await supabase.from("clientes").delete().eq("id", clienteId);
       if (error) throw error;
 
       if (authOk) {
