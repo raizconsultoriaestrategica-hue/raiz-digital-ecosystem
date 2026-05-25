@@ -47,8 +47,8 @@ export default function VisaoGeral() {
     (async () => {
       setLoading(true);
       const [p, c] = await Promise.all([
-        (supabase as any).from("pagamentos_raiz").select("valor,vencimento,status,data_pagamento,cliente_nome"),
-        (supabase as any).from("contas_pagar_raiz").select("valor,vencimento,status,data_pagamento"),
+        supabase.from("pagamentos_raiz").select("valor,vencimento,status,data_pagamento,cliente_nome"),
+        supabase.from("contas_pagar_raiz").select("valor,vencimento,status,data_pagamento"),
       ]);
       setPagamentos(p.data ?? []);
       setContas(c.data ?? []);

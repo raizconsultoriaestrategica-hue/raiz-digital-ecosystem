@@ -22,7 +22,6 @@ const SimuladorPrecificacao = lazy(() => import("./pages/ferramentas/SimuladorPr
 const Orcamentos = lazy(() => import("./pages/ferramentas/Orcamentos"));
 const GestaoCliente = lazy(() => import("./pages/consultor/GestaoCliente"));
 const Biblioteca = lazy(() => import("./pages/Biblioteca"));
-const EmBreve = lazy(() => import("./pages/EmBreve"));
 const FinanceiroLayout = lazy(() => import("./pages/financeiro/FinanceiroLayout"));
 const VisaoGeral = lazy(() => import("./pages/financeiro/VisaoGeral"));
 const Contratos = lazy(() => import("./pages/financeiro/Contratos"));
