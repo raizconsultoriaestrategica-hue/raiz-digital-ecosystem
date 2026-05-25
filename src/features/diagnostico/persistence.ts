@@ -275,6 +275,7 @@ interface ClienteRow {
   nome_clinica: string | null;
   cidade: string | null;
   especialidade: string | null;
+  especialidade_clinica: string | null;
 }
 
 function reconstructSnapshot(
@@ -387,7 +388,7 @@ async function loadDiagnosticosFromTypedTable(): Promise<StoredDiagnostico[]> {
 
   const { data: clientes, error: cErr } = await supabase
     .from("clientes")
-    .select("id, nome_cliente, nome_clinica, cidade, especialidade")
+    .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica")
     .in("id", [...new Set(clienteIds)]);
   if (cErr) throw cErr;
 
@@ -476,7 +477,7 @@ async function loadDiagnosticosFromEAV(): Promise<StoredDiagnostico[]> {
 
   const { data: clientes, error: cErr } = await supabase
     .from("clientes")
-    .select("id, nome_cliente, nome_clinica, cidade, especialidade")
+    .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica")
     .in("id", clienteIds);
   if (cErr) throw cErr;
 
