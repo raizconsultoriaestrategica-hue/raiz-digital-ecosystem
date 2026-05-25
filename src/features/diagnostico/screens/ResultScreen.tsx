@@ -144,6 +144,9 @@ export function ResultScreen({
       };
       const rows: Row[] = [];
 
+      // inicio_consultoria NAO e gravado aqui. So vira valor concreto quando
+      // o admin ativa o cliente (status=projeto_ativo) e define data_inicio_projeto
+      // no cadastro. Aqui e diagnostico, etapa do funil, antes do contrato.
       const configEntries: Array<[string, string | undefined]> = [
         ["cliente_nome", client.name],
         ["especialidade", client.especialidade || client.proc],
@@ -151,7 +154,6 @@ export function ResultScreen({
         ["orcamento_inicial", kpisIniciais.fat],
         ["meta_faturamento", kpisIniciais.meta_fat || client.meta],
         ["ramo", ramo],
-        ["inicio_consultoria", mesAtual],
         ["mes_referencia", mesAtual],
       ];
       configEntries.forEach(([campo, valor]) => {
