@@ -56,7 +56,7 @@ export default function Login() {
     setResetSubmitting(true);
     try {
       await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: "https://raiz-digital-ecosystem.pages.dev/nova-senha",
+        redirectTo: "https://www.raizconsultoriaestrategica.com.br/nova-senha",
       });
     } catch {
       // Mensagem é neutra de qualquer forma
