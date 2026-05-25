@@ -46,6 +46,21 @@ const fmtData = (iso: string | null | undefined) => {
   }
 };
 
+const emptyForm = () => ({
+  faturamento_bruto: 0,
+  ticket_medio: 0,
+  pacientes_novos: 0,
+  margem_liquida: 0,
+  taxa_conversao: 0,
+  taxa_inadimplencia: 0,
+  pct_recebido_vista: 0,
+  investimento_marketing: 0,
+  taxa_no_show: 0,
+  ocupacao_cadeiras: 0,
+  faturamento_convenios: 0,
+  observacoes: "",
+});
+
 function NumInput({
   id,
   value,
@@ -79,18 +94,47 @@ function NumInput({
   );
 }
 
+function FieldGroup({ children, title }: { children: React.ReactNode; title: string }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-quase-preto/50">
+        {title}
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+function FormField({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="text-xs font-semibold text-quase-preto">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
 export function AtualizacaoMensalCard({ clienteId }: Props) {
   const { kpi, isLoading, error, salvar, salvando, mes_label } =
     useKpiMesCorrente(clienteId);
 
   const [editando, setEditando] = useState(false);
-  const [form, setForm] = useState({
-    faturamento_bruto: 0,
-    ticket_medio: 0,
-    pacientes_novos: 0,
-    margem_liquida: 0,
-    observacoes: "",
-  });
+  const [form, setForm] = useState(emptyForm());
+
+  const setF = <K extends keyof ReturnType<typeof emptyForm>>(
+    key: K,
+    value: ReturnType<typeof emptyForm>[K],
+  ) => setForm((f) => ({ ...f, [key]: value }));
 
   // Hidrata form com KPI existente sempre que entra em modo edicao
   useEffect(() => {
@@ -100,6 +144,13 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
       ticket_medio: Number(kpi?.ticket_medio ?? 0),
       pacientes_novos: Number(kpi?.pacientes_novos ?? 0),
       margem_liquida: Number(kpi?.margem_liquida ?? 0),
+      taxa_conversao: Number(kpi?.taxa_conversao ?? 0),
+      taxa_inadimplencia: Number(kpi?.taxa_inadimplencia ?? 0),
+      pct_recebido_vista: Number(kpi?.pct_recebido_vista ?? 0),
+      investimento_marketing: Number(kpi?.investimento_marketing ?? 0),
+      taxa_no_show: Number(kpi?.taxa_no_show ?? 0),
+      ocupacao_cadeiras: Number(kpi?.ocupacao_cadeiras ?? 0),
+      faturamento_convenios: Number(kpi?.faturamento_convenios ?? 0),
       observacoes: kpi?.observacoes ?? "",
     });
   }, [editando, kpi]);
@@ -109,11 +160,11 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
       await salvar(form);
       toast.success("Indicadores salvos.");
       setEditando(false);
-    } catch (e: any) {
-      const msg = e?.message || "Erro ao salvar.";
+    } catch (e: unknown) {
+      const msg = (e as { message?: string })?.message || "Erro ao salvar.";
       if (typeof msg === "string" && msg.toLowerCase().includes("row-level security")) {
         toast.error(
-          "Você só pode atualizar os próprios indicadores. Avisa o consultor se houver problema.",
+          "Voce so pode atualizar os proprios indicadores. Avisa o consultor se houver problema.",
         );
       } else {
         toast.error(msg);
@@ -135,7 +186,7 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Não foi possível carregar seus indicadores: {error.message}
+          Nao foi possivel carregar seus indicadores: {error.message}
         </AlertDescription>
       </Alert>
     );
@@ -161,65 +212,122 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="faturamento_bruto" className="text-xs font-semibold text-quase-preto">
-                Faturamento bruto (R$)
-              </Label>
+        <CardContent className="space-y-6">
+          <FieldGroup title="Resultados">
+            <FormField id="faturamento_bruto" label="Faturamento bruto (R$)">
               <NumInput
                 id="faturamento_bruto"
                 value={form.faturamento_bruto}
-                onChange={(n) => setForm((f) => ({ ...f, faturamento_bruto: n }))}
+                onChange={(n) => setF("faturamento_bruto", n)}
                 min={0}
               />
-            </div>
-            <div>
-              <Label htmlFor="ticket_medio" className="text-xs font-semibold text-quase-preto">
-                Ticket médio (R$)
-              </Label>
+            </FormField>
+            <FormField id="ticket_medio" label="Ticket medio (R$)">
               <NumInput
                 id="ticket_medio"
                 value={form.ticket_medio}
-                onChange={(n) => setForm((f) => ({ ...f, ticket_medio: n }))}
+                onChange={(n) => setF("ticket_medio", n)}
                 min={0}
               />
-            </div>
-            <div>
-              <Label htmlFor="pacientes_novos" className="text-xs font-semibold text-quase-preto">
-                Pacientes novos no mês
-              </Label>
+            </FormField>
+            <FormField id="pacientes_novos" label="Pacientes novos no mes">
               <NumInput
                 id="pacientes_novos"
                 value={form.pacientes_novos}
-                onChange={(n) => setForm((f) => ({ ...f, pacientes_novos: n }))}
+                onChange={(n) => setF("pacientes_novos", n)}
                 step="1"
                 min={0}
               />
-            </div>
-            <div>
-              <Label htmlFor="margem_liquida" className="text-xs font-semibold text-quase-preto">
-                Margem líquida (%)
-              </Label>
+            </FormField>
+            <FormField id="margem_liquida" label="Margem liquida (%)">
               <NumInput
                 id="margem_liquida"
                 value={form.margem_liquida}
-                onChange={(n) => setForm((f) => ({ ...f, margem_liquida: n }))}
+                onChange={(n) => setF("margem_liquida", n)}
                 min={-100}
                 max={100}
               />
-            </div>
-          </div>
+            </FormField>
+          </FieldGroup>
+
+          <div className="border-t border-border/40" />
+
+          <FieldGroup title="Operacional">
+            <FormField id="taxa_conversao" label="Taxa de conversao (%)">
+              <NumInput
+                id="taxa_conversao"
+                value={form.taxa_conversao}
+                onChange={(n) => setF("taxa_conversao", n)}
+                min={0}
+                max={100}
+                placeholder="Consultas que viraram pacientes"
+              />
+            </FormField>
+            <FormField id="taxa_no_show" label="Taxa de no-show (%)">
+              <NumInput
+                id="taxa_no_show"
+                value={form.taxa_no_show}
+                onChange={(n) => setF("taxa_no_show", n)}
+                min={0}
+                max={100}
+              />
+            </FormField>
+            <FormField id="ocupacao_cadeiras" label="Ocupacao das cadeiras (%)">
+              <NumInput
+                id="ocupacao_cadeiras"
+                value={form.ocupacao_cadeiras}
+                onChange={(n) => setF("ocupacao_cadeiras", n)}
+                min={0}
+                max={100}
+              />
+            </FormField>
+            <FormField id="taxa_inadimplencia" label="Taxa de inadimplencia (%)">
+              <NumInput
+                id="taxa_inadimplencia"
+                value={form.taxa_inadimplencia}
+                onChange={(n) => setF("taxa_inadimplencia", n)}
+                min={0}
+                max={100}
+              />
+            </FormField>
+            <FormField id="pct_recebido_vista" label="Recebido a vista (%)">
+              <NumInput
+                id="pct_recebido_vista"
+                value={form.pct_recebido_vista}
+                onChange={(n) => setF("pct_recebido_vista", n)}
+                min={0}
+                max={100}
+              />
+            </FormField>
+            <FormField id="investimento_marketing" label="Investimento em marketing (R$)">
+              <NumInput
+                id="investimento_marketing"
+                value={form.investimento_marketing}
+                onChange={(n) => setF("investimento_marketing", n)}
+                min={0}
+              />
+            </FormField>
+            <FormField id="faturamento_convenios" label="Faturamento convenios (R$)">
+              <NumInput
+                id="faturamento_convenios"
+                value={form.faturamento_convenios}
+                onChange={(n) => setF("faturamento_convenios", n)}
+                min={0}
+              />
+            </FormField>
+          </FieldGroup>
+
+          <div className="border-t border-border/40" />
 
           <div>
             <Label htmlFor="observacoes" className="text-xs font-semibold text-quase-preto">
-              Observações (opcional)
+              Observacoes (opcional)
             </Label>
             <Textarea
               id="observacoes"
               value={form.observacoes}
-              onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
-              placeholder="Comentários sobre o mês, contexto, eventos pontuais."
+              onChange={(e) => setF("observacoes", e.target.value)}
+              placeholder="Comentarios sobre o mes, contexto, eventos pontuais."
               rows={3}
               className="resize-none"
             />
@@ -242,6 +350,16 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
 
   // Modo visualizacao: ja preenchido
   if (kpi) {
+    const operacionais = [
+      { label: "Conversao", valor: fmtPct(kpi.taxa_conversao), raw: kpi.taxa_conversao },
+      { label: "No-show", valor: fmtPct(kpi.taxa_no_show), raw: kpi.taxa_no_show },
+      { label: "Ocupacao", valor: fmtPct(kpi.ocupacao_cadeiras), raw: kpi.ocupacao_cadeiras },
+      { label: "Inadimplencia", valor: fmtPct(kpi.taxa_inadimplencia), raw: kpi.taxa_inadimplencia },
+      { label: "Recebido a vista", valor: fmtPct(kpi.pct_recebido_vista), raw: kpi.pct_recebido_vista },
+      { label: "Marketing", valor: fmtBRL(kpi.investimento_marketing), raw: kpi.investimento_marketing },
+      { label: "Convenios", valor: fmtBRL(kpi.faturamento_convenios), raw: kpi.faturamento_convenios },
+    ].filter((o) => o.raw !== null && o.raw !== undefined && Number(o.raw) !== 0);
+
     return (
       <Card className="border-verde-raiz/30 bg-verde-menta/20">
         <CardHeader className="pb-3">
@@ -266,16 +384,25 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCell label="Faturamento bruto" valor={fmtBRL(kpi.faturamento_bruto)} />
-            <KpiCell label="Ticket médio" valor={fmtBRL(kpi.ticket_medio)} />
+            <KpiCell label="Ticket medio" valor={fmtBRL(kpi.ticket_medio)} />
             <KpiCell label="Pacientes novos" valor={fmtInt(kpi.pacientes_novos)} />
-            <KpiCell label="Margem líquida" valor={fmtPct(kpi.margem_liquida)} />
+            <KpiCell label="Margem liquida" valor={fmtPct(kpi.margem_liquida)} />
           </div>
+
+          {operacionais.length > 0 && (
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {operacionais.map((o) => (
+                <KpiCellSmall key={o.label} label={o.label} valor={o.valor} />
+              ))}
+            </div>
+          )}
+
           {kpi.observacoes && (
-            <p className="mt-4 rounded-md bg-card/60 p-3 text-sm text-quase-preto/80">
-              <span className="font-semibold text-verde-raiz">Observações: </span>
+            <p className="rounded-md bg-card/60 p-3 text-sm text-quase-preto/80">
+              <span className="font-semibold text-verde-raiz">Observacoes: </span>
               {kpi.observacoes}
             </p>
           )}
@@ -297,7 +424,7 @@ export function AtualizacaoMensalCard({ clienteId }: Props) {
               Atualize seus indicadores de {mes_label}
             </h3>
             <p className="mt-1 max-w-md text-sm text-quase-preto/70">
-              Registre faturamento, ticket médio, pacientes novos e margem do mês. Esses dados alimentam sua análise e o resumo mensal.
+              Registre faturamento, ticket medio, pacientes novos e margem do mes. Esses dados alimentam sua analise e o resumo mensal.
             </p>
           </div>
         </div>
@@ -319,6 +446,17 @@ function KpiCell({ label, valor }: { label: string; valor: string }) {
         {label}
       </div>
       <div className="mt-1 font-display text-xl text-verde-raiz">{valor}</div>
+    </div>
+  );
+}
+
+function KpiCellSmall({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="rounded-lg bg-card/50 px-3 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-quase-preto/50">
+        {label}
+      </div>
+      <div className="mt-0.5 text-sm font-semibold text-quase-preto/80">{valor}</div>
     </div>
   );
 }
