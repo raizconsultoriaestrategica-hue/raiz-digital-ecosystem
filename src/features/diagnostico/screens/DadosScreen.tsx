@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SelectOpts } from "../components/SelectOpts";
-import { ClienteSelector } from "../components/ClienteSelector";
+import { ClienteSelector, type ClienteRow } from "../components/ClienteSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
@@ -42,6 +43,45 @@ export function DadosScreen({
   const isMed = ramo === "medico";
   const tipoOptions = isMed ? OPT_TIPO_MED : OPT_TIPO_DENT;
   const especialidades = isMed ? ESPECIALIDADES_MED : ESPECIALIDADES_DENT;
+
+  // Popula os campos do form a partir do cadastro do cliente.
+  // Usada tanto pelo onChange do ClienteSelector quanto pelo useEffect de
+  // hidratacao via query param (?cliente=ID), garantindo que o lead recem
+  // cadastrado ja apareca com nome, cidade e especialidade preenchidos.
+  const popularDoCliente = (c: ClienteRow) => {
+    onClientField("name", c.nome_cliente);
+    if (c.cidade) onClientField("cidade", c.cidade);
+    const espCadastro = c.especialidade_clinica || c.especialidade;
+    if (espCadastro) {
+      onClientField("especialidade", espCadastro);
+      onClientField("proc", espCadastro);
+    }
+  };
+
+  // Hidratacao do cadastro quando clienteId chega por fora (ex: query param
+  // ?cliente=ID vindo do botao "+ Novo Lead" ou do menu de acoes do dashboard).
+  // Roda uma vez por clienteId, so se o form esta vazio (preserva edicoes do consultor).
+  const hidratadoPara = useRef<string | null>(null);
+  useEffect(() => {
+    if (!clienteId) return;
+    if (hidratadoPara.current === clienteId) return;
+    if (client.name.trim()) {
+      // Form ja tem nome, ou veio pelo onChange do dropdown (que ja preencheu),
+      // ou consultor digitou manualmente. Nao sobrescreve.
+      hidratadoPara.current = clienteId;
+      return;
+    }
+    hidratadoPara.current = clienteId;
+    (async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica")
+        .eq("id", clienteId)
+        .maybeSingle();
+      if (!error && data) popularDoCliente(data as ClienteRow);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clienteId]);
 
   const handleNext = async () => {
     if (clienteId) {
@@ -92,15 +132,9 @@ export function DadosScreen({
             value={clienteId}
             onChange={async (id, c) => {
               onClienteIdChange(id, c);
-              if (c) {
-                onClientField("name", c.nome_cliente);
-                if (c.cidade) onClientField("cidade", c.cidade);
-                const espCadastro = c.especialidade_clinica || c.especialidade;
-                if (espCadastro) {
-                  onClientField("especialidade", espCadastro);
-                  onClientField("proc", espCadastro);
-                }
-              }
+              // Marca como hidratado para o useEffect nao re-buscar
+              if (id) hidratadoPara.current = id;
+              if (c) popularDoCliente(c);
               // Pre-carga do ultimo diagnostico do cliente
               if (id && onLoadPrevious) {
                 try {
