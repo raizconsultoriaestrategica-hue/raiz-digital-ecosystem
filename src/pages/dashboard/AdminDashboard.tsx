@@ -78,11 +78,13 @@ import { generatePDF } from "@/features/diagnostico/pdf";
 import { OrcamentosListDialog } from "./OrcamentosListDialog";
 import { useSaudeFinanceiraClientes } from "@/hooks/useSaudeFinanceiraCliente";
 import {
-  validarCadastroClienteNovo,
+  validarCadastroLead,
+  validarAtivacaoCliente,
   temErros,
   RAMOS_VALIDOS,
   RAMO_LABEL as RAMO_LABEL_LIB,
   type ErrosCadastro,
+  type ErrosAtivacao,
   type Ramo,
 } from "@/lib/validacoes-cadastro";
 
@@ -163,47 +165,56 @@ type EditState = {
   valor_mensalidade: string;
 };
 
-// Estado do formulário de novo cliente (todos os campos M1)
-type NovoClienteForm = {
+// Estado do formulario de novo LEAD (cadastro inicial, antes de virar cliente).
+// Campos mínimos para fazer Diagnóstico 360. Sem dados comerciais (plano, valor,
+// vencimento, forma pgto, etc). Esses entram só na ativação (lead → projeto_ativo).
+type NovoLeadForm = {
   nome_cliente: string;
   nome_clinica: string;
   cidade: string;
-  plano: string;
-  status: StatusCarteira;
-  meta_faturamento: string;
-  consultor: string;
   telefone: string;
   email_cliente: string;
-  cpf_cnpj: string;
-  endereco: string;
-  data_nascimento: string;
-  instagram: string;
-  observacoes_relacionamento: string;
-  dia_vencimento: string;
-  forma_pagamento: string;
   ramo: Ramo;
   especialidade_clinica: string;
+  instagram: string;
+  observacoes_relacionamento: string;
 };
 
-const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
+const NOVO_LEAD_INITIAL: NovoLeadForm = {
   nome_cliente: "",
   nome_clinica: "",
   cidade: "",
-  plano: "",
-  status: "lead",
-  meta_faturamento: "",
-  consultor: "",
   telefone: "",
   email_cliente: "",
-  cpf_cnpj: "",
-  endereco: "",
-  data_nascimento: "",
-  instagram: "",
-  observacoes_relacionamento: "",
-  dia_vencimento: "",
-  forma_pagamento: "",
   ramo: "odontologia",
   especialidade_clinica: "",
+  instagram: "",
+  observacoes_relacionamento: "",
+};
+
+// Estado do formulario de ATIVAÇÃO (lead → projeto_ativo). Dados comerciais.
+type AtivacaoForm = {
+  plano: string;
+  valor_mensalidade: string;
+  dia_vencimento: string;
+  forma_pagamento: string;
+  data_inicio_projeto: string;
+  duracao_meses: string;
+  meta_faturamento: string;
+  cpf_cnpj: string;
+  endereco: string;
+};
+
+const ATIVACAO_INITIAL: AtivacaoForm = {
+  plano: "",
+  valor_mensalidade: "",
+  dia_vencimento: "",
+  forma_pagamento: "",
+  data_inicio_projeto: "",
+  duracao_meses: "12",
+  meta_faturamento: "",
+  cpf_cnpj: "",
+  endereco: "",
 };
 
 export default function AdminDashboard() {
@@ -218,11 +229,18 @@ export default function AdminDashboard() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [orcamentosOpen, setOrcamentosOpen] = useState<{ id: string; nome: string } | null>(null);
 
-  // Modal Novo Cliente
-  const [novoClienteOpen, setNovoClienteOpen] = useState(false);
-  const [novoClienteForm, setNovoClienteForm] = useState<NovoClienteForm>(NOVO_CLIENTE_INITIAL);
-  const [savingNovoCliente, setSavingNovoCliente] = useState(false);
-  const [novoClienteErros, setNovoClienteErros] = useState<ErrosCadastro>({});
+  // Modal Novo Lead
+  const [novoLeadOpen, setNovoLeadOpen] = useState(false);
+  const [novoLeadForm, setNovoLeadForm] = useState<NovoLeadForm>(NOVO_LEAD_INITIAL);
+  const [savingNovoLead, setSavingNovoLead] = useState(false);
+  const [novoLeadErros, setNovoLeadErros] = useState<ErrosCadastro>({});
+
+  // Modal Ativação cliente (lead → projeto_ativo)
+  const [ativarCliente, setAtivarCliente] = useState<Cliente | null>(null);
+  const [ativacaoForm, setAtivacaoForm] = useState<AtivacaoForm>(ATIVACAO_INITIAL);
+  const [savingAtivacao, setSavingAtivacao] = useState(false);
+  const [ativacaoErros, setAtivacaoErros] = useState<ErrosAtivacao>({});
+  const [credenciaisAtivacao, setCredenciaisAtivacao] = useState<{ email: string; senha: string } | null>(null);
 
   // Especialidades (tabela de referência, estável — staleTime infinito)
   const { data: especialidades = [] } = useQuery({
@@ -259,8 +277,8 @@ export default function AdminDashboard() {
   // Abre modal automaticamente quando URL contém ?novo=1
   useEffect(() => {
     if (searchParams.get("novo") === "1") {
-      setNovoClienteOpen(true);
-      setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({});
+      setNovoLeadOpen(true);
+      setNovoLeadForm(NOVO_LEAD_INITIAL); setNovoLeadErros({});
       // Remove o param da URL sem adicionar ao histórico
       setSearchParams({}, { replace: true });
     }
@@ -449,69 +467,125 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleCriarCliente = async () => {
-    if (!novoClienteForm.nome_cliente.trim()) {
+  const handleCriarLead = async () => {
+    if (!novoLeadForm.nome_cliente.trim()) {
       toast.error("Nome do responsável é obrigatório.");
       return;
     }
-    const erros = validarCadastroClienteNovo({
-      email_cliente: novoClienteForm.email_cliente,
-      telefone: novoClienteForm.telefone,
-      dia_vencimento: novoClienteForm.dia_vencimento,
-      ramo: novoClienteForm.ramo,
+    const erros = validarCadastroLead({
+      email_cliente: novoLeadForm.email_cliente,
+      telefone: novoLeadForm.telefone,
+      ramo: novoLeadForm.ramo,
     });
-    setNovoClienteErros(erros);
+    setNovoLeadErros(erros);
     if (temErros(erros)) {
       toast.error("Corrija os campos destacados antes de salvar.");
       return;
     }
-    setSavingNovoCliente(true);
+    setSavingNovoLead(true);
     try {
-      const toNum = (s: string) => {
-        const n = Number(s.replace(",", "."));
-        return s.trim() !== "" && Number.isFinite(n) ? n : null;
-      };
       const { data, error } = await supabase
         .from("clientes")
         .insert({
-          nome_cliente: novoClienteForm.nome_cliente.trim(),
-          nome_clinica: novoClienteForm.nome_clinica.trim() || null,
-          cidade: novoClienteForm.cidade.trim() || null,
-          ramo: novoClienteForm.ramo,
-          plano: novoClienteForm.plano || null,
-          status: novoClienteForm.status,
-          meta_faturamento: toNum(novoClienteForm.meta_faturamento),
-          consultor: novoClienteForm.consultor.trim() || null,
-          telefone: novoClienteForm.telefone.trim() || null,
-          email_cliente: novoClienteForm.email_cliente.trim() || null,
-          cpf_cnpj: novoClienteForm.cpf_cnpj.trim() || null,
-          endereco: novoClienteForm.endereco.trim() || null,
-          data_nascimento: novoClienteForm.data_nascimento || null,
-          instagram: novoClienteForm.instagram.trim() || null,
-          observacoes_relacionamento: novoClienteForm.observacoes_relacionamento.trim() || null,
-          dia_vencimento: toNum(novoClienteForm.dia_vencimento),
-          forma_pagamento: novoClienteForm.forma_pagamento || null,
-          especialidade_clinica: novoClienteForm.especialidade_clinica.trim() || null,
+          nome_cliente: novoLeadForm.nome_cliente.trim(),
+          nome_clinica: novoLeadForm.nome_clinica.trim() || null,
+          cidade: novoLeadForm.cidade.trim() || null,
+          ramo: novoLeadForm.ramo,
+          status: "lead",
+          telefone: novoLeadForm.telefone.trim() || null,
+          email_cliente: novoLeadForm.email_cliente.trim() || null,
+          instagram: novoLeadForm.instagram.trim() || null,
+          observacoes_relacionamento: novoLeadForm.observacoes_relacionamento.trim() || null,
+          especialidade_clinica: novoLeadForm.especialidade_clinica.trim() || null,
         })
         .select("id")
         .single();
       if (error) throw error;
-      toast.success("Cliente criado com sucesso.");
-      setNovoClienteOpen(false);
-      setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({});
-      navigate(`/consultor/clientes/${data.id}`);
+      toast.success("Lead cadastrado. Próximo passo: fazer Diagnóstico 360 com ele.");
+      setNovoLeadOpen(false);
+      setNovoLeadForm(NOVO_LEAD_INITIAL); setNovoLeadErros({});
+      load();
+      // Já leva o consultor pra ferramenta de Diagnóstico com o lead pré-selecionado
+      navigate(`/ferramentas/diagnostico?cliente=${data.id}`);
     } catch (e) {
       const err = e as { message?: string; code?: string; details?: string; hint?: string };
       const partes = [
-        err?.message ?? "Falha ao criar cliente",
+        err?.message ?? "Falha ao cadastrar lead",
         err?.code ? `(${err.code})` : null,
         err?.details ?? null,
         err?.hint ?? null,
       ].filter(Boolean);
       toast.error(partes.join(" · "));
-      console.error("[Novo Cliente] Erro do Supabase:", err);
+      console.error("[Novo Lead] Erro do Supabase:", err);
     } finally {
-      setSavingNovoCliente(false);
+      setSavingNovoLead(false);
+    }
+  };
+
+  const openAtivacao = (c: Cliente) => {
+    setCredenciaisAtivacao(null);
+    setAtivacaoErros({});
+    setAtivacaoForm({
+      ...ATIVACAO_INITIAL,
+      data_inicio_projeto: new Date().toISOString().slice(0, 10),
+    });
+    setAtivarCliente(c);
+  };
+
+  const handleAtivarCliente = async () => {
+    if (!ativarCliente) return;
+    const erros = validarAtivacaoCliente({
+      plano: ativacaoForm.plano,
+      valor_mensalidade: ativacaoForm.valor_mensalidade,
+      dia_vencimento: ativacaoForm.dia_vencimento,
+      forma_pagamento: ativacaoForm.forma_pagamento,
+      data_inicio_projeto: ativacaoForm.data_inicio_projeto,
+      duracao_meses: ativacaoForm.duracao_meses,
+    });
+    setAtivacaoErros(erros);
+    if (temErros(erros)) {
+      toast.error("Corrija os campos destacados antes de ativar.");
+      return;
+    }
+    setSavingAtivacao(true);
+    try {
+      const numOrNull = (s: string) => {
+        if (!s.trim()) return null;
+        const n = Number(s.replace(",", "."));
+        return Number.isFinite(n) ? n : null;
+      };
+      const { data, error } = await supabase.functions.invoke("activate-cliente", {
+        body: {
+          cliente_id: ativarCliente.id,
+          plano: ativacaoForm.plano,
+          valor_mensalidade: Number(ativacaoForm.valor_mensalidade.replace(",", ".")),
+          dia_vencimento: Number(ativacaoForm.dia_vencimento),
+          forma_pagamento: ativacaoForm.forma_pagamento,
+          data_inicio_projeto: ativacaoForm.data_inicio_projeto,
+          duracao_meses: Number(ativacaoForm.duracao_meses),
+          meta_faturamento: numOrNull(ativacaoForm.meta_faturamento),
+          cpf_cnpj: ativacaoForm.cpf_cnpj.trim() || null,
+          endereco: ativacaoForm.endereco.trim() || null,
+        },
+      });
+      const errMsg = error?.message ?? (data as { error?: string } | null)?.error;
+      if (errMsg) throw new Error(errMsg);
+
+      const res = data as { ok: boolean; email: string; senha_provisoria: string | null; auth_criado: boolean };
+      if (res.auth_criado && res.senha_provisoria) {
+        setCredenciaisAtivacao({ email: res.email, senha: res.senha_provisoria });
+        toast.success("Cliente ativado. Acesso criado, compartilhe as credenciais.");
+      } else {
+        toast.success("Cliente ativado. Acesso já existia previamente.");
+        setAtivarCliente(null);
+      }
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao ativar cliente";
+      toast.error(msg);
+      console.error("[Ativar Cliente] erro:", e);
+    } finally {
+      setSavingAtivacao(false);
     }
   };
 
@@ -563,11 +637,11 @@ export default function AdminDashboard() {
           </p>
         </div>
         <Button
-          onClick={() => { setNovoClienteOpen(true); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }}
+          onClick={() => { setNovoLeadOpen(true); setNovoLeadForm(NOVO_LEAD_INITIAL); setNovoLeadErros({}); }}
           className="bg-verde-raiz hover:bg-verde-raiz/90"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Novo Cliente
+          Novo Lead
         </Button>
       </div>
 
@@ -771,6 +845,18 @@ export default function AdminDashboard() {
                                   <FolderOpen className="mr-2 h-4 w-4" />
                                   Orçamentos salvos
                                 </DropdownMenuItem>
+                                {l.cliente.status !== "projeto_ativo" && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => openAtivacao(l.cliente)}
+                                      className="text-verde-raiz focus:text-verde-raiz"
+                                    >
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Ativar como cliente
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                                 <DropdownMenuSeparator />
                                 {d && (
                                   <DropdownMenuItem
@@ -812,24 +898,24 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {/* ===== Modal: Novo Cliente ===== */}
+      {/* ===== Modal: Novo Lead (cadastro mínimo) ===== */}
       <Dialog
-        open={novoClienteOpen}
+        open={novoLeadOpen}
         onOpenChange={(o) => {
-          if (!o) { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }
+          if (!o) { setNovoLeadOpen(false); setNovoLeadForm(NOVO_LEAD_INITIAL); setNovoLeadErros({}); }
         }}
       >
-        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
+        <DialogContent className="flex max-h-[90vh] max-w-xl flex-col">
           <DialogHeader>
-            <DialogTitle>Novo Cliente</DialogTitle>
+            <DialogTitle>Novo Lead</DialogTitle>
             <DialogDescription>
-              Preencha os dados do cliente. Apenas o nome do responsável é obrigatório.
+              Cadastre o lead para iniciar o Diagnóstico 360. Dados comerciais (plano, valor, vencimento) só são exigidos na ativação como cliente.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto pr-1">
             <div className="space-y-5 py-2">
-              {/* Seção: Identificação */}
+              {/* Identificação */}
               <div>
                 <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
                   Identificação
@@ -839,209 +925,92 @@ export default function AdminDashboard() {
                     <Label>Nome do responsável <span className="text-destructive">*</span></Label>
                     <Input
                       placeholder="ex.: Dra. Ana Lima"
-                      value={novoClienteForm.nome_cliente}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, nome_cliente: e.target.value }))}
+                      value={novoLeadForm.nome_cliente}
+                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, nome_cliente: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Nome da clínica</Label>
                     <Input
                       placeholder="ex.: Clínica OdontoVida"
-                      value={novoClienteForm.nome_clinica}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, nome_clinica: e.target.value }))}
+                      value={novoLeadForm.nome_clinica}
+                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, nome_clinica: e.target.value }))}
                     />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <Label>Cidade</Label>
                     <Input
-                      placeholder="ex.: São Paulo"
-                      value={novoClienteForm.cidade}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, cidade: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>CPF / CNPJ</Label>
-                    <Input
-                      placeholder="000.000.000-00"
-                      value={novoClienteForm.cpf_cnpj}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, cpf_cnpj: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Data de nascimento</Label>
-                    <Input
-                      type="date"
-                      value={novoClienteForm.data_nascimento}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, data_nascimento: e.target.value }))}
+                      placeholder="ex.: São Paulo - SP"
+                      value={novoLeadForm.cidade}
+                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, cidade: e.target.value }))}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Seção: Contato */}
+              {/* Contato */}
               <div>
                 <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
                   Contato
                 </p>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>
-                      Telefone <span className="text-destructive">*</span>
-                    </Label>
+                    <Label>Telefone <span className="text-destructive">*</span></Label>
                     <Input
                       placeholder="(11) 99999-9999"
-                      value={novoClienteForm.telefone}
-                      aria-invalid={!!novoClienteErros.telefone}
+                      value={novoLeadForm.telefone}
+                      aria-invalid={!!novoLeadErros.telefone}
                       onChange={(e) => {
                         const v = e.target.value;
-                        setNovoClienteForm((f) => ({ ...f, telefone: v }));
-                        if (novoClienteErros.telefone) setNovoClienteErros((er) => ({ ...er, telefone: undefined }));
+                        setNovoLeadForm((f) => ({ ...f, telefone: v }));
+                        if (novoLeadErros.telefone) setNovoLeadErros((er) => ({ ...er, telefone: undefined }));
                       }}
                     />
-                    {novoClienteErros.telefone && (
-                      <p className="text-xs text-destructive">{novoClienteErros.telefone}</p>
+                    {novoLeadErros.telefone && (
+                      <p className="text-xs text-destructive">{novoLeadErros.telefone}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label>
-                      E-mail <span className="text-destructive">*</span>
-                    </Label>
+                    <Label>E-mail <span className="text-destructive">*</span></Label>
                     <Input
                       type="email"
                       placeholder="dra.ana@clinica.com"
-                      value={novoClienteForm.email_cliente}
-                      aria-invalid={!!novoClienteErros.email_cliente}
+                      value={novoLeadForm.email_cliente}
+                      aria-invalid={!!novoLeadErros.email_cliente}
                       onChange={(e) => {
                         const v = e.target.value;
-                        setNovoClienteForm((f) => ({ ...f, email_cliente: v }));
-                        if (novoClienteErros.email_cliente) setNovoClienteErros((er) => ({ ...er, email_cliente: undefined }));
+                        setNovoLeadForm((f) => ({ ...f, email_cliente: v }));
+                        if (novoLeadErros.email_cliente) setNovoLeadErros((er) => ({ ...er, email_cliente: undefined }));
                       }}
                     />
-                    {novoClienteErros.email_cliente && (
-                      <p className="text-xs text-destructive">{novoClienteErros.email_cliente}</p>
+                    {novoLeadErros.email_cliente && (
+                      <p className="text-xs text-destructive">{novoLeadErros.email_cliente}</p>
                     )}
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <Label>Instagram</Label>
                     <Input
                       placeholder="@usuario"
-                      value={novoClienteForm.instagram}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, instagram: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-1">
-                    <Label>Endereço</Label>
-                    <Input
-                      placeholder="Rua, número, bairro"
-                      value={novoClienteForm.endereco}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, endereco: e.target.value }))}
+                      value={novoLeadForm.instagram}
+                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, instagram: e.target.value }))}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Seção: Contrato */}
+              {/* Categoria clínica */}
               <div>
                 <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
-                  Contrato
+                  Categoria clínica
                 </p>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>Plano</Label>
+                    <Label>Ramo <span className="text-destructive">*</span></Label>
                     <Select
-                      value={novoClienteForm.plano}
-                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, plano: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o plano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PLANO_OPCOES.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Status</Label>
-                    <Select
-                      value={novoClienteForm.status}
-                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, status: v as StatusCarteira }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
-                          <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Meta de faturamento (R$/mês)</Label>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="0"
-                      value={novoClienteForm.meta_faturamento}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Consultor responsável</Label>
-                    <Input
-                      placeholder="Nome do consultor"
-                      value={novoClienteForm.consultor}
-                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, consultor: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>
-                      Dia de vencimento (1 a 31) <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={31}
-                      placeholder="10"
-                      value={novoClienteForm.dia_vencimento}
-                      aria-invalid={!!novoClienteErros.dia_vencimento}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setNovoClienteForm((f) => ({ ...f, dia_vencimento: v }));
-                        if (novoClienteErros.dia_vencimento) setNovoClienteErros((er) => ({ ...er, dia_vencimento: undefined }));
-                      }}
-                    />
-                    {novoClienteErros.dia_vencimento && (
-                      <p className="text-xs text-destructive">{novoClienteErros.dia_vencimento}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Forma de pagamento</Label>
-                    <Select
-                      value={novoClienteForm.forma_pagamento}
-                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, forma_pagamento: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FORMA_PAGAMENTO_OPCOES.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>
-                      Ramo <span className="text-destructive">*</span>
-                    </Label>
-                    <Select
-                      value={novoClienteForm.ramo}
+                      value={novoLeadForm.ramo}
                       onValueChange={(v) => {
                         const novoRamo = v as Ramo;
-                        setNovoClienteForm((f) => ({
+                        setNovoLeadForm((f) => ({
                           ...f,
                           ramo: novoRamo,
                           especialidade_clinica:
@@ -1050,10 +1019,10 @@ export default function AdminDashboard() {
                               ? f.especialidade_clinica
                               : "",
                         }));
-                        if (novoClienteErros.ramo) setNovoClienteErros((er) => ({ ...er, ramo: undefined }));
+                        if (novoLeadErros.ramo) setNovoLeadErros((er) => ({ ...er, ramo: undefined }));
                       }}
                     >
-                      <SelectTrigger aria-invalid={!!novoClienteErros.ramo}>
+                      <SelectTrigger aria-invalid={!!novoLeadErros.ramo}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1062,21 +1031,21 @@ export default function AdminDashboard() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {novoClienteErros.ramo && (
-                      <p className="text-xs text-destructive">{novoClienteErros.ramo}</p>
+                    {novoLeadErros.ramo && (
+                      <p className="text-xs text-destructive">{novoLeadErros.ramo}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Especialidade clínica</Label>
                     <Select
-                      value={novoClienteForm.especialidade_clinica}
-                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, especialidade_clinica: v }))}
+                      value={novoLeadForm.especialidade_clinica}
+                      onValueChange={(v) => setNovoLeadForm((f) => ({ ...f, especialidade_clinica: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a especialidade" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(especialidadesPorRamo[novoClienteForm.ramo] ?? []).map((e) => (
+                        {(especialidadesPorRamo[novoLeadForm.ramo] ?? []).map((e) => (
                           <SelectItem key={e.id} value={e.nome}>{e.nome}</SelectItem>
                         ))}
                       </SelectContent>
@@ -1085,18 +1054,18 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Seção: Relacionamento */}
+              {/* Relacionamento */}
               <div>
                 <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
                   Relacionamento
                 </p>
                 <div className="space-y-1.5">
-                  <Label>Observações de relacionamento</Label>
+                  <Label>Observações</Label>
                   <Textarea
                     rows={3}
-                    placeholder="Preferências, pontos de atenção, contexto relevante…"
-                    value={novoClienteForm.observacoes_relacionamento}
-                    onChange={(e) => setNovoClienteForm((f) => ({ ...f, observacoes_relacionamento: e.target.value }))}
+                    placeholder="Origem do lead, dores conhecidas, pontos de atenção, contexto relevante…"
+                    value={novoLeadForm.observacoes_relacionamento}
+                    onChange={(e) => setNovoLeadForm((f) => ({ ...f, observacoes_relacionamento: e.target.value }))}
                   />
                 </div>
               </div>
@@ -1106,19 +1075,229 @@ export default function AdminDashboard() {
           <DialogFooter className="mt-4 border-t pt-4">
             <Button
               variant="outline"
-              onClick={() => { setNovoClienteOpen(false); setNovoClienteForm(NOVO_CLIENTE_INITIAL); setNovoClienteErros({}); }}
-              disabled={savingNovoCliente}
+              onClick={() => { setNovoLeadOpen(false); setNovoLeadForm(NOVO_LEAD_INITIAL); setNovoLeadErros({}); }}
+              disabled={savingNovoLead}
             >
               Cancelar
             </Button>
             <Button
-              onClick={handleCriarCliente}
-              disabled={savingNovoCliente || !novoClienteForm.nome_cliente.trim()}
+              onClick={handleCriarLead}
+              disabled={savingNovoLead || !novoLeadForm.nome_cliente.trim()}
               className="bg-verde-raiz hover:bg-verde-raiz/90"
             >
-              {savingNovoCliente ? "Criando…" : "Criar cliente"}
+              {savingNovoLead ? "Cadastrando…" : "Cadastrar lead"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== Modal: Ativar como cliente (lead → projeto_ativo) ===== */}
+      <Dialog
+        open={!!ativarCliente}
+        onOpenChange={(o) => {
+          if (!o) {
+            setAtivarCliente(null);
+            setAtivacaoForm(ATIVACAO_INITIAL);
+            setAtivacaoErros({});
+            setCredenciaisAtivacao(null);
+          }
+        }}
+      >
+        <DialogContent className="flex max-h-[90vh] max-w-xl flex-col">
+          <DialogHeader>
+            <DialogTitle>Ativar como cliente</DialogTitle>
+            <DialogDescription>
+              {ativarCliente?.nome_clinica || ativarCliente?.nome_cliente}. Define os dados comerciais
+              e cria o acesso do cliente à plataforma.
+            </DialogDescription>
+          </DialogHeader>
+
+          {credenciaisAtivacao ? (
+            <div className="space-y-4 py-2">
+              <div className="rounded-md border border-verde-raiz/30 bg-verde-raiz/5 p-4">
+                <p className="text-sm font-semibold text-verde-raiz">Cliente ativado com sucesso.</p>
+                <p className="mt-2 text-xs text-quase-preto/70">Compartilhe estas credenciais com o cliente. No primeiro login, ele será forçado a trocar a senha.</p>
+                <div className="mt-3 space-y-1 font-mono text-sm">
+                  <div><span className="text-quase-preto/60">Email:</span> {credenciaisAtivacao.email}</div>
+                  <div><span className="text-quase-preto/60">Senha:</span> {credenciaisAtivacao.senha}</div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => {
+                    setAtivarCliente(null);
+                    setCredenciaisAtivacao(null);
+                  }}
+                  className="bg-verde-raiz hover:bg-verde-raiz/90"
+                >
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto pr-1">
+                <div className="space-y-5 py-2">
+                  <div>
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                      Dados comerciais
+                    </p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label>Plano <span className="text-destructive">*</span></Label>
+                        <Select
+                          value={ativacaoForm.plano}
+                          onValueChange={(v) => {
+                            setAtivacaoForm((f) => ({ ...f, plano: v }));
+                            if (ativacaoErros.plano) setAtivacaoErros((er) => ({ ...er, plano: undefined }));
+                          }}
+                        >
+                          <SelectTrigger aria-invalid={!!ativacaoErros.plano}>
+                            <SelectValue placeholder="Selecione o plano" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PLANO_OPCOES.map((p) => (
+                              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {ativacaoErros.plano && <p className="text-xs text-destructive">{ativacaoErros.plano}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Valor mensalidade (R$) <span className="text-destructive">*</span></Label>
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          placeholder="3500"
+                          value={ativacaoForm.valor_mensalidade}
+                          aria-invalid={!!ativacaoErros.valor_mensalidade}
+                          onChange={(e) => {
+                            setAtivacaoForm((f) => ({ ...f, valor_mensalidade: e.target.value }));
+                            if (ativacaoErros.valor_mensalidade) setAtivacaoErros((er) => ({ ...er, valor_mensalidade: undefined }));
+                          }}
+                        />
+                        {ativacaoErros.valor_mensalidade && <p className="text-xs text-destructive">{ativacaoErros.valor_mensalidade}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Forma de pagamento <span className="text-destructive">*</span></Label>
+                        <Select
+                          value={ativacaoForm.forma_pagamento}
+                          onValueChange={(v) => {
+                            setAtivacaoForm((f) => ({ ...f, forma_pagamento: v }));
+                            if (ativacaoErros.forma_pagamento) setAtivacaoErros((er) => ({ ...er, forma_pagamento: undefined }));
+                          }}
+                        >
+                          <SelectTrigger aria-invalid={!!ativacaoErros.forma_pagamento}>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FORMA_PAGAMENTO_OPCOES.map((p) => (
+                              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {ativacaoErros.forma_pagamento && <p className="text-xs text-destructive">{ativacaoErros.forma_pagamento}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Dia vencimento (1 a 31) <span className="text-destructive">*</span></Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={31}
+                          placeholder="10"
+                          value={ativacaoForm.dia_vencimento}
+                          aria-invalid={!!ativacaoErros.dia_vencimento}
+                          onChange={(e) => {
+                            setAtivacaoForm((f) => ({ ...f, dia_vencimento: e.target.value }));
+                            if (ativacaoErros.dia_vencimento) setAtivacaoErros((er) => ({ ...er, dia_vencimento: undefined }));
+                          }}
+                        />
+                        {ativacaoErros.dia_vencimento && <p className="text-xs text-destructive">{ativacaoErros.dia_vencimento}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Data início do projeto <span className="text-destructive">*</span></Label>
+                        <Input
+                          type="date"
+                          value={ativacaoForm.data_inicio_projeto}
+                          aria-invalid={!!ativacaoErros.data_inicio_projeto}
+                          onChange={(e) => {
+                            setAtivacaoForm((f) => ({ ...f, data_inicio_projeto: e.target.value }));
+                            if (ativacaoErros.data_inicio_projeto) setAtivacaoErros((er) => ({ ...er, data_inicio_projeto: undefined }));
+                          }}
+                        />
+                        {ativacaoErros.data_inicio_projeto && <p className="text-xs text-destructive">{ativacaoErros.data_inicio_projeto}</p>}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Duração (meses) <span className="text-destructive">*</span></Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={ativacaoForm.duracao_meses}
+                          aria-invalid={!!ativacaoErros.duracao_meses}
+                          onChange={(e) => {
+                            setAtivacaoForm((f) => ({ ...f, duracao_meses: e.target.value }));
+                            if (ativacaoErros.duracao_meses) setAtivacaoErros((er) => ({ ...er, duracao_meses: undefined }));
+                          }}
+                        />
+                        {ativacaoErros.duracao_meses && <p className="text-xs text-destructive">{ativacaoErros.duracao_meses}</p>}
+                      </div>
+                      <div className="space-y-1.5 md:col-span-2">
+                        <Label>Meta de faturamento (R$/mês)</Label>
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          placeholder="100000"
+                          value={ativacaoForm.meta_faturamento}
+                          onChange={(e) => setAtivacaoForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                      Dados fiscais (opcional)
+                    </p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label>CPF / CNPJ</Label>
+                        <Input
+                          placeholder="000.000.000-00"
+                          value={ativacaoForm.cpf_cnpj}
+                          onChange={(e) => setAtivacaoForm((f) => ({ ...f, cpf_cnpj: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Endereço</Label>
+                        <Input
+                          placeholder="Rua, número, bairro"
+                          value={ativacaoForm.endereco}
+                          onChange={(e) => setAtivacaoForm((f) => ({ ...f, endereco: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="mt-4 border-t pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setAtivarCliente(null)}
+                  disabled={savingAtivacao}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleAtivarCliente}
+                  disabled={savingAtivacao}
+                  className="bg-verde-raiz hover:bg-verde-raiz/90"
+                >
+                  {savingAtivacao ? "Ativando…" : "Ativar cliente"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
