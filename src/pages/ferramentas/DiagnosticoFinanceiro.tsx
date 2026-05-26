@@ -14,8 +14,8 @@ import { ClienteSelector } from "@/features/diagnostico/components/ClienteSelect
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  calcular, emptyForm, fmtBRL, fmtPct,
-  type DiagFinForm, type CalcResult,
+  calcular, emptyForm, fmtBRL, fmtPct, FIX_LABELS,
+  type DiagFinForm, type CalcResult, type CustosFixos,
 } from "@/features/diagnostico-financeiro/logic";
 import { generateDiagFinPDF } from "@/features/diagnostico-financeiro/pdf";
 import CustosClinicaSection from "@/components/consultor/CustosClinicaSection";
@@ -201,6 +201,39 @@ export default function DiagnosticoFinanceiro() {
         created_by: user?.id ?? null,
       });
       if (error) throw error;
+
+      // Sync de custos fixos com custos_clinica.
+      // Diag Fin armazena custos como JSON snapshot, mas o Simulador de
+      // Precificacao le de custos_clinica (tabela canonica). Sem essa
+      // sincronizacao, o consultor digita os mesmos custos 2x.
+      // Mesma logica do handleSalvarCustosNoCadastro do Simulador.
+      if (form.cliente_id) {
+        try {
+          await supabase
+            .from("custos_clinica")
+            .update({ ativo: false })
+            .eq("cliente_id", form.cliente_id)
+            .eq("tipo", "fixo")
+            .eq("ativo", true);
+          const linhas = (Object.keys(form.custos_fixos) as (keyof CustosFixos)[])
+            .filter((k) => (form.custos_fixos[k] || 0) > 0)
+            .map((k) => ({
+              cliente_id: form.cliente_id!,
+              tipo: "fixo",
+              categoria: k as string,
+              descricao: FIX_LABELS[k],
+              valor: Number(form.custos_fixos[k]),
+            }));
+          if (linhas.length > 0) {
+            const { error: insErr } = await supabase.from("custos_clinica").insert(linhas);
+            if (insErr) {
+              console.warn("[diag fin] sync de custos_clinica falhou:", insErr);
+            }
+          }
+        } catch (e) {
+          console.warn("[diag fin] sync de custos_clinica excecao:", e);
+        }
+      }
 
       // Sync com cadastro do cliente: 5 campos estruturais do consultorio.
       // Esses dados sao canonicos em clientes desde PR 4. Aqui o consultor

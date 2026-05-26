@@ -547,11 +547,19 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
               <ClienteSelector
                 value={form.cliente_id}
                 onChange={(id, c) => {
-                  const esp = (c?.especialidade_clinica || c?.especialidade || "").toLowerCase();
+                  // Segmento prioriza o ramo (canonico, whitelist em clientes.ramo).
+                  // Fallback para especialidade so se o ramo nao casar.
                   let segmento: PrecificacaoForm["segmento"] = form.segmento;
-                  if (esp.includes("odonto") || esp.includes("dentist")) segmento = "Odontologia";
-                  else if (esp.includes("derma")) segmento = "Dermatologia";
-                  else if (esp.includes("estét") || esp.includes("estet") || esp.includes("medic")) segmento = "Medicina Estética";
+                  const ramo = (c?.ramo || "").toLowerCase();
+                  if (ramo === "odontologia") segmento = "Odontologia";
+                  else if (ramo === "medicina") segmento = "Medicina Estética";
+                  else if (ramo === "estetica") segmento = "Medicina Estética";
+                  else {
+                    const esp = (c?.especialidade_clinica || c?.especialidade || "").toLowerCase();
+                    if (esp.includes("odont") || esp.includes("dentist")) segmento = "Odontologia";
+                    else if (esp.includes("derma")) segmento = "Dermatologia";
+                    else if (esp.includes("estét") || esp.includes("estet") || esp.includes("medic")) segmento = "Medicina Estética";
+                  }
                   setForm((f) => ({
                     ...f,
                     cliente_id: id,

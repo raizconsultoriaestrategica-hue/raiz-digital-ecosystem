@@ -112,7 +112,7 @@ export interface CalcResult {
   rankingCustos: { nome: string; valor: number; tipo: string }[];
 }
 
-const FIX_LABELS: Record<keyof CustosFixos, string> = {
+export const FIX_LABELS: Record<keyof CustosFixos, string> = {
   aluguel: "Aluguel/condomínio",
   folha: "Folha de pagamento",
   pro_labore: "Pró-labore",
