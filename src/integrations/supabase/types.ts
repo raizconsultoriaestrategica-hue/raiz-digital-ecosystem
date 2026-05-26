@@ -207,6 +207,7 @@ export type Database = {
       }
       clientes: {
         Row: {
+          atendimentos_dia: number | null
           cidade: string | null
           consultor: string | null
           cpf_cnpj: string | null
@@ -215,12 +216,14 @@ export type Database = {
           data_inicio_projeto: string | null
           data_nascimento: string | null
           dia_vencimento: number | null
+          dias_trabalhados: number | null
           duracao_meses: number | null
           email_cliente: string | null
           endereco: string | null
           especialidade: string | null
           especialidade_clinica: string | null
           forma_pagamento: string | null
+          horas_clinicas_dia: number | null
           id: string
           instagram: string | null
           mes_referencia: string | null
@@ -228,18 +231,21 @@ export type Database = {
           modulos_ativos: string | null
           nome_cliente: string
           nome_clinica: string | null
+          num_profissionais: number | null
           observacoes_relacionamento: string | null
           orcamento_inicial: number | null
           pilares_foco: string | null
           plano: string | null
           primeiro_acesso: boolean
           ramo: string | null
+          regime_tributario: string | null
           status: string | null
           telefone: string | null
           user_id: string | null
           valor_mensalidade: number | null
         }
         Insert: {
+          atendimentos_dia?: number | null
           cidade?: string | null
           consultor?: string | null
           cpf_cnpj?: string | null
@@ -248,12 +254,14 @@ export type Database = {
           data_inicio_projeto?: string | null
           data_nascimento?: string | null
           dia_vencimento?: number | null
+          dias_trabalhados?: number | null
           duracao_meses?: number | null
           email_cliente?: string | null
           endereco?: string | null
           especialidade?: string | null
           especialidade_clinica?: string | null
           forma_pagamento?: string | null
+          horas_clinicas_dia?: number | null
           id?: string
           instagram?: string | null
           mes_referencia?: string | null
@@ -261,18 +269,21 @@ export type Database = {
           modulos_ativos?: string | null
           nome_cliente: string
           nome_clinica?: string | null
+          num_profissionais?: number | null
           observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
+          regime_tributario?: string | null
           status?: string | null
           telefone?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
         }
         Update: {
+          atendimentos_dia?: number | null
           cidade?: string | null
           consultor?: string | null
           cpf_cnpj?: string | null
@@ -281,12 +292,14 @@ export type Database = {
           data_inicio_projeto?: string | null
           data_nascimento?: string | null
           dia_vencimento?: number | null
+          dias_trabalhados?: number | null
           duracao_meses?: number | null
           email_cliente?: string | null
           endereco?: string | null
           especialidade?: string | null
           especialidade_clinica?: string | null
           forma_pagamento?: string | null
+          horas_clinicas_dia?: number | null
           id?: string
           instagram?: string | null
           mes_referencia?: string | null
@@ -294,12 +307,14 @@ export type Database = {
           modulos_ativos?: string | null
           nome_cliente?: string
           nome_clinica?: string | null
+          num_profissionais?: number | null
           observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
+          regime_tributario?: string | null
           status?: string | null
           telefone?: string | null
           user_id?: string | null
