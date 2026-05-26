@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
 import { generateDiagFinPDF } from "@/features/diagnostico-financeiro/pdf";
 import CustosClinicaSection from "@/components/consultor/CustosClinicaSection";
 import { useUltimosKpisMensais } from "@/hooks/useUltimosKpisMensais";
+import { mesCorrenteSP } from "@/hooks/useKpiMesCorrente";
 
 const STEPS = [
   { id: "dados", label: "1. Consultório" },
@@ -65,6 +67,7 @@ function Field({ label, children, hint }: { label: string; children: React.React
 
 export default function DiagnosticoFinanceiro() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<StepId>("dados");
   const [form, setForm] = useState<DiagFinForm>(emptyForm());
   const [clienteNome, setClienteNome] = useState<string>("");
@@ -166,8 +169,53 @@ export default function DiagnosticoFinanceiro() {
       });
       if (error) throw error;
 
+      // Sync com kpis_mensais: zeros viram NULL para nao contaminar benchmarks.
+      // Upsert por (cliente_id, mes_referencia) garante atualizacao se ja existe
+      // (ex: cliente preencheu o card mensal antes do consultor rodar o diag fin).
+      if (form.cliente_id) {
+        try {
+          const { mes_referencia } = mesCorrenteSP();
+          const numOrNull = (n: number) => (Number.isFinite(n) && n !== 0 ? n : null);
+          const intOrNull = (n: number) => (Number.isFinite(n) && n !== 0 ? Math.round(n) : null);
+          const kpiPayload = {
+            cliente_id: form.cliente_id,
+            mes_referencia,
+            faturamento_bruto: numOrNull(form.receitas.faturamento_bruto),
+            faturamento_convenios: numOrNull(form.receitas.faturamento_convenios),
+            ticket_medio: numOrNull(form.receitas.ticket_medio),
+            pacientes_novos: intOrNull(form.receitas.pacientes_novos_mes),
+            taxa_conversao: numOrNull(form.receitas.taxa_conversao),
+            taxa_inadimplencia: numOrNull(form.receitas.taxa_inadimplencia),
+            pct_recebido_vista: numOrNull(form.receitas.pct_vista),
+            investimento_marketing: numOrNull(form.receitas.investimento_marketing),
+            taxa_no_show: numOrNull(form.receitas.no_show),
+            ocupacao_cadeiras: numOrNull(form.receitas.ocupacao_agenda),
+            margem_liquida: numOrNull(calc.margemLiquida),
+            preenchido_por: user?.id ?? null,
+          };
+          const { error: kpiErr } = await supabase
+            .from("kpis_mensais")
+            .upsert(kpiPayload, { onConflict: "cliente_id,mes_referencia" });
+          if (kpiErr) {
+            console.warn("[diag fin] sync com kpis_mensais falhou:", kpiErr);
+            toast.warning("Diagnóstico salvo, mas falhou sync com KPIs do mês: " + kpiErr.message);
+          } else {
+            // Invalida queries dependentes para refletir nas telas em tempo real
+            queryClient.invalidateQueries({ queryKey: ["kpi-mes-corrente", form.cliente_id, mes_referencia] });
+            queryClient.invalidateQueries({ queryKey: ["ultimos-kpis-mensais", form.cliente_id] });
+            queryClient.invalidateQueries({ queryKey: ["gargalos", form.cliente_id] });
+            queryClient.invalidateQueries({ queryKey: ["saude-financeira-cliente", form.cliente_id] });
+            queryClient.invalidateQueries({ queryKey: ["saude-financeira-clientes"] });
+            queryClient.invalidateQueries({ queryKey: ["saude-plataforma"] });
+            queryClient.invalidateQueries({ queryKey: ["evolucao-negocio"] });
+          }
+        } catch (kpiErr) {
+          console.warn("[diag fin] sync com kpis_mensais excecao:", kpiErr);
+        }
+      }
+
       doc.save(fileName);
-      toast.success("Diagnóstico salvo e PDF gerado.");
+      toast.success("Diagnóstico salvo, PDF gerado e KPIs do mês atualizados.");
     } catch (e: any) {
       toast.error("Erro ao salvar: " + (e.message || e));
     } finally {
