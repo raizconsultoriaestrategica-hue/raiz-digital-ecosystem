@@ -140,9 +140,11 @@ export default function SimuladorPrecificacao() {
   const [form, setForm] = useState<PrecificacaoForm>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [savingCustos, setSavingCustos] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
   const [analisando, setAnalisando] = useState(false);
   const [analiseIA, setAnaliseIA] = useState<{ analise: string; insights: string[] } | null>(null);
   const [custosHidratados, setCustosHidratados] = useState<string | null>(null);
+  const [configHidratada, setConfigHidratada] = useState<string | null>(null);
 
   // Política descontos via IA
   const [politicaLoading, setPoliticaLoading] = useState(false);
@@ -184,6 +186,54 @@ export default function SimuladorPrecificacao() {
     setCustosHidratados(form.cliente_id);
     toast.success(`${fixosBanco.length} custos carregados do cadastro do cliente`);
   }, [form.cliente_id, custosBanco, custosHidratados, form.custos_fixos]);
+
+  // Auto-fill de horas_dia e dias_mes a partir do cadastro do cliente.
+  // Esses campos sao canonicos em clientes desde PR 4. Diag Fin tambem
+  // sincroniza. Aqui o consultor pode editar e salvar de volta.
+  useEffect(() => {
+    if (!form.cliente_id) return;
+    if (configHidratada === form.cliente_id) return;
+    setConfigHidratada(form.cliente_id);
+    (async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("dias_trabalhados, horas_clinicas_dia")
+        .eq("id", form.cliente_id!)
+        .maybeSingle();
+      if (error || !data) return;
+      // So sobrescreve se o cadastro tem valor E o form ainda esta com default
+      const PADRAO_HORAS = emptyForm().horas_dia;
+      const PADRAO_DIAS = emptyForm().dias_mes;
+      setForm((f) => ({
+        ...f,
+        horas_dia: data.horas_clinicas_dia && f.horas_dia === PADRAO_HORAS ? data.horas_clinicas_dia : f.horas_dia,
+        dias_mes: data.dias_trabalhados && f.dias_mes === PADRAO_DIAS ? data.dias_trabalhados : f.dias_mes,
+      }));
+    })();
+  }, [form.cliente_id, configHidratada]);
+
+  async function handleSalvarConfigNoCadastro() {
+    if (!form.cliente_id) {
+      toast.error("Selecione um cliente antes de salvar");
+      return;
+    }
+    setSavingConfig(true);
+    try {
+      const { error } = await supabase
+        .from("clientes")
+        .update({
+          horas_clinicas_dia: form.horas_dia || null,
+          dias_trabalhados: form.dias_mes || null,
+        })
+        .eq("id", form.cliente_id);
+      if (error) throw error;
+      toast.success("Configuração salva no cadastro do cliente");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar configuração");
+    } finally {
+      setSavingConfig(false);
+    }
+  }
 
   async function handleSalvarCustosNoCadastro() {
     if (!form.cliente_id) {
@@ -476,7 +526,22 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
 
         {/* CONFIG */}
         <Card className="p-6">
-          <h2 className="mb-4 font-display text-xl text-verde-raiz">Configuração inicial</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-xl text-verde-raiz">Configuração inicial</h2>
+            {form.cliente_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSalvarConfigNoCadastro}
+                disabled={savingConfig}
+                className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
+                title="Salva horas trabalhadas/dia e dias/mês no cadastro do cliente"
+              >
+                <Save className="mr-1 h-4 w-4" />
+                {savingConfig ? "Salvando..." : "Salvar no cadastro"}
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <ClienteSelector
@@ -496,6 +561,7 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
                     custos_fixos: id !== f.cliente_id ? [novoCusto()] : f.custos_fixos,
                   }));
                   setCustosHidratados(null);
+                  setConfigHidratada(null);
                 }}
               />
             </div>
