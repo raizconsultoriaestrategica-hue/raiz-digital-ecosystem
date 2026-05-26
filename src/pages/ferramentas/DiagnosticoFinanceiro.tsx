@@ -74,6 +74,39 @@ export default function DiagnosticoFinanceiro() {
   const [calc, setCalc] = useState<CalcResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [kpisHidratados, setKpisHidratados] = useState<string | null>(null);
+  const [cadastroHidratado, setCadastroHidratado] = useState<string | null>(null);
+
+  // Auto-fill de dados estruturais do consultorio a partir do cadastro do cliente.
+  // Esses 5 campos (num_profissionais, dias_trabalhados, horas_clinicas_dia,
+  // atendimentos_dia, regime_tributario) sao agora canonicos em clientes (PR 4)
+  // e podem ser editados no proprio Diag Fin, com sync de volta ao cadastro no save.
+  useEffect(() => {
+    if (!form.cliente_id) return;
+    if (cadastroHidratado === form.cliente_id) return;
+    setCadastroHidratado(form.cliente_id);
+    (async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("nome_cliente, cidade, especialidade_clinica, especialidade, num_profissionais, dias_trabalhados, horas_clinicas_dia, atendimentos_dia, regime_tributario")
+        .eq("id", form.cliente_id!)
+        .maybeSingle();
+      if (error || !data) return;
+      setForm((f) => ({
+        ...f,
+        dados: {
+          ...f.dados,
+          nome_profissional: f.dados.nome_profissional || data.nome_cliente || "",
+          especialidade: f.dados.especialidade || data.especialidade_clinica || data.especialidade || f.dados.especialidade,
+          cidade: f.dados.cidade || data.cidade || "",
+          regime_tributario: data.regime_tributario || f.dados.regime_tributario,
+          num_profissionais: data.num_profissionais ?? f.dados.num_profissionais,
+          dias_trabalhados: data.dias_trabalhados ?? f.dados.dias_trabalhados,
+          horas_clinicas_dia: data.horas_clinicas_dia ?? f.dados.horas_clinicas_dia,
+          atendimentos_dia: data.atendimentos_dia ?? f.dados.atendimentos_dia,
+        },
+      }));
+    })();
+  }, [form.cliente_id, cadastroHidratado]);
 
   const stepIdx = STEPS.findIndex((s) => s.id === step);
 
@@ -168,6 +201,27 @@ export default function DiagnosticoFinanceiro() {
         created_by: user?.id ?? null,
       });
       if (error) throw error;
+
+      // Sync com cadastro do cliente: 5 campos estruturais do consultorio.
+      // Esses dados sao canonicos em clientes desde PR 4. Aqui o consultor
+      // pode editar no Diag Fin e o cadastro reflete sem precisar abrir
+      // "Editar projeto" depois.
+      if (form.cliente_id) {
+        try {
+          await supabase
+            .from("clientes")
+            .update({
+              num_profissionais: form.dados.num_profissionais || null,
+              dias_trabalhados: form.dados.dias_trabalhados || null,
+              horas_clinicas_dia: form.dados.horas_clinicas_dia || null,
+              atendimentos_dia: form.dados.atendimentos_dia || null,
+              regime_tributario: form.dados.regime_tributario || null,
+            })
+            .eq("id", form.cliente_id);
+        } catch (e) {
+          console.warn("[diag fin] sync de dados estruturais com clientes falhou:", e);
+        }
+      }
 
       // Sync com kpis_mensais: zeros viram NULL para nao contaminar benchmarks.
       // Upsert por (cliente_id, mes_referencia) garante atualizacao se ja existe
