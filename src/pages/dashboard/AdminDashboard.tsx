@@ -779,12 +779,9 @@ export default function AdminDashboard() {
                             <Badge className={STATUS_BADGE[status]}>{STATUS_LABEL[status]}</Badge>
                           </TableCell>
                           <TableCell>
-                            {d ? (
+                            {d && d.totalMax > 0 ? (
                               <span className="font-display text-caramelo">
-                                {d.totalScore}
-                                <span className="ml-1 font-body text-xs text-quase-preto/60">
-                                  / {d.totalMax}
-                                </span>
+                                {Math.round((d.totalScore / d.totalMax) * 100)}%
                               </span>
                             ) : (
                               <span className="text-quase-preto/40">,</span>
