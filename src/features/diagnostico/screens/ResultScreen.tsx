@@ -252,8 +252,8 @@ export function ResultScreen({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="font-display text-3xl font-semibold text-linho">{totalScore}</span>
-              <span className="text-[10px] text-linho/50">de {totalMax}</span>
+              <span className="font-display text-3xl font-semibold text-linho">{Math.round(totalPct * 100)}%</span>
+              <span className="text-[10px] text-linho/50">de maturidade</span>
             </div>
           </div>
           <div className="flex-1">
@@ -395,7 +395,7 @@ export function ResultScreen({
                       />
                     </div>
                     <div className="mt-1 text-[11px] text-quase-preto/50">
-                      {total} / {max} pts · {Math.round(pct * 100)}%
+                      {Math.round(pct * 100)}% de maturidade
                     </div>
                   </div>
                 );

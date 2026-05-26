@@ -116,8 +116,8 @@ export function OrcamentosListDialog({ clienteId, clienteNome, onClose }: Props)
                     </div>
                     <div className="mt-0.5 font-body text-xs text-quase-preto/55">
                       {new Date(o.created_at).toLocaleString("pt-BR")}
-                      {o.score != null && o.score_max != null && (
-                        <> · Score: {o.score}/{o.score_max}</>
+                      {o.score != null && o.score_max != null && o.score_max > 0 && (
+                        <> · Score: {Math.round((Number(o.score) / Number(o.score_max)) * 100)}%</>
                       )}
                     </div>
                   </div>

@@ -74,11 +74,11 @@ export function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string) {
   y = 72;
 
   // Score
-  const { totalScore, totalMax, totalPct, classif, plano } = snapshot;
+  const { totalPct, classif, plano } = snapshot;
   doc.setFillColor(LIGHT[0], LIGHT[1], LIGHT[2]);
   doc.roundedRect(M, y, CW, 22, 2, 2, "F");
   setFont(10, "bold", GREEN);
-  doc.text(`Pontuação Geral: ${totalScore} / ${totalMax} pts (${Math.round(totalPct * 100)}%)`, M + 6, y + 7);
+  doc.text(`Maturidade Geral: ${Math.round(totalPct * 100)}%`, M + 6, y + 7);
   setFont(9, "normal", DARK);
   doc.text(`Classificação: ${classif.label.replace(/[🚧⚡📈✅🏆]/g, "").trim()}`, M + 6, y + 14);
   y += 28;
@@ -98,7 +98,7 @@ export function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string) {
     setFont(10, "bold", DARK);
     doc.text(`${p.num} · ${p.name}`, M, y);
     setFont(9, "normal", GRAY);
-    doc.text(`${total}/${max} · ${Math.round(pct * 100)}%`, W - M, y, { align: "right" });
+    doc.text(`${Math.round(pct * 100)}%`, W - M, y, { align: "right" });
     y += 4;
     doc.setFillColor(226, 232, 240);
     doc.roundedRect(M, y, bw, 3, 1, 1, "F");
