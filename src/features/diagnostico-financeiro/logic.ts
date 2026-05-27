@@ -46,6 +46,14 @@ export interface Financiamentos {
   parcelas_equipamentos: number;
 }
 
+// Custo extra com nome livre, complementa as categorias fixas acima.
+// Persistido em custos_clinica com categoria slugificada do nome.
+export interface CustoExtra {
+  id: string;
+  nome: string;
+  valor: number;
+}
+
 export interface DiagFinForm {
   cliente_id: string | null;
   dados: DadosConsultorio;
@@ -53,6 +61,8 @@ export interface DiagFinForm {
   custos_fixos: CustosFixos;
   custos_variaveis: CustosVariaveis;
   financiamentos: Financiamentos;
+  extras_fixos: CustoExtra[];
+  extras_variaveis: CustoExtra[];
 }
 
 export interface Indicador {
@@ -132,8 +142,10 @@ const VAR_LABELS: Record<keyof CustosVariaveis, string> = {
 
 export function calcular(form: DiagFinForm): CalcResult {
   const fat = Number(form.receitas.faturamento_bruto) || 0;
-  const tF = sum(form.custos_fixos as any);
-  const tV = sum(form.custos_variaveis as any);
+  const extraF = (form.extras_fixos || []).reduce((a, e) => a + (Number(e.valor) || 0), 0);
+  const extraV = (form.extras_variaveis || []).reduce((a, e) => a + (Number(e.valor) || 0), 0);
+  const tF = sum(form.custos_fixos as any) + extraF;
+  const tV = sum(form.custos_variaveis as any) + extraV;
   const tFin = sum(form.financiamentos as any);
   const custos = tF + tV + tFin;
   const lucro = fat - custos;
@@ -216,6 +228,14 @@ export function calcular(form: DiagFinForm): CalcResult {
     const v = Number(form.custos_variaveis[k]) || 0;
     if (v > 0) ranking.push({ nome: VAR_LABELS[k], valor: v, tipo: "Variável" });
   });
+  (form.extras_fixos || []).forEach((e) => {
+    const v = Number(e.valor) || 0;
+    if (v > 0 && e.nome.trim()) ranking.push({ nome: e.nome.trim(), valor: v, tipo: "Fixo" });
+  });
+  (form.extras_variaveis || []).forEach((e) => {
+    const v = Number(e.valor) || 0;
+    if (v > 0 && e.nome.trim()) ranking.push({ nome: e.nome.trim(), valor: v, tipo: "Variável" });
+  });
   if (tFin > 0) ranking.push({ nome: "Parcelas equipamentos/financ.", valor: tFin, tipo: "Financiamento" });
   ranking.sort((a, b) => b.valor - a.valor);
 
@@ -245,5 +265,7 @@ export function emptyForm(): DiagFinForm {
     custos_fixos: { aluguel: 0, folha: 0, pro_labore: 0, contabilidade: 0, utilities: 0, software: 0, outros_fixos: 0 },
     custos_variaveis: { materiais: 0, laboratorio: 0, comissoes: 0, impostos: 0, taxas_cartao: 0, outros_variaveis: 0 },
     financiamentos: { parcelas_equipamentos: 0 },
+    extras_fixos: [],
+    extras_variaveis: [],
   };
 }
