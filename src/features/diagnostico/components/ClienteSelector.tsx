@@ -14,6 +14,7 @@ export interface ClienteRow {
   cidade: string | null;
   especialidade?: string | null;
   especialidade_clinica?: string | null;
+  ramo?: string | null;
 }
 
 interface ClienteSelectorProps {
@@ -29,7 +30,7 @@ export function ClienteSelector({ value, onChange }: ClienteSelectorProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("clientes")
-      .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica")
+      .select("id, nome_cliente, nome_clinica, cidade, especialidade, especialidade_clinica, ramo")
       .order("nome_cliente");
     if (error) toast.error("Erro ao carregar clientes: " + error.message);
     setClientes(data || []);
