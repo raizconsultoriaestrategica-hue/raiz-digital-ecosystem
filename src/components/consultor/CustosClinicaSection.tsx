@@ -6,12 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { useCustosClinica, type CustoClinica } from "@/hooks/useCustosClinica";
+import { useCustosClinica } from "@/hooks/useCustosClinica";
 import type {
   CustosFixos,
   CustosVariaveis,
   Financiamentos,
+  CustoExtra,
 } from "@/features/diagnostico-financeiro/logic";
 
 // Mapping entre categorias do form (frontend) e categoria persistida no banco.
@@ -43,11 +43,29 @@ interface Props {
   custosFixos: CustosFixos;
   custosVariaveis: CustosVariaveis;
   financiamentos: Financiamentos;
+  extrasFixos: CustoExtra[];
+  extrasVariaveis: CustoExtra[];
   onChange: (patch: {
     custos_fixos?: Partial<CustosFixos>;
     custos_variaveis?: Partial<CustosVariaveis>;
     financiamentos?: Partial<Financiamentos>;
+    extras_fixos?: CustoExtra[];
+    extras_variaveis?: CustoExtra[];
   }) => void;
+}
+
+function novoExtra(): CustoExtra {
+  return { id: `e_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, nome: "", valor: 0 };
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 60) || "extra";
 }
 
 function fmtBRL(n: number) {
@@ -59,14 +77,17 @@ export default function CustosClinicaSection({
   custosFixos,
   custosVariaveis,
   financiamentos,
+  extrasFixos,
+  extrasVariaveis,
   onChange,
 }: Props) {
   const { data: custos = [], isLoading, refetch } = useCustosClinica(clienteId);
   const [hidratado, setHidratado] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [customCustos, setCustomCustos] = useState<CustoClinica[]>([]);
 
-  // Hidrata o form quando os custos chegam (apenas uma vez por cliente)
+  // Hidrata o form quando os custos chegam (apenas uma vez por cliente).
+  // Custos com categoria conhecida (aluguel, folha, etc) vao para custosFixos/Variaveis.
+  // Custos com categoria livre vao para extras_fixos/variaveis (editaveis).
   useEffect(() => {
     if (!clienteId || isLoading) return;
     if (hidratado) return;
@@ -74,7 +95,8 @@ export default function CustosClinicaSection({
     const patchFixos: Partial<CustosFixos> = {};
     const patchVariaveis: Partial<CustosVariaveis> = {};
     const patchFinanciamentos: Partial<Financiamentos> = {};
-    const customs: CustoClinica[] = [];
+    const extrasF: CustoExtra[] = [];
+    const extrasV: CustoExtra[] = [];
 
     const keysFixos = new Set(CATEGORIAS_FIXOS.map((c) => c.key));
     const keysVariaveis = new Set(CATEGORIAS_VARIAVEIS.map((c) => c.key));
@@ -88,16 +110,19 @@ export default function CustosClinicaSection({
         patchVariaveis[c.categoria as keyof CustosVariaveis] = v;
       } else if (c.tipo === "financiamento" && keysFinanc.has(c.categoria as keyof Financiamentos)) {
         patchFinanciamentos[c.categoria as keyof Financiamentos] = v;
-      } else {
-        customs.push(c);
+      } else if (c.tipo === "fixo") {
+        extrasF.push({ id: c.id, nome: c.descricao || c.categoria, valor: v });
+      } else if (c.tipo === "variavel") {
+        extrasV.push({ id: c.id, nome: c.descricao || c.categoria, valor: v });
       }
     }
 
-    setCustomCustos(customs);
     onChange({
       custos_fixos: patchFixos,
       custos_variaveis: patchVariaveis,
       financiamentos: patchFinanciamentos,
+      extras_fixos: extrasF,
+      extras_variaveis: extrasV,
     });
     setHidratado(true);
   }, [clienteId, isLoading, custos, hidratado, onChange]);
@@ -105,7 +130,6 @@ export default function CustosClinicaSection({
   // Reseta hidratação quando o cliente muda
   useEffect(() => {
     setHidratado(false);
-    setCustomCustos([]);
   }, [clienteId]);
 
   async function handleSalvar() {
@@ -115,26 +139,29 @@ export default function CustosClinicaSection({
     }
     setSalvando(true);
     try {
-      type Linha = { tipo: string; categoria: string; valor: number };
+      type Linha = { tipo: string; categoria: string; descricao?: string | null; valor: number };
       const linhas: Linha[] = [
         ...CATEGORIAS_FIXOS.map((c) => ({
           tipo: "fixo",
           categoria: c.key as string,
+          descricao: c.label,
           valor: Number(custosFixos[c.key]) || 0,
         })),
         ...CATEGORIAS_VARIAVEIS.map((c) => ({
           tipo: "variavel",
           categoria: c.key as string,
+          descricao: c.label,
           valor: Number(custosVariaveis[c.key]) || 0,
         })),
         ...CATEGORIAS_FINANCIAMENTOS.map((c) => ({
           tipo: "financiamento",
           categoria: c.key as string,
+          descricao: c.label,
           valor: Number(financiamentos[c.key]) || 0,
         })),
       ];
 
-      // Upsert manual: lê existentes, atualiza ou insere
+      // Upsert manual das categorias padrao
       for (const linha of linhas) {
         const { data: existente } = await supabase
           .from("custos_clinica")
@@ -155,10 +182,59 @@ export default function CustosClinicaSection({
             cliente_id: clienteId,
             tipo: linha.tipo,
             categoria: linha.categoria,
+            descricao: linha.descricao ?? null,
             valor: linha.valor,
           });
         }
       }
+
+      // Extras: soft-delete dos existentes ja inativos nao tem efeito, dos ativos
+      // com tipo customizado e re-insert dos atuais. Mais simples que diff.
+      // Pega ids dos extras carregados que ainda estao na UI (mantem ids estaveis).
+      const extrasUI = [
+        ...extrasFixos.filter((e) => e.nome.trim() && Number(e.valor) > 0).map((e) => ({
+          tipo: "fixo" as const, ...e,
+        })),
+        ...extrasVariaveis.filter((e) => e.nome.trim() && Number(e.valor) > 0).map((e) => ({
+          tipo: "variavel" as const, ...e,
+        })),
+      ];
+      const idsExtrasUI = new Set(extrasUI.filter((e) => !e.id.startsWith("e_")).map((e) => e.id));
+
+      // Soft-delete dos extras (custos com categoria fora das whitelists) que sumiram da UI
+      const keysFixos = new Set(CATEGORIAS_FIXOS.map((c) => c.key));
+      const keysVariaveis = new Set(CATEGORIAS_VARIAVEIS.map((c) => c.key));
+      const extrasBanco = custos.filter(
+        (c) =>
+          (c.tipo === "fixo" && !keysFixos.has(c.categoria as keyof CustosFixos)) ||
+          (c.tipo === "variavel" && !keysVariaveis.has(c.categoria as keyof CustosVariaveis)),
+      );
+      for (const ext of extrasBanco) {
+        if (!idsExtrasUI.has(ext.id)) {
+          await supabase.from("custos_clinica").update({ ativo: false }).eq("id", ext.id);
+        }
+      }
+
+      // INSERT/UPDATE extras
+      for (const ext of extrasUI) {
+        if (ext.id.startsWith("e_")) {
+          // ID temporario do form, e novo
+          await supabase.from("custos_clinica").insert({
+            cliente_id: clienteId,
+            tipo: ext.tipo,
+            categoria: slugify(ext.nome),
+            descricao: ext.nome.trim(),
+            valor: Number(ext.valor),
+          });
+        } else {
+          // ID veio do banco, faz UPDATE
+          await supabase
+            .from("custos_clinica")
+            .update({ descricao: ext.nome.trim(), valor: Number(ext.valor) })
+            .eq("id", ext.id);
+        }
+      }
+
       await refetch();
       toast.success("Custos salvos no cadastro do cliente");
     } catch (e) {
@@ -168,28 +244,35 @@ export default function CustosClinicaSection({
     }
   }
 
-  async function handleExcluirCustom(id: string) {
-    if (!confirm("Excluir este custo customizado?")) return;
-    try {
-      await supabase.from("custos_clinica").update({ ativo: false }).eq("id", id);
-      await refetch();
-      setCustomCustos((prev) => prev.filter((c) => c.id !== id));
-      toast.success("Custo excluído");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao excluir");
-    }
+  function addExtraFixo() {
+    onChange({ extras_fixos: [...extrasFixos, novoExtra()] });
+  }
+  function addExtraVariavel() {
+    onChange({ extras_variaveis: [...extrasVariaveis, novoExtra()] });
+  }
+  function updateExtraFixo(id: string, patch: Partial<CustoExtra>) {
+    onChange({ extras_fixos: extrasFixos.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+  }
+  function updateExtraVariavel(id: string, patch: Partial<CustoExtra>) {
+    onChange({ extras_variaveis: extrasVariaveis.map((e) => (e.id === id ? { ...e, ...patch } : e)) });
+  }
+  function removeExtraFixo(id: string) {
+    onChange({ extras_fixos: extrasFixos.filter((e) => e.id !== id) });
+  }
+  function removeExtraVariavel(id: string) {
+    onChange({ extras_variaveis: extrasVariaveis.filter((e) => e.id !== id) });
   }
 
-  const totalFixos = CATEGORIAS_FIXOS.reduce((s, c) => s + (Number(custosFixos[c.key]) || 0), 0);
-  const totalVariaveis = CATEGORIAS_VARIAVEIS.reduce(
-    (s, c) => s + (Number(custosVariaveis[c.key]) || 0),
-    0,
-  );
+  const totalFixos =
+    CATEGORIAS_FIXOS.reduce((s, c) => s + (Number(custosFixos[c.key]) || 0), 0) +
+    extrasFixos.reduce((s, e) => s + (Number(e.valor) || 0), 0);
+  const totalVariaveis =
+    CATEGORIAS_VARIAVEIS.reduce((s, c) => s + (Number(custosVariaveis[c.key]) || 0), 0) +
+    extrasVariaveis.reduce((s, e) => s + (Number(e.valor) || 0), 0);
   const totalFinanc = CATEGORIAS_FINANCIAMENTOS.reduce(
     (s, c) => s + (Number(financiamentos[c.key]) || 0),
     0,
   );
-  const totalCustom = customCustos.reduce((s, c) => s + (Number(c.valor) || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -247,6 +330,43 @@ export default function CustosClinicaSection({
             </div>
           ))}
         </div>
+
+        {extrasFixos.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-border pt-4">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-quase-preto/55">
+              Outros custos fixos
+            </Label>
+            {extrasFixos.map((e) => (
+              <div key={e.id} className="flex items-center gap-2">
+                <Input
+                  placeholder="Nome do custo (ex: limpeza, segurança)"
+                  value={e.nome}
+                  onChange={(ev) => updateExtraFixo(e.id, { nome: ev.target.value })}
+                  className="h-10 flex-1"
+                />
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  value={e.valor || ""}
+                  onChange={(ev) => updateExtraFixo(e.id, { valor: Number(ev.target.value) || 0 })}
+                  placeholder="0"
+                  className="h-10 w-32"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeExtraFixo(e.id)}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        <Button variant="outline" size="sm" onClick={addExtraFixo} className="mt-3">
+          <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar outro custo fixo
+        </Button>
       </Card>
 
       {/* Custos Variáveis */}
@@ -274,6 +394,43 @@ export default function CustosClinicaSection({
             </div>
           ))}
         </div>
+
+        {extrasVariaveis.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-border pt-4">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-quase-preto/55">
+              Outros custos variáveis
+            </Label>
+            {extrasVariaveis.map((e) => (
+              <div key={e.id} className="flex items-center gap-2">
+                <Input
+                  placeholder="Nome do custo (ex: brindes, eventos)"
+                  value={e.nome}
+                  onChange={(ev) => updateExtraVariavel(e.id, { nome: ev.target.value })}
+                  className="h-10 flex-1"
+                />
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  value={e.valor || ""}
+                  onChange={(ev) => updateExtraVariavel(e.id, { valor: Number(ev.target.value) || 0 })}
+                  placeholder="0"
+                  className="h-10 w-32"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeExtraVariavel(e.id)}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        <Button variant="outline" size="sm" onClick={addExtraVariavel} className="mt-3">
+          <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar outro custo variável
+        </Button>
       </Card>
 
       {/* Financiamentos */}
@@ -303,44 +460,6 @@ export default function CustosClinicaSection({
         </div>
       </Card>
 
-      {/* Custos customizados (categorias livres cadastradas no banco) */}
-      {customCustos.length > 0 && (
-        <Card className="p-5">
-          <div className="mb-4 flex items-baseline justify-between">
-            <div>
-              <h3 className="font-serif text-lg text-verde-raiz">Custos customizados</h3>
-              <p className="text-xs text-quase-preto/55">
-                Cadastrados manualmente no banco. Não entram nos campos padrão acima, mas estão somados no total geral.
-              </p>
-            </div>
-            <span className="font-display text-sm text-quase-preto/70">{fmtBRL(totalCustom)}</span>
-          </div>
-          <div className="divide-y divide-border">
-            {customCustos.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 py-2.5">
-                <Badge variant="outline" className="capitalize">
-                  {c.tipo}
-                </Badge>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-quase-preto/85">
-                    {c.descricao || c.categoria}
-                  </div>
-                  <div className="text-xs text-quase-preto/55">{c.categoria}</div>
-                </div>
-                <span className="shrink-0 font-display text-sm">{fmtBRL(Number(c.valor) || 0)}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => handleExcluirCustom(c.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
