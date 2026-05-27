@@ -202,20 +202,25 @@ export default function DiagnosticoFinanceiro() {
       });
       if (error) throw error;
 
-      // Sync de custos fixos com custos_clinica.
+      // Sync de custos (fixos + variaveis + extras) com custos_clinica.
       // Diag Fin armazena custos como JSON snapshot, mas o Simulador de
       // Precificacao le de custos_clinica (tabela canonica). Sem essa
       // sincronizacao, o consultor digita os mesmos custos 2x.
-      // Mesma logica do handleSalvarCustosNoCadastro do Simulador.
+      // Padrao soft-delete + insert para garantir snapshot atual.
       if (form.cliente_id) {
         try {
           await supabase
             .from("custos_clinica")
             .update({ ativo: false })
             .eq("cliente_id", form.cliente_id)
-            .eq("tipo", "fixo")
+            .in("tipo", ["fixo", "variavel"])
             .eq("ativo", true);
-          const linhas = (Object.keys(form.custos_fixos) as (keyof CustosFixos)[])
+
+          const slugify = (s: string) =>
+            s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+              .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60) || "extra";
+
+          const linhasFixos = (Object.keys(form.custos_fixos) as (keyof CustosFixos)[])
             .filter((k) => (form.custos_fixos[k] || 0) > 0)
             .map((k) => ({
               cliente_id: form.cliente_id!,
@@ -224,6 +229,35 @@ export default function DiagnosticoFinanceiro() {
               descricao: FIX_LABELS[k],
               valor: Number(form.custos_fixos[k]),
             }));
+          const linhasVar = (Object.keys(form.custos_variaveis) as (keyof typeof form.custos_variaveis)[])
+            .filter((k) => (form.custos_variaveis[k] || 0) > 0)
+            .map((k) => ({
+              cliente_id: form.cliente_id!,
+              tipo: "variavel",
+              categoria: k as string,
+              descricao: null as string | null,
+              valor: Number(form.custos_variaveis[k]),
+            }));
+          const linhasExtrasF = form.extras_fixos
+            .filter((e) => e.nome.trim() && Number(e.valor) > 0)
+            .map((e) => ({
+              cliente_id: form.cliente_id!,
+              tipo: "fixo",
+              categoria: slugify(e.nome),
+              descricao: e.nome.trim(),
+              valor: Number(e.valor),
+            }));
+          const linhasExtrasV = form.extras_variaveis
+            .filter((e) => e.nome.trim() && Number(e.valor) > 0)
+            .map((e) => ({
+              cliente_id: form.cliente_id!,
+              tipo: "variavel",
+              categoria: slugify(e.nome),
+              descricao: e.nome.trim(),
+              valor: Number(e.valor),
+            }));
+
+          const linhas = [...linhasFixos, ...linhasVar, ...linhasExtrasF, ...linhasExtrasV];
           if (linhas.length > 0) {
             const { error: insErr } = await supabase.from("custos_clinica").insert(linhas);
             if (insErr) {
@@ -497,12 +531,16 @@ export default function DiagnosticoFinanceiro() {
                 custosFixos={form.custos_fixos}
                 custosVariaveis={form.custos_variaveis}
                 financiamentos={form.financiamentos}
+                extrasFixos={form.extras_fixos}
+                extrasVariaveis={form.extras_variaveis}
                 onChange={(patch) => {
                   setForm((f) => ({
                     ...f,
                     custos_fixos: { ...f.custos_fixos, ...(patch.custos_fixos ?? {}) },
                     custos_variaveis: { ...f.custos_variaveis, ...(patch.custos_variaveis ?? {}) },
                     financiamentos: { ...f.financiamentos, ...(patch.financiamentos ?? {}) },
+                    extras_fixos: patch.extras_fixos ?? f.extras_fixos,
+                    extras_variaveis: patch.extras_variaveis ?? f.extras_variaveis,
                   }));
                 }}
               />
