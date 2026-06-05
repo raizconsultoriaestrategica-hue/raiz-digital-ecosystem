@@ -36,6 +36,8 @@ interface Cliente {
   plano: string | null;
   status: string | null;
   meta_faturamento: number | null;
+  faturamento_atual: number | null;
+  origem: string | null;
   consultor: string | null;
   pilares_foco: string | null;
   // M1
@@ -86,9 +88,25 @@ const STATUS_OPCOES = [
 ];
 
 const PLANO_OPCOES = [
-  { value: "Raiz Essencial", label: "Raiz Essencial" },
+  { value: "Raiz de Base", label: "Raiz de Base" },
   { value: "Raiz de Crescimento", label: "Raiz de Crescimento" },
   { value: "Raiz de Expansão", label: "Raiz de Expansão" },
+] as const;
+
+const ORIGEM_OPCOES = [
+  { value: "site", label: "Site" },
+  { value: "landing_diagnostico", label: "Landing do diagnóstico" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "instagram", label: "Instagram" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "outro", label: "Outro" },
+] as const;
+
+const RAMO_OPCOES = [
+  { value: "odontologia", label: "Odontologia" },
+  { value: "medicina", label: "Medicina" },
+  { value: "estetica", label: "Estética" },
+  { value: "outros", label: "Outros" },
 ] as const;
 
 const FORMA_PAGAMENTO_OPCOES = [
@@ -176,9 +194,12 @@ export default function GestaoCliente() {
     nome_clinica: "",
     cidade: "",
     especialidade: "",
+    ramo: "",
     plano: "",
     status: "lead",
     meta_faturamento: "",
+    faturamento_atual: "",
+    origem: "",
     consultor: "",
     telefone: "",
     email_cliente: "",
@@ -205,7 +226,7 @@ export default function GestaoCliente() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, consultor, pilares_foco, telefone, email_cliente, cpf_cnpj, endereco, data_nascimento, instagram, observacoes_relacionamento, dia_vencimento, forma_pagamento, especialidade_clinica",
+            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, faturamento_atual, origem, consultor, pilares_foco, telefone, email_cliente, cpf_cnpj, endereco, data_nascimento, instagram, observacoes_relacionamento, dia_vencimento, forma_pagamento, especialidade_clinica",
           )
           .eq("id", clienteId)
           .maybeSingle(),
@@ -228,9 +249,12 @@ export default function GestaoCliente() {
         nome_clinica: c.nome_clinica ?? "",
         cidade: c.cidade ?? "",
         especialidade: c.especialidade ?? "",
+        ramo: c.ramo ?? "",
         plano: c.plano ?? "",
         status: c.status ?? "lead",
         meta_faturamento: c.meta_faturamento != null ? String(c.meta_faturamento) : "",
+        faturamento_atual: c.faturamento_atual != null ? String(c.faturamento_atual) : "",
+        origem: c.origem ?? "",
         consultor: c.consultor ?? "",
         telefone: c.telefone ?? "",
         email_cliente: c.email_cliente ?? "",
@@ -475,9 +499,12 @@ export default function GestaoCliente() {
           nome_clinica: cadastroForm.nome_clinica.trim() || null,
           cidade: cadastroForm.cidade.trim() || null,
           especialidade: cadastroForm.especialidade.trim() || null,
+          ramo: cadastroForm.ramo || null,
           plano: cadastroForm.plano || null,
           status: cadastroForm.status,
           meta_faturamento: toNum(cadastroForm.meta_faturamento),
+          faturamento_atual: toNum(cadastroForm.faturamento_atual),
+          origem: cadastroForm.origem || null,
           consultor: cadastroForm.consultor.trim() || null,
           telefone: cadastroForm.telefone.trim() || null,
           email_cliente: cadastroForm.email_cliente.trim() || null,
@@ -526,7 +553,9 @@ export default function GestaoCliente() {
           <p className="mt-1 text-sm text-quase-preto/60">
             {cliente.nome_clinica ?? "Clínica não informada"}
             {cliente.cidade ? ` · ${cliente.cidade}` : ""}
-            {cliente.especialidade ? ` · ${cliente.especialidade}` : ""}
+            {(cliente.especialidade_clinica || cliente.especialidade)
+              ? ` · ${cliente.especialidade_clinica || cliente.especialidade}`
+              : ""}
           </p>
         </div>
         <Badge className="bg-verde-raiz/10 text-verde-raiz">
@@ -774,6 +803,15 @@ export default function GestaoCliente() {
                     </Select>
                   </div>
                   <div>
+                    <Label>Faturamento atual (R$/mês)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={cadastroForm.faturamento_atual}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, faturamento_atual: e.target.value }))}
+                    />
+                  </div>
+                  <div>
                     <Label>Meta de faturamento (R$/mês)</Label>
                     <Input
                       type="text"
@@ -781,6 +819,22 @@ export default function GestaoCliente() {
                       value={cadastroForm.meta_faturamento}
                       onChange={(e) => setCadastroForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
                     />
+                  </div>
+                  <div>
+                    <Label>Origem do lead</Label>
+                    <Select
+                      value={cadastroForm.origem}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, origem: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORIGEM_OPCOES.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Consultor responsável</Label>
@@ -812,6 +866,22 @@ export default function GestaoCliente() {
                       <SelectContent>
                         {FORMA_PAGAMENTO_OPCOES.map((p) => (
                           <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Ramo</Label>
+                    <Select
+                      value={cadastroForm.ramo}
+                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, ramo: v }))}
+                    >
+                      <SelectTrigger className="mt-0.5">
+                        <SelectValue placeholder="Selecione o ramo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RAMO_OPCOES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

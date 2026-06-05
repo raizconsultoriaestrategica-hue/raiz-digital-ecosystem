@@ -103,7 +103,10 @@ export function useOrcamento() {
 
     updates.nomeCliente = vc.nome_cliente || "";
     updates.nomeClinica = vc.nome_clinica || "";
-    updates.especialidade = vc.ramo || vc.especialidade || "";
+    // Fonte de verdade: especialidade_clinica (catálogo). Fallback para a
+    // coluna legada e, por último, o ramo. Antes lia ramo primeiro, o que
+    // fazia a especialidade do orçamento sair quase sempre como o ramo.
+    updates.especialidade = vc.especialidade_clinica || vc.especialidade || vc.ramo || "";
     updates.cidade = vc.cidade || "";
 
     // Faturamento: prefere kpis_mensais (view), senao orcamento_inicial

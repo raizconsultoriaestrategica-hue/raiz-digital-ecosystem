@@ -116,6 +116,8 @@ Deno.serve(async (req) => {
         nome_cliente,
         nome_clinica,
         cidade,
+        // Grava o mesmo e-mail do login. É a chave do sync com o CRM Notion.
+        email_cliente: email,
         consultor: "Raiz Consultoria",
       })
       .select("id, nome_cliente, nome_clinica, cidade")

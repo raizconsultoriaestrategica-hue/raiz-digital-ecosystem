@@ -79,69 +79,105 @@ export type Database = {
         Row: {
           cidade: string | null
           consultor: string | null
+          cpf_cnpj: string | null
           created_at: string | null
           data_diagnostico: string | null
           data_inicio_projeto: string | null
+          data_nascimento: string | null
+          dia_vencimento: number | null
           duracao_meses: number | null
+          email_cliente: string | null
+          endereco: string | null
           especialidade: string | null
+          especialidade_clinica: string | null
+          faturamento_atual: number | null
+          forma_pagamento: string | null
           id: string
+          instagram: string | null
           mes_referencia: string | null
           meta_faturamento: number | null
           modulos_ativos: string | null
           nome_cliente: string
           nome_clinica: string | null
+          observacoes_relacionamento: string | null
           orcamento_inicial: number | null
+          origem: string | null
           pilares_foco: string | null
           plano: string | null
           primeiro_acesso: boolean
           ramo: string | null
           status: string | null
+          telefone: string | null
           user_id: string | null
           valor_mensalidade: number | null
         }
         Insert: {
           cidade?: string | null
           consultor?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_diagnostico?: string | null
           data_inicio_projeto?: string | null
+          data_nascimento?: string | null
+          dia_vencimento?: number | null
           duracao_meses?: number | null
+          email_cliente?: string | null
+          endereco?: string | null
           especialidade?: string | null
+          especialidade_clinica?: string | null
+          faturamento_atual?: number | null
+          forma_pagamento?: string | null
           id?: string
+          instagram?: string | null
           mes_referencia?: string | null
           meta_faturamento?: number | null
           modulos_ativos?: string | null
           nome_cliente: string
           nome_clinica?: string | null
+          observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
+          origem?: string | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
           status?: string | null
+          telefone?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
         }
         Update: {
           cidade?: string | null
           consultor?: string | null
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_diagnostico?: string | null
           data_inicio_projeto?: string | null
+          data_nascimento?: string | null
+          dia_vencimento?: number | null
           duracao_meses?: number | null
+          email_cliente?: string | null
+          endereco?: string | null
           especialidade?: string | null
+          especialidade_clinica?: string | null
+          faturamento_atual?: number | null
+          forma_pagamento?: string | null
           id?: string
+          instagram?: string | null
           mes_referencia?: string | null
           meta_faturamento?: number | null
           modulos_ativos?: string | null
           nome_cliente?: string
           nome_clinica?: string | null
+          observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
+          origem?: string | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
           ramo?: string | null
           status?: string | null
+          telefone?: string | null
           user_id?: string | null
           valor_mensalidade?: number | null
         }
@@ -466,6 +502,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      especialidades: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          ramo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          ramo: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          ramo?: string
+        }
+        Relationships: []
       }
       modulos: {
         Row: {

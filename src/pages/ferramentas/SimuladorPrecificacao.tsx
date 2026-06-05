@@ -377,7 +377,7 @@ Inclua: limite máximo de desconto por tipo de procedimento, política de parcel
               <ClienteSelector
                 value={form.cliente_id}
                 onChange={(id, c) => {
-                  const esp = (c?.especialidade || "").toLowerCase();
+                  const esp = (c?.especialidade_clinica || c?.especialidade || "").toLowerCase();
                   let segmento: PrecificacaoForm["segmento"] = form.segmento;
                   if (esp.includes("odonto") || esp.includes("dentist")) segmento = "Odontologia";
                   else if (esp.includes("derma")) segmento = "Dermatologia";

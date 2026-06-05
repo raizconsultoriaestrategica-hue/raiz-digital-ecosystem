@@ -79,6 +79,7 @@ interface Cliente {
   id: string;
   nome_cliente: string;
   especialidade: string | null;
+  especialidade_clinica: string | null;
   ramo: string | null;
 }
 
@@ -103,7 +104,7 @@ export default function ClientPortal() {
 
         const { data: cli } = await supabase
           .from("clientes")
-          .select("id, nome_cliente, especialidade, ramo")
+          .select("id, nome_cliente, especialidade, especialidade_clinica, ramo")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -272,8 +273,8 @@ export default function ClientPortal() {
           >
             {cliente.nome_cliente}
           </h1>
-          {(cliente.especialidade || cliente.ramo) && (
-            <p className="mt-2 text-white/70">{cliente.especialidade || cliente.ramo}</p>
+          {(cliente.especialidade_clinica || cliente.especialidade || cliente.ramo) && (
+            <p className="mt-2 text-white/70">{cliente.especialidade_clinica || cliente.especialidade || cliente.ramo}</p>
           )}
           <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-white/20 px-4 py-2 text-sm text-white/80">
             <span>Diagnóstico</span>

@@ -118,6 +118,7 @@ interface Cliente {
   nome_cliente: string;
   nome_clinica: string | null;
   especialidade: string | null;
+  especialidade_clinica: string | null;
   cidade: string | null;
   ramo: string | null;
 }
@@ -142,7 +143,7 @@ export default function PastaDoCliente() {
 
       const { data: cli } = await supabase
         .from("clientes")
-        .select("id, nome_cliente, nome_clinica, especialidade, cidade, ramo")
+        .select("id, nome_cliente, nome_clinica, especialidade, especialidade_clinica, cidade, ramo")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(1)
@@ -364,7 +365,7 @@ export default function PastaDoCliente() {
             {cliente.nome_clinica || cliente.nome_cliente}
           </h1>
           <p className="mt-1 text-sm text-linho/70">
-            {[cliente.nome_cliente, cliente.especialidade || cliente.ramo, cliente.cidade]
+            {[cliente.nome_cliente, cliente.especialidade_clinica || cliente.especialidade || cliente.ramo, cliente.cidade]
               .filter(Boolean)
               .join(" · ")}
           </p>

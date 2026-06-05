@@ -101,8 +101,8 @@ const STATUS_LABEL: Record<StatusCarteira, string> = {
   lead: "Lead",
   diagnostico_feito: "Diagnóstico feito",
   proposta_enviada: "Proposta enviada",
-  projeto_ativo: "Projeto ativo",
-  encerrado: "Encerrado",
+  projeto_ativo: "Cliente ativo",
+  encerrado: "Inativo",
 };
 
 // Badges com cores semânticas. Uso classes Tailwind diretas para tons de paleta solicitada
@@ -115,9 +115,25 @@ const STATUS_BADGE: Record<StatusCarteira, string> = {
 };
 
 const PLANO_OPCOES = [
-  { value: "Raiz Essencial", label: "Raiz Essencial" },
+  { value: "Raiz de Base", label: "Raiz de Base" },
   { value: "Raiz de Crescimento", label: "Raiz de Crescimento" },
   { value: "Raiz de Expansão", label: "Raiz de Expansão" },
+] as const;
+
+const ORIGEM_OPCOES = [
+  { value: "site", label: "Site" },
+  { value: "landing_diagnostico", label: "Landing do diagnóstico" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "instagram", label: "Instagram" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "outro", label: "Outro" },
+] as const;
+
+const RAMO_OPCOES = [
+  { value: "odontologia", label: "Odontologia" },
+  { value: "medicina", label: "Medicina" },
+  { value: "estetica", label: "Estética" },
+  { value: "outros", label: "Outros" },
 ] as const;
 
 const FORMA_PAGAMENTO_OPCOES = [
@@ -152,9 +168,12 @@ type NovoClienteForm = {
   nome_clinica: string;
   cidade: string;
   especialidade: string;
+  ramo: string;
   plano: string;
   status: StatusCarteira;
   meta_faturamento: string;
+  faturamento_atual: string;
+  origem: string;
   consultor: string;
   telefone: string;
   email_cliente: string;
@@ -173,9 +192,12 @@ const NOVO_CLIENTE_INITIAL: NovoClienteForm = {
   nome_clinica: "",
   cidade: "",
   especialidade: "",
+  ramo: "",
   plano: "",
   status: "lead",
   meta_faturamento: "",
+  faturamento_atual: "",
+  origem: "",
   consultor: "",
   telefone: "",
   email_cliente: "",
@@ -416,9 +438,12 @@ export default function AdminDashboard() {
           nome_clinica: novoClienteForm.nome_clinica.trim() || null,
           cidade: novoClienteForm.cidade.trim() || null,
           especialidade: novoClienteForm.especialidade.trim() || null,
+          ramo: novoClienteForm.ramo || null,
           plano: novoClienteForm.plano || null,
           status: novoClienteForm.status,
           meta_faturamento: toNum(novoClienteForm.meta_faturamento),
+          faturamento_atual: toNum(novoClienteForm.faturamento_atual),
+          origem: novoClienteForm.origem || null,
           consultor: novoClienteForm.consultor.trim() || null,
           telefone: novoClienteForm.telefone.trim() || null,
           email_cliente: novoClienteForm.email_cliente.trim() || null,
@@ -874,6 +899,16 @@ export default function AdminDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
+                    <Label>Faturamento atual (R$/mês)</Label>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={novoClienteForm.faturamento_atual}
+                      onChange={(e) => setNovoClienteForm((f) => ({ ...f, faturamento_atual: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
                     <Label>Meta de faturamento (R$/mês)</Label>
                     <Input
                       type="number"
@@ -882,6 +917,22 @@ export default function AdminDashboard() {
                       value={novoClienteForm.meta_faturamento}
                       onChange={(e) => setNovoClienteForm((f) => ({ ...f, meta_faturamento: e.target.value }))}
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Origem do lead</Label>
+                    <Select
+                      value={novoClienteForm.origem}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, origem: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORIGEM_OPCOES.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Consultor responsável</Label>
@@ -914,6 +965,22 @@ export default function AdminDashboard() {
                       <SelectContent>
                         {FORMA_PAGAMENTO_OPCOES.map((p) => (
                           <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Ramo</Label>
+                    <Select
+                      value={novoClienteForm.ramo}
+                      onValueChange={(v) => setNovoClienteForm((f) => ({ ...f, ramo: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o ramo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RAMO_OPCOES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
