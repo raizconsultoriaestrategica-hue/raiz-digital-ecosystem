@@ -222,6 +222,7 @@ export type Database = {
           endereco: string | null
           especialidade: string | null
           especialidade_clinica: string | null
+          faturamento_atual: number | null
           forma_pagamento: string | null
           horas_clinicas_dia: number | null
           id: string
@@ -234,6 +235,7 @@ export type Database = {
           num_profissionais: number | null
           observacoes_relacionamento: string | null
           orcamento_inicial: number | null
+          origem: string | null
           pilares_foco: string | null
           plano: string | null
           primeiro_acesso: boolean
@@ -260,6 +262,7 @@ export type Database = {
           endereco?: string | null
           especialidade?: string | null
           especialidade_clinica?: string | null
+          faturamento_atual?: number | null
           forma_pagamento?: string | null
           horas_clinicas_dia?: number | null
           id?: string
@@ -272,6 +275,7 @@ export type Database = {
           num_profissionais?: number | null
           observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
+          origem?: string | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
@@ -298,6 +302,7 @@ export type Database = {
           endereco?: string | null
           especialidade?: string | null
           especialidade_clinica?: string | null
+          faturamento_atual?: number | null
           forma_pagamento?: string | null
           horas_clinicas_dia?: number | null
           id?: string
@@ -310,6 +315,7 @@ export type Database = {
           num_profissionais?: number | null
           observacoes_relacionamento?: string | null
           orcamento_inicial?: number | null
+          origem?: string | null
           pilares_foco?: string | null
           plano?: string | null
           primeiro_acesso?: boolean
@@ -1527,5 +1533,3 @@ export const Constants = {
     },
   },
 } as const
-A new version of Supabase CLI is available: v2.101.0 (currently installed v2.90.0)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
