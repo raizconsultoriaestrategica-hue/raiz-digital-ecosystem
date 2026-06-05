@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { CLASSIFS, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS } from "./data";
+import { CLASSIFS, fromRamoCanonico, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS, toRamoCanonico } from "./data";
 import type { ClientData, DiagnosticoSnapshot, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "./types";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -99,7 +99,7 @@ export async function saveDiagnosticoToSupabase(
   });
   rows.push({
     cliente_id: clienteId, tipo: "PILAR", mes: "Diagnóstico",
-    campo: "RAMO", valor: ramo, benchmark: null,
+    campo: "RAMO", valor: toRamoCanonico(ramo), benchmark: null,
   });
   if (snapshot.kpisIniciais) {
     rows.push({
@@ -135,7 +135,7 @@ export async function saveDiagnosticoToSupabase(
     const { error: diagErr } = await supabase.from("diagnostics").upsert(
       {
         client_id: clienteId,
-        ramo: ramo as string,
+        ramo: toRamoCanonico(ramo),
         total_score: snapshot.totalScore,
         total_max: snapshot.totalMax,
         total_pct: totalPctForDb,
@@ -316,7 +316,7 @@ function reconstructSnapshot(
   if (totalMax === 0) return null;
   const totalPct = totalScore / totalMax;
 
-  const ramo: Ramo = (map.get("RAMO")?.valor as Ramo) || "dentista";
+  const ramo: Ramo = fromRamoCanonico(map.get("RAMO")?.valor);
   const pilaresList = getPilaresByRamo(ramo);
   const planosList = getPlanosByRamo(ramo);
 
@@ -400,7 +400,7 @@ async function loadDiagnosticosFromTypedTable(): Promise<StoredDiagnostico[]> {
     const cliente = clienteMap.get(row.client_id);
     if (!cliente) continue;
 
-    const ramo: Ramo = (row.ramo as Ramo) || "dentista";
+    const ramo: Ramo = fromRamoCanonico(row.ramo);
     const pilaresList = getPilaresByRamo(ramo);
     const planosList = getPlanosByRamo(ramo);
 

@@ -120,8 +120,8 @@ const STATUS_LABEL: Record<StatusCarteira, string> = {
   lead: "Lead",
   diagnostico_feito: "Diagnóstico feito",
   proposta_enviada: "Proposta enviada",
-  projeto_ativo: "Projeto ativo",
-  encerrado: "Encerrado",
+  projeto_ativo: "Cliente ativo",
+  encerrado: "Inativo",
 };
 
 // Badges com cores semânticas. Uso classes Tailwind diretas para tons de paleta solicitada
@@ -134,9 +134,18 @@ const STATUS_BADGE: Record<StatusCarteira, string> = {
 };
 
 const PLANO_OPCOES = [
-  { value: "Raiz Essencial", label: "Raiz Essencial" },
+  { value: "Raiz de Base", label: "Raiz de Base" },
   { value: "Raiz de Crescimento", label: "Raiz de Crescimento" },
   { value: "Raiz de Expansão", label: "Raiz de Expansão" },
+] as const;
+
+const ORIGEM_OPCOES = [
+  { value: "site", label: "Site" },
+  { value: "landing_diagnostico", label: "Landing do diagnóstico" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "instagram", label: "Instagram" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "outro", label: "Outro" },
 ] as const;
 
 const FORMA_PAGAMENTO_OPCOES = [
@@ -178,6 +187,8 @@ type NovoLeadForm = {
   especialidade_clinica: string;
   instagram: string;
   observacoes_relacionamento: string;
+  origem: string;
+  faturamento_atual: string;
 };
 
 const NOVO_LEAD_INITIAL: NovoLeadForm = {
@@ -190,6 +201,8 @@ const NOVO_LEAD_INITIAL: NovoLeadForm = {
   especialidade_clinica: "",
   instagram: "",
   observacoes_relacionamento: "",
+  origem: "",
+  faturamento_atual: "",
 };
 
 // Estado do formulario de ATIVAÇÃO (lead → projeto_ativo). Dados comerciais.
@@ -497,6 +510,11 @@ export default function AdminDashboard() {
           instagram: novoLeadForm.instagram.trim() || null,
           observacoes_relacionamento: novoLeadForm.observacoes_relacionamento.trim() || null,
           especialidade_clinica: novoLeadForm.especialidade_clinica.trim() || null,
+          origem: novoLeadForm.origem || null,
+          faturamento_atual: (() => {
+            const n = Number(novoLeadForm.faturamento_atual.replace(",", "."));
+            return novoLeadForm.faturamento_atual.trim() !== "" && Number.isFinite(n) ? n : null;
+          })(),
         })
         .select("id")
         .single();
@@ -1047,6 +1065,41 @@ export default function AdminDashboard() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Qualificação */}
+              <div>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Qualificação
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Origem do lead</Label>
+                    <Select
+                      value={novoLeadForm.origem}
+                      onValueChange={(v) => setNovoLeadForm((f) => ({ ...f, origem: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORIGEM_OPCOES.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Faturamento atual (R$/mês)</Label>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={novoLeadForm.faturamento_atual}
+                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, faturamento_atual: e.target.value }))}
+                    />
                   </div>
                 </div>
               </div>

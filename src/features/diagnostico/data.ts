@@ -4,6 +4,31 @@ export const ADMIN_PIN = "raiz360";
 
 export type Ramo = "dentista" | "medico";
 
+/** Vocabulário canônico de ramo no banco (clientes.ramo, diagnostics.ramo). */
+export type RamoCanonico = "odontologia" | "medicina" | "estetica" | "outros";
+
+/**
+ * Converte o ramo interno do diagnóstico (dentista|medico) para o vocabulário
+ * canônico gravado no banco. Necessário porque diagnostics.ramo tem CHECK em
+ * ('odontologia','medicina','estetica','outros').
+ */
+export function toRamoCanonico(ramo: Ramo): RamoCanonico {
+  return ramo === "medico" ? "medicina" : "odontologia";
+}
+
+/**
+ * Converte o ramo canônico do banco de volta para o ramo interno usado pela
+ * lógica de pilares/planos. Aceita também os valores legados (dentista|medico)
+ * de registros pré-migração. medicina/estetica/outros caem em "medico"
+ * (conjunto de pilares de saúde); odontologia em "dentista".
+ */
+export function fromRamoCanonico(ramo: string | null | undefined): Ramo {
+  if (ramo === "medico" || ramo === "medicina" || ramo === "estetica" || ramo === "outros") {
+    return "medico";
+  }
+  return "dentista";
+}
+
 /* ============================================================
  * PILARES. Versão DENTISTA (default)
  * ============================================================ */
@@ -180,9 +205,9 @@ export const PLANOS: Plano[] = [
 ];
 
 export const PLANOS_MEDICO: Plano[] = [
-  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base · Saúde", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing Digital"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
-  { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento · Saúde", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de particulares, marketing médico ético e gestão financeira para acelerar faturamento com consistência.", modulos: ["Captação & Tráfego", "Marketing Digital", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
-  { trigger: () => true, badge: "FASE 2–3 · EXPANSÃO", name: "Raiz de Expansão · Saúde", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing Digital", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
+  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base", desc: "Para consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para destravar o faturamento, reduzir dependência de convênios e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing Digital"], valor: "R$ 2.500 – R$ 3.500/mês", duracao: "3–4 meses · 1 encontro/semana", roi: "+40–80%" },
+  { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de particulares, marketing médico ético e gestão financeira para acelerar faturamento com consistência.", modulos: ["Captação & Tráfego", "Marketing Digital", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "R$ 3.500 – R$ 5.000/mês", duracao: "4–5 meses · 1 encontro/semana", roi: "+60–120%" },
+  { trigger: () => true, badge: "FASE 2–3 · EXPANSÃO", name: "Raiz de Expansão", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing Digital", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
 ];
 
 export function getPlanosByRamo(ramo: Ramo): Plano[] {
