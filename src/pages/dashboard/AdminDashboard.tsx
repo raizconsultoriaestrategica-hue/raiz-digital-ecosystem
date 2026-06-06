@@ -188,7 +188,6 @@ type NovoLeadForm = {
   instagram: string;
   observacoes_relacionamento: string;
   origem: string;
-  faturamento_atual: string;
 };
 
 const NOVO_LEAD_INITIAL: NovoLeadForm = {
@@ -202,7 +201,6 @@ const NOVO_LEAD_INITIAL: NovoLeadForm = {
   instagram: "",
   observacoes_relacionamento: "",
   origem: "",
-  faturamento_atual: "",
 };
 
 // Estado do formulario de ATIVAÇÃO (lead → projeto_ativo). Dados comerciais.
@@ -511,10 +509,6 @@ export default function AdminDashboard() {
           observacoes_relacionamento: novoLeadForm.observacoes_relacionamento.trim() || null,
           especialidade_clinica: novoLeadForm.especialidade_clinica.trim() || null,
           origem: novoLeadForm.origem || null,
-          faturamento_atual: (() => {
-            const n = Number(novoLeadForm.faturamento_atual.replace(",", "."));
-            return novoLeadForm.faturamento_atual.trim() !== "" && Number.isFinite(n) ? n : null;
-          })(),
         })
         .select("id")
         .single();
@@ -1090,16 +1084,6 @@ export default function AdminDashboard() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Faturamento atual (R$/mês)</Label>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="0"
-                      value={novoLeadForm.faturamento_atual}
-                      onChange={(e) => setNovoLeadForm((f) => ({ ...f, faturamento_atual: e.target.value }))}
-                    />
                   </div>
                 </div>
               </div>
