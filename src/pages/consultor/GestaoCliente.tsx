@@ -541,7 +541,8 @@ export default function GestaoCliente() {
           especialidade: cadastroForm.especialidade.trim() || null,
           ramo: cadastroForm.ramo,
           plano: cadastroForm.plano || null,
-          status: cadastroForm.status,
+          // status NÃO é gravado aqui: transições são ações controladas na carteira
+          // (Ativar como cliente / Encerrar / Reabrir).
           meta_faturamento: toNum(cadastroForm.meta_faturamento),
           faturamento_atual: toNum(cadastroForm.faturamento_atual),
           origem: cadastroForm.origem || null,
@@ -851,19 +852,12 @@ export default function GestaoCliente() {
                   </div>
                   <div>
                     <Label>Status</Label>
-                    <Select
-                      value={cadastroForm.status}
-                      onValueChange={(v) => setCadastroForm((f) => ({ ...f, status: v }))}
-                    >
-                      <SelectTrigger className="mt-0.5">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUS_OPCOES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <p className="mt-1 text-sm text-quase-preto">
+                      {STATUS_OPCOES.find((s) => s.value === cadastroForm.status)?.label ?? "Lead"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Muda pelas ações da carteira (Ativar como cliente, Encerrar, Reabrir).
+                    </p>
                   </div>
                   <div>
                     <Label>Faturamento atual (R$/mês)</Label>

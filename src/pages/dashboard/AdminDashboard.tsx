@@ -612,13 +612,11 @@ export default function AdminDashboard() {
       const { error } = await supabase
         .from("clientes")
         .update({
-          status: editState.status,
+          // status NÃO é editado aqui: transições são ações controladas
+          // (Ativar como cliente / Encerrar / Reabrir).
           orcamento_inicial: num(editState.orcamento_inicial),
           data_diagnostico: editState.data_diagnostico || null,
-          data_inicio_projeto:
-            editState.status === "projeto_ativo"
-              ? editState.data_inicio_projeto || null
-              : editState.data_inicio_projeto || null,
+          data_inicio_projeto: editState.data_inicio_projeto || null,
           duracao_meses:
             editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
           valor_mensalidade: num(editState.valor_mensalidade),
@@ -633,6 +631,23 @@ export default function AdminDashboard() {
       toast.error(msg);
     } finally {
       setSavingEdit(false);
+    }
+  };
+
+  // Transições explícitas de status (encerrar / reabrir). A única porta para
+  // projeto_ativo continua sendo o fluxo "Ativar como cliente" (activate-cliente).
+  const mudarStatusCliente = async (id: string, novoStatus: StatusCarteira, msgOk: string) => {
+    try {
+      const { error } = await supabase
+        .from("clientes")
+        .update({ status: novoStatus })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success(msgOk);
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao mudar status";
+      toast.error(msg);
     }
   };
 
@@ -854,7 +869,9 @@ export default function AdminDashboard() {
                                   <FolderOpen className="mr-2 h-4 w-4" />
                                   Orçamentos salvos
                                 </DropdownMenuItem>
-                                {l.cliente.status !== "projeto_ativo" && (
+                                {(l.cliente.status === "lead" ||
+                                  l.cliente.status === "diagnostico_feito" ||
+                                  l.cliente.status === "proposta_enviada") && (
                                   <>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
@@ -863,6 +880,34 @@ export default function AdminDashboard() {
                                     >
                                       <Plus className="mr-2 h-4 w-4" />
                                       Ativar como cliente
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {l.cliente.status === "projeto_ativo" && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() =>
+                                        mudarStatusCliente(l.cliente.id, "encerrado", "Cliente encerrado")
+                                      }
+                                    >
+                                      <Briefcase className="mr-2 h-4 w-4" />
+                                      Encerrar cliente
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {l.cliente.status === "encerrado" && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-verde-raiz focus:text-verde-raiz"
+                                      onClick={() =>
+                                        mudarStatusCliente(l.cliente.id, "projeto_ativo", "Cliente reaberto")
+                                      }
+                                    >
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Reabrir cliente
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -1349,23 +1394,14 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select
-                  value={editState.status}
-                  onValueChange={(v) =>
-                    setEditState({ ...editState, status: v as StatusCarteira })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(STATUS_LABEL) as StatusCarteira[]).map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {STATUS_LABEL[s]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Badge className={STATUS_BADGE[editState.status]}>
+                    {STATUS_LABEL[editState.status]}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O status muda pelas ações da carteira (Ativar como cliente, Encerrar, Reabrir), não por aqui.
+                </p>
               </div>
 
               <div className="space-y-2">

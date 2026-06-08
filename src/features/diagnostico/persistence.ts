@@ -155,6 +155,19 @@ export async function saveDiagnosticoToSupabase(
     console.warn("[saveDiagnosticoToSupabase] dual-write diagnostics falhou:", e);
   }
 
+  // Avança o funil: lead -> diagnostico_feito (transição automática controlada).
+  // Só avança quem ainda é 'lead'; não rebaixa proposta_enviada/projeto_ativo/encerrado.
+  // Não bloqueia o fluxo principal se falhar.
+  try {
+    await supabase
+      .from("clientes")
+      .update({ status: "diagnostico_feito", data_diagnostico: new Date().toISOString().slice(0, 10) })
+      .eq("id", clienteId)
+      .eq("status", "lead");
+  } catch (e) {
+    console.warn("[saveDiagnosticoToSupabase] avanço de status falhou:", e);
+  }
+
   // Também persiste configs (fat, meta, dor, especialidade) para reuso por outras ferramentas (ex.: Orçamentos)
   await saveClienteConfigToSupabase(clienteId, {
     fat: fatLabelToNumber(snapshot.selOpts?.fat),
