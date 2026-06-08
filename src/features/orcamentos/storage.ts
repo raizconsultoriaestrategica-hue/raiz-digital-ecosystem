@@ -237,11 +237,16 @@ export async function saveOrcamento(
       console.log("[saveOrcamento] nenhum módulo selecionado");
     }
 
-    // === Passo E. Ativar projeto ===
+    // === Passo E. Avançar funil para "proposta enviada" ===
+    // Gerar orçamento NÃO ativa o cliente. Ativar é uma ação explícita
+    // ("Ativar como cliente"), que exige plano/valor. Aqui só avançamos o
+    // funil de lead/diagnóstico para proposta_enviada, sem rebaixar quem
+    // já está ativo ou encerrado.
     const { data: updData, error: updErr } = await supabase
       .from("clientes")
-      .update({ status: "projeto_ativo" })
+      .update({ status: "proposta_enviada" })
       .eq("id", clienteId)
+      .in("status", ["lead", "diagnostico_feito"])
       .select("id, status");
     if (updErr) throw updErr;
     console.log("[saveOrcamento] cliente atualizado", updData);
