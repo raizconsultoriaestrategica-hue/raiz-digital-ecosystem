@@ -22,9 +22,11 @@ export interface ClienteCompleto {
   endereco: string | null;
   instagram: string | null;
   observacoes_relacionamento: string | null;
+  origem: string | null;
   plano: string | null;
   status: string | null;
   meta_faturamento: number | null;
+  faturamento_atual_cadastro: number | null;
   orcamento_inicial: number | null;
   valor_mensalidade: number | null;
   data_inicio_projeto: string | null;

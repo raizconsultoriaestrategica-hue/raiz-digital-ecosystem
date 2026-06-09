@@ -107,9 +107,11 @@ export function useOrcamento() {
     updates.especialidade = vc.especialidade_clinica || vc.especialidade || vc.ramo || "";
     updates.cidade = vc.cidade || "";
 
-    // Faturamento: prefere kpis_mensais (view), senao orcamento_inicial
+    // Faturamento: prefere o KPI real (mês a mês); se não houver KPI ainda,
+    // usa o informado no cadastro (faturamento_atual_cadastro); por último o orçamento inicial.
     updates.faturamento =
       vc.faturamento_atual != null ? String(vc.faturamento_atual) :
+      vc.faturamento_atual_cadastro != null ? String(vc.faturamento_atual_cadastro) :
       vc.orcamento_inicial != null ? String(vc.orcamento_inicial) : "";
 
     updates.meta =
