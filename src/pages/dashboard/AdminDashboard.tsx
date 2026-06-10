@@ -164,16 +164,6 @@ const formatBRL = (v: number | null | undefined) =>
         maximumFractionDigits: 0,
       }).format(v);
 
-type EditState = {
-  cliente: Cliente;
-  status: StatusCarteira;
-  data_diagnostico: string;
-  data_inicio_projeto: string;
-  duracao_meses: string;
-  orcamento_inicial: string;
-  valor_mensalidade: string;
-};
-
 // Estado do formulario de novo LEAD (cadastro inicial, antes de virar cliente).
 // Campos mínimos para fazer Diagnóstico 360. Sem dados comerciais (plano, valor,
 // vencimento, forma pgto, etc). Esses entram só na ativação (lead → projeto_ativo).
@@ -236,8 +226,6 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; nome: string } | null>(null);
   const [confirmDeleteCliente, setConfirmDeleteCliente] = useState<{ id: string; nome: string } | null>(null);
-  const [editState, setEditState] = useState<EditState | null>(null);
-  const [savingEdit, setSavingEdit] = useState(false);
   const [orcamentosOpen, setOrcamentosOpen] = useState<{ id: string; nome: string } | null>(null);
 
   // Modal Novo Lead
@@ -458,26 +446,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const openEdit = (c: Cliente) => {
-    // Auto-preenche data_diagnostico com a data do diagnóstico salvo, se ainda não definida
-    let dataDiag = c.data_diagnostico ?? "";
-    if (!dataDiag) {
-      const diag = linhas.find((l) => l.cliente.id === c.id)?.diag;
-      if (diag?.timestamp) {
-        dataDiag = new Date(diag.timestamp).toISOString().slice(0, 10);
-      }
-    }
-    setEditState({
-      cliente: c,
-      status: (c.status as StatusCarteira) || "lead",
-      data_diagnostico: dataDiag,
-      data_inicio_projeto: c.data_inicio_projeto ?? "",
-      duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
-      orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
-      valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
-    });
-  };
-
   const handleCriarLead = async () => {
     if (!novoLeadForm.nome_cliente.trim()) {
       toast.error("Nome do responsável é obrigatório.");
@@ -598,39 +566,6 @@ export default function AdminDashboard() {
       console.error("[Ativar Cliente] erro:", e);
     } finally {
       setSavingAtivacao(false);
-    }
-  };
-
-  const saveEdit = async () => {
-    if (!editState) return;
-    setSavingEdit(true);
-    try {
-      const num = (s: string) => {
-        const n = Number(String(s).replace(",", "."));
-        return Number.isFinite(n) && s !== "" ? n : null;
-      };
-      const { error } = await supabase
-        .from("clientes")
-        .update({
-          // status NÃO é editado aqui: transições são ações controladas
-          // (Ativar como cliente / Encerrar / Reabrir).
-          orcamento_inicial: num(editState.orcamento_inicial),
-          data_diagnostico: editState.data_diagnostico || null,
-          data_inicio_projeto: editState.data_inicio_projeto || null,
-          duracao_meses:
-            editState.duracao_meses === "" ? null : parseInt(editState.duracao_meses, 10),
-          valor_mensalidade: num(editState.valor_mensalidade),
-        })
-        .eq("id", editState.cliente.id);
-      if (error) throw error;
-      toast.success("Projeto atualizado");
-      setEditState(null);
-      load();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao atualizar";
-      toast.error(msg);
-    } finally {
-      setSavingEdit(false);
     }
   };
 
@@ -829,10 +764,6 @@ export default function AdminDashboard() {
                                 >
                                   <Briefcase className="mr-2 h-4 w-4" />
                                   Gerir cliente
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openEdit(l.cliente)}>
-                                  <Briefcase className="mr-2 h-4 w-4" />
-                                  Editar projeto
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -1377,111 +1308,6 @@ export default function AdminDashboard() {
               </DialogFooter>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ===== Modal: Editar projeto ===== */}
-      <Dialog open={!!editState} onOpenChange={(o) => !o && setEditState(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar projeto</DialogTitle>
-            <DialogDescription>
-              {editState?.cliente.nome_clinica || editState?.cliente.nome_cliente}
-            </DialogDescription>
-          </DialogHeader>
-
-          {editState && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <div>
-                  <Badge className={STATUS_BADGE[editState.status]}>
-                    {STATUS_LABEL[editState.status]}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  O status muda pelas ações da carteira (Ativar como cliente, Encerrar, Reabrir), não por aqui.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Data do diagnóstico</Label>
-                <Input
-                  type="date"
-                  value={editState.data_diagnostico}
-                  onChange={(e) =>
-                    setEditState({ ...editState, data_diagnostico: e.target.value })
-                  }
-                />
-              </div>
-
-              {editState.status === "projeto_ativo" && (
-                <div className="space-y-2">
-                  <Label>
-                    Data de início do projeto <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    type="date"
-                    required
-                    value={editState.data_inicio_projeto}
-                    onChange={(e) =>
-                      setEditState({ ...editState, data_inicio_projeto: e.target.value })
-                    }
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Duração (meses)</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={editState.duracao_meses}
-                  onChange={(e) =>
-                    setEditState({ ...editState, duracao_meses: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Orçamento inicial (R$)</Label>
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    value={editState.orcamento_inicial}
-                    onChange={(e) =>
-                      setEditState({ ...editState, orcamento_inicial: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor mensalidade (R$)</Label>
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    value={editState.valor_mensalidade}
-                    onChange={(e) =>
-                      setEditState({ ...editState, valor_mensalidade: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditState(null)} disabled={savingEdit}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={saveEdit}
-              disabled={savingEdit}
-              className="bg-verde-raiz hover:bg-verde-raiz/90"
-            >
-              {savingEdit ? "Salvando…" : "Salvar"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

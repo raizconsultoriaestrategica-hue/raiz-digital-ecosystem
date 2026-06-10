@@ -62,6 +62,12 @@ interface Cliente {
   dia_vencimento: number | null;
   forma_pagamento: string | null;
   especialidade_clinica: string | null;
+  // Projeto (antes só no modal "Editar projeto" do painel)
+  data_diagnostico: string | null;
+  data_inicio_projeto: string | null;
+  duracao_meses: number | null;
+  orcamento_inicial: number | null;
+  valor_mensalidade: number | null;
 }
 
 interface DashboardRow {
@@ -215,6 +221,11 @@ export default function GestaoCliente() {
     forma_pagamento: string;
     ramo: Ramo;
     especialidade_clinica: string;
+    data_diagnostico: string;
+    data_inicio_projeto: string;
+    duracao_meses: string;
+    orcamento_inicial: string;
+    valor_mensalidade: string;
   }>({
     nome_cliente: "",
     nome_clinica: "",
@@ -237,6 +248,11 @@ export default function GestaoCliente() {
     forma_pagamento: "",
     ramo: "odontologia",
     especialidade_clinica: "",
+    data_diagnostico: "",
+    data_inicio_projeto: "",
+    duracao_meses: "",
+    orcamento_inicial: "",
+    valor_mensalidade: "",
   });
   const [salvandoCadastro, setSalvandoCadastro] = useState(false);
   const [cadastroErros, setCadastroErros] = useState<ErrosCadastro>({});
@@ -253,7 +269,7 @@ export default function GestaoCliente() {
         supabase
           .from("clientes")
           .select(
-            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, faturamento_atual, origem, consultor, pilares_foco, telefone, email_cliente, cpf_cnpj, endereco, data_nascimento, instagram, observacoes_relacionamento, dia_vencimento, forma_pagamento, especialidade_clinica",
+            "id, nome_cliente, nome_clinica, cidade, especialidade, ramo, plano, status, meta_faturamento, faturamento_atual, origem, consultor, pilares_foco, telefone, email_cliente, cpf_cnpj, endereco, data_nascimento, instagram, observacoes_relacionamento, dia_vencimento, forma_pagamento, especialidade_clinica, data_diagnostico, data_inicio_projeto, duracao_meses, orcamento_inicial, valor_mensalidade",
           )
           .eq("id", clienteId)
           .maybeSingle(),
@@ -295,6 +311,11 @@ export default function GestaoCliente() {
           ? (c.ramo as Ramo)
           : "odontologia",
         especialidade_clinica: c.especialidade_clinica ?? "",
+        data_diagnostico: c.data_diagnostico ?? "",
+        data_inicio_projeto: c.data_inicio_projeto ?? "",
+        duracao_meses: c.duracao_meses != null ? String(c.duracao_meses) : "",
+        orcamento_inicial: c.orcamento_inicial != null ? String(c.orcamento_inicial) : "",
+        valor_mensalidade: c.valor_mensalidade != null ? String(c.valor_mensalidade) : "",
       });
 
       const dRows = (dash ?? []) as DashboardRow[];
@@ -557,6 +578,11 @@ export default function GestaoCliente() {
           dia_vencimento: toNum(cadastroForm.dia_vencimento),
           forma_pagamento: cadastroForm.forma_pagamento || null,
           especialidade_clinica: cadastroForm.especialidade_clinica.trim() || null,
+          data_diagnostico: cadastroForm.data_diagnostico || null,
+          data_inicio_projeto: cadastroForm.data_inicio_projeto || null,
+          duracao_meses: cadastroForm.duracao_meses.trim() === "" ? null : parseInt(cadastroForm.duracao_meses, 10),
+          orcamento_inicial: toNum(cadastroForm.orcamento_inicial),
+          valor_mensalidade: toNum(cadastroForm.valor_mensalidade),
         })
         .eq("id", clienteId);
       if (error) throw error;
@@ -983,6 +1009,63 @@ export default function GestaoCliente() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Projeto */}
+              <div>
+                <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-verde-musgo">
+                  Projeto
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Data do diagnóstico</Label>
+                    <Input
+                      type="date"
+                      className="mt-0.5"
+                      value={cadastroForm.data_diagnostico}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, data_diagnostico: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Data de início do projeto</Label>
+                    <Input
+                      type="date"
+                      className="mt-0.5"
+                      value={cadastroForm.data_inicio_projeto}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, data_inicio_projeto: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Duração (meses)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      className="mt-0.5"
+                      value={cadastroForm.duracao_meses}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, duracao_meses: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Orçamento inicial (R$)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      className="mt-0.5"
+                      value={cadastroForm.orcamento_inicial}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, orcamento_inicial: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Valor da mensalidade (R$)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      className="mt-0.5"
+                      value={cadastroForm.valor_mensalidade}
+                      onChange={(e) => setCadastroForm((f) => ({ ...f, valor_mensalidade: e.target.value }))}
+                    />
                   </div>
                 </div>
               </div>
