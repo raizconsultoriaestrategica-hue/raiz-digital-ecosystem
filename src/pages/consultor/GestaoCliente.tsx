@@ -414,6 +414,45 @@ export default function GestaoCliente() {
         if (insErr) throw insErr;
       }
 
+      // 2b) Espelha os KPIs na tabela tipada kpis_mensais, que é o que a view
+      //     v_cliente_completo e as ferramentas (financeiro, IA, hooks) leem.
+      //     Sem isso, o KPI atualizado aqui não reflete nas ferramentas.
+      //     Mesmo parser pt-BR do dashboard (ponto=milhar, vírgula=decimal).
+      const numKpi = (v: string | undefined): number | undefined => {
+        if (!v || String(v).trim() === "") return undefined;
+        const norm = String(v).trim().replace(/\./g, "").replace(",", ".");
+        const n = Number(norm);
+        if (Number.isFinite(n)) return n;
+        const n2 = Number(v);
+        return Number.isFinite(n2) ? n2 : undefined;
+      };
+      // Mapa: chave do KPI editável (EAV) -> coluna tipada de kpis_mensais
+      const MAPA_KPI_TIPADO: Record<string, string> = {
+        faturamento_bruto: "faturamento_bruto",
+        margem_liquida: "margem_liquida",
+        taxa_conversao: "taxa_conversao",
+        ticket_medio_rs: "ticket_medio",
+        taxa_no_show: "taxa_no_show",
+        ocupacao_cadeiras: "ocupacao_cadeiras",
+      };
+      const kpiTipado: Record<string, number> = {};
+      for (const [eavKey, col] of Object.entries(MAPA_KPI_TIPADO)) {
+        const n = numKpi(kpiValues[eavKey]);
+        if (n !== undefined) kpiTipado[col] = n;
+      }
+      if (Object.keys(kpiTipado).length > 0) {
+        // mes "MM/YYYY" -> data do primeiro dia do mês (YYYY-MM-01)
+        const [mmRef, yyyyRef] = mesRef.split("/");
+        const mesReferenciaDate = `${yyyyRef}-${mmRef.padStart(2, "0")}-01`;
+        const { error: kpiErr } = await supabase
+          .from("kpis_mensais")
+          .upsert(
+            { cliente_id: clienteId, mes_referencia: mesReferenciaDate, ...kpiTipado },
+            { onConflict: "cliente_id,mes_referencia" },
+          );
+        if (kpiErr) throw kpiErr;
+      }
+
       // 3) Atualiza CONFIG.mes_referencia para refletir no dashboard do cliente
       await supabase
         .from("dashboard_data")
