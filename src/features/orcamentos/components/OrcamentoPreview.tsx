@@ -44,7 +44,6 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
 
     const duracao = DURACAO_MESES[form.plano] ?? 5;
-    const valorTotal = valorFinal * duracao;
 
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
@@ -127,7 +126,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
-      valorCalculado, valorFinal, valorTotal, duracao, validadeDate, ancoragemFrase,
+      valorCalculado, valorFinal, duracao, validadeDate, ancoragemFrase,
     };
   }, [form, modulosDb]);
 
@@ -270,25 +269,31 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                 )}
               </div>
 
-              {/* Valor total e parcelas */}
+              {/* Duração e condição de pagamento */}
               <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">
                 <div>
-                  <span className="text-[#718096]">Valor total do contrato:</span>
-                </div>
-                <div className="text-right font-semibold text-verde-raiz">
-                  {fmtMoney(data.valorTotal)}
-                </div>
-                <div>
-                  <span className="text-[#718096]">Parcelas:</span>
+                  <span className="text-[#718096]">Duração:</span>
                 </div>
                 <div className="text-right font-semibold text-quase-preto">
-                  {data.duracao}x de {fmtMoney(data.valorFinal)}
+                  Ciclo inicial de {data.plano.dur.split("·")[0].trim()}
+                </div>
+                <div className="col-span-2 text-[11px] text-[#718096] leading-[1.55]">
+                  Com continuidade mensal conforme a evolução do projeto.
+                </div>
+                <div>
+                  <span className="text-[#718096]">Condição de pagamento:</span>
+                </div>
+                <div className="text-right font-semibold text-verde-raiz">
+                  2x de {fmtMoney(data.valorFinal / 2)} no mês
+                </div>
+                <div className="col-span-2 text-[11px] text-[#718096] leading-[1.55]">
+                  A mensalidade pode ser dividida em duas parcelas: a 1ª parte até o dia 10 e a 2ª parte até o dia 20 de cada mês.
                 </div>
                 <div>
                   <span className="text-[#718096]">Formas de pagamento:</span>
                 </div>
                 <div className="text-right text-quase-preto">
-                  PIX, Boleto ou Cartão em até 12x
+                  PIX, Boleto ou Cartão
                 </div>
                 <div>
                   <span className="text-[#718096]">Validade da proposta:</span>
