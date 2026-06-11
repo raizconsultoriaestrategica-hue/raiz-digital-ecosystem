@@ -284,16 +284,16 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                   <span className="text-[#718096]">Condição de pagamento:</span>
                 </div>
                 <div className="text-right font-semibold text-verde-raiz">
-                  2x de {fmtMoney(data.valorFinal / 2)} no mês
+                  {fmtMoney(data.valorFinal)}/mês ou 2x de {fmtMoney(data.valorFinal / 2)}
                 </div>
                 <div className="col-span-2 text-[11px] text-[#718096] leading-[1.55]">
-                  A mensalidade pode ser dividida em duas parcelas: a 1ª parte até o dia 10 e a 2ª parte até o dia 20 de cada mês.
+                  Pagamento integral no mês, ou dividido em 2 parcelas iguais: a 1ª parte até o dia 10 e a 2ª parte até o dia 20 de cada mês.
                 </div>
                 <div>
                   <span className="text-[#718096]">Formas de pagamento:</span>
                 </div>
                 <div className="text-right text-quase-preto">
-                  PIX, Boleto ou Cartão
+                  PIX ou Transferência
                 </div>
                 <div>
                   <span className="text-[#718096]">Validade da proposta:</span>
@@ -339,7 +339,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           <div className="grid grid-cols-2 gap-3 mb-5">
             {[
               ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],
-              ["Pagamento Inicial", "Confirmação do primeiro pagamento via PIX ou boleto. Parcelamento disponível sob consulta."],
+              ["Pagamento Inicial", "Confirmação do primeiro pagamento via PIX ou transferência. Pagamento mensal integral ou em 2 parcelas no mês."],
               ["Onboarding Estratégico", "Sessão de onboarding em até 7 dias: metas, indicadores e primeiro módulo definidos."],
               ["Dashboard Ativado", "Dashboard exclusivo do cliente configurado com KPIs iniciais do diagnóstico."],
             ].map(([t, d], i) => (
