@@ -1,7 +1,9 @@
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { useOrcamento } from "@/features/orcamentos/hooks/useOrcamento";
 import { OrcamentoSidebar } from "@/features/orcamentos/components/OrcamentoSidebar";
 import { OrcamentoPreview } from "@/features/orcamentos/components/OrcamentoPreview";
+import { generateOrcamentoPDFBlob } from "@/features/orcamentos/storage";
 import "@/features/orcamentos/print.css";
 
 export default function Orcamentos() {
@@ -14,12 +16,29 @@ export default function Orcamentos() {
     return () => { document.title = prev; };
   }, []);
 
-  const handlePrint = () => {
-    document.body.classList.add("printing-orcamento");
-    setTimeout(() => {
-      window.print();
-      document.body.classList.remove("printing-orcamento");
-    }, 50);
+  // Gera o PDF paginado (mesma engine do salvamento automático) e baixa.
+  // Substitui a impressão do navegador, que quebrava cada seção numa página.
+  const handlePrint = async () => {
+    const tid = toast.loading("Gerando PDF…");
+    try {
+      const blob = await generateOrcamentoPDFBlob();
+      const base = (orc.form.nomeClinica || orc.form.nomeCliente || "cliente")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Orcamento - ${base || "cliente"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success("PDF gerado", { id: tid });
+    } catch {
+      toast.error("Falha ao gerar o PDF. Tente novamente.", { id: tid });
+    }
   };
 
   return (

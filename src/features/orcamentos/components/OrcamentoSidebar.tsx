@@ -577,7 +577,7 @@ export function OrcamentoSidebar(p: Props) {
         className="w-full bg-dourado hover:opacity-90 text-white font-bold text-[13px] rounded-lg py-3 mt-5 flex items-center justify-center gap-2 transition-opacity"
       >
         <Printer className="w-4 h-4" />
-        Imprimir / Gerar PDF
+        Baixar PDF
       </button>
       <button
         onClick={handleSave}
