@@ -320,12 +320,12 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               </div>
             </div>
           </div>
+        </Section>
 
+        {/* INVESTIMENTO */}
+        <Section label="03 · Investimento" title="Investimento & Condições">
           <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
             <div className="px-6 py-5 bg-white">
-              <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
-                Investimento
-              </div>
               <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
                 {fmtMoney(data.valorFinal)}/mês
               </div>
@@ -386,7 +386,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
 
         {/* RETORNO */}
         {data.fat > 0 && data.meta > 0 && data.meta > data.fat && (
-          <Section label="03 · O Retorno" title="De onde você está para onde quer chegar">
+          <Section label="04 · O Retorno" title="De onde você está para onde quer chegar">
             <div className="grid grid-cols-3 gap-3 mb-5">
               {[
                 ["Hoje", fmtMoney(data.fat), "#718096"],
@@ -406,7 +406,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         )}
 
         {/* CRONOGRAMA */}
-        <Section label="04 · Cronograma de Execução" title="Fases do Trabalho">
+        <Section label="05 · Cronograma de Execução" title="Fases do Trabalho">
           <div className="relative pl-7">
             <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #E8DDD0)" }} />
             {data.timeline.map((t) => (
@@ -425,7 +425,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         </Section>
 
         {/* PRÓXIMOS PASSOS */}
-        <Section label="05 · Próximos Passos" title="Como iniciamos o trabalho">
+        <Section label="06 · Próximos Passos" title="Como iniciamos o trabalho">
           <div className="grid grid-cols-2 gap-3 mb-5">
             {[
               ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],
