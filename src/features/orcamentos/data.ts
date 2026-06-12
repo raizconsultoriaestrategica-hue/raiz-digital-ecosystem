@@ -14,16 +14,17 @@ export const PILARES: Pilar[] = [
   { id: "p07", name: "Crescimento & Expansão" },
 ];
 
-/** Mapa pilar -> frente (nome + resultado), alinhado à linguagem do deck.
- * O cliente vê frentes e resultados, nunca códigos de módulo. */
-export const FRENTES: Record<string, { nome: string; resultado: string }> = {
-  p01: { nome: "Posicionamento & Conteúdo", resultado: "presença que vira autoridade e converte" },
-  p02: { nome: "Captação Previsível", resultado: "saber de onde vem cada paciente, com previsibilidade" },
-  p03: { nome: "Conversão & Atendimento", resultado: "nenhum paciente se perde no contato" },
-  p04: { nome: "Receita & Margem", resultado: "faturar mais com os mesmos pacientes" },
-  p05: { nome: "Gestão & Sistema", resultado: "a operação para de depender do dono" },
-  p06: { nome: "Retenção & Reativação", resultado: "a base de pacientes volta a gerar caixa" },
-  p07: { nome: "Expansão & Operação", resultado: "crescer com estrutura, sem depender de você" },
+/** Mapa pilar -> frente (nome + resultado + entrega), alinhado à linguagem do
+ * deck. O cliente vê frentes, resultados e entregáveis em linguagem de valor,
+ * nunca códigos nem nomes técnicos de módulo. */
+export const FRENTES: Record<string, { nome: string; resultado: string; entrega: string }> = {
+  p01: { nome: "Posicionamento & Conteúdo", resultado: "presença que vira autoridade e converte", entrega: "posicionamento documentado, linha editorial e calendário de conteúdo" },
+  p02: { nome: "Captação Previsível", resultado: "saber de onde vem cada paciente, com previsibilidade", entrega: "diagnóstico de canais, funil de captação e metas de aquisição" },
+  p03: { nome: "Conversão & Atendimento", resultado: "nenhum paciente se perde no contato", entrega: "scripts de atendimento e de fechamento, follow-up estruturado e treino da equipe" },
+  p04: { nome: "Receita & Margem", resultado: "faturar mais com os mesmos pacientes", entrega: "custo e margem por procedimento, tabela de preços e controle financeiro" },
+  p05: { nome: "Gestão & Sistema", resultado: "a operação para de depender do dono", entrega: "processos documentados, papéis definidos e ferramentas de gestão" },
+  p06: { nome: "Retenção & Reativação", resultado: "a base de pacientes volta a gerar caixa", entrega: "protocolo de pós-atendimento, recall de inativos e programa de indicação" },
+  p07: { nome: "Expansão & Operação", resultado: "crescer com estrutura, sem depender de você", entrega: "diagnóstico de maturidade e plano de expansão sustentável" },
 };
 
 export const PLANOS: Record<PlanoKey, Plano> = {
