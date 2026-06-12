@@ -34,12 +34,13 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
     }
   });
 
+  const scale = 2.5;
   const canvas = await html2canvas(node, {
     useCORS: true,
     allowTaint: false,
     imageTimeout: 15000,
     foreignObjectRendering: false,
-    scale: 2,
+    scale,
     logging: false,
     backgroundColor: "#ffffff",
     onclone: (clonedDoc) => {
@@ -53,24 +54,52 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
     },
   });
 
-  const imgData = canvas.toDataURL("image/jpeg", 0.92);
   const pdf = new jsPDF("p", "mm", "a4");
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const imgW = pageW;
-  const imgH = (canvas.height * imgW) / canvas.width;
+  const pageWmm = pdf.internal.pageSize.getWidth();
+  const pageHmm = pdf.internal.pageSize.getHeight();
+  const pxPerMm = canvas.width / pageWmm;
+  const pageHpx = Math.floor(pageHmm * pxPerMm);
 
-  let heightLeft = imgH;
-  let position = 0;
+  // Pontos de quebra permitidos: topo da capa e de cada seção, em px do canvas.
+  // Quebrar nesses limites evita cortar conteúdo no meio.
+  const breakEls = Array.from(node.querySelectorAll<HTMLElement>(".pg-cover, .orc-section"));
+  const breakSet = new Set<number>([0, canvas.height]);
+  for (const el of breakEls) breakSet.add(Math.round(el.offsetTop * scale));
+  const breaks = Array.from(breakSet)
+    .filter((b) => b >= 0 && b <= canvas.height)
+    .sort((a, b) => a - b);
 
-  pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-  heightLeft -= pageH;
+  // Paginação gulosa: empacota o máximo de seções por página sem estourar a A4.
+  const slice = document.createElement("canvas");
+  const ctx = slice.getContext("2d");
+  if (!ctx) throw new Error("Não foi possível preparar a página do PDF.");
 
-  while (heightLeft > 0) {
-    position = heightLeft - imgH;
-    pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-    heightLeft -= pageH;
+  let pageStart = 0;
+  let first = true;
+  let guard = 0;
+  while (pageStart < canvas.height - 1 && guard++ < 100) {
+    const maxEnd = pageStart + pageHpx;
+    // maior ponto de quebra que cabe nesta página
+    let pageEnd = -1;
+    for (const b of breaks) {
+      if (b > pageStart && b <= maxEnd) pageEnd = b;
+    }
+    // Seção mais alta que uma página: corte forçado (inevitável)
+    if (pageEnd <= pageStart) pageEnd = Math.min(maxEnd, canvas.height);
+
+    const sliceH = pageEnd - pageStart;
+    slice.width = canvas.width;
+    slice.height = sliceH;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, slice.width, sliceH);
+    ctx.drawImage(canvas, 0, pageStart, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+    const imgData = slice.toDataURL("image/jpeg", 0.95);
+    const imgHmm = sliceH / pxPerMm;
+    if (!first) pdf.addPage();
+    pdf.addImage(imgData, "JPEG", 0, 0, pageWmm, imgHmm);
+    first = false;
+    pageStart = pageEnd;
   }
 
   return pdf.output("blob");
