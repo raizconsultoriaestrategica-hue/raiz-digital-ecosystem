@@ -14,6 +14,18 @@ export const PILARES: Pilar[] = [
   { id: "p07", name: "Crescimento & Expansão" },
 ];
 
+/** Mapa pilar -> frente (nome + resultado), alinhado à linguagem do deck.
+ * O cliente vê frentes e resultados, nunca códigos de módulo. */
+export const FRENTES: Record<string, { nome: string; resultado: string }> = {
+  p01: { nome: "Posicionamento & Conteúdo", resultado: "presença que vira autoridade e converte" },
+  p02: { nome: "Captação Previsível", resultado: "saber de onde vem cada paciente, com previsibilidade" },
+  p03: { nome: "Conversão & Atendimento", resultado: "nenhum paciente se perde no contato" },
+  p04: { nome: "Receita & Margem", resultado: "faturar mais com os mesmos pacientes" },
+  p05: { nome: "Gestão & Sistema", resultado: "a operação para de depender do dono" },
+  p06: { nome: "Retenção & Reativação", resultado: "a base de pacientes volta a gerar caixa" },
+  p07: { nome: "Expansão & Operação", resultado: "crescer com estrutura, sem depender de você" },
+};
+
 export const PLANOS: Record<PlanoKey, Plano> = {
   base: {
     key: "base",

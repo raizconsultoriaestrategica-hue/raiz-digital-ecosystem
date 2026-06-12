@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PILARES, PLANOS, fmtMoney, getBarColor, classifFor, type PlanoKey } from "../data";
+import { PILARES, PLANOS, FRENTES, fmtMoney, getBarColor, classifFor, type PlanoKey } from "../data";
 import { ANCORAGENS, calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
 
 const DURACAO_MESES: Record<PlanoKey, number> = { base: 4, crescimento: 5, expansao: 6 };
@@ -42,6 +42,24 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     const valorFinalNum = parseFloat(form.valorFinal);
     const valorFinal =
       !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
+
+    // Frentes: agrupa os módulos selecionados por pilar e usa a linguagem do
+    // deck (nome da frente + resultado), sem expor códigos de módulo ao cliente.
+    const frentesSel = (() => {
+      const byPilar = new Map<number, ModuloDb[]>();
+      for (const m of selectedMods) {
+        if (!byPilar.has(m.pilar)) byPilar.set(m.pilar, []);
+        byPilar.get(m.pilar)!.push(m);
+      }
+      return [...byPilar.entries()]
+        .map(([pilar, mods]) => {
+          const pid = `p${String(pilar).padStart(2, "0")}`;
+          const f = FRENTES[pid] ?? { nome: mods[0].pilar_nome, resultado: "" };
+          const fase = Math.min(...mods.map((m) => m.fase));
+          return { pid, pilar, fase, nome: f.nome, resultado: f.resultado, mods };
+        })
+        .sort((a, b) => a.fase - b.fase || a.pilar - b.pilar);
+    })();
 
     const duracao = DURACAO_MESES[form.plano] ?? 5;
 
@@ -92,7 +110,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       const mesesOrdenados = [...porMes.keys()].sort((a, b) => a - b);
       return mesesOrdenados.map((mes, idx) => {
         const mods = porMes.get(mes)!;
-        const nomes = mods.map((m) => `${m.codigo} ${m.nome}`).join(", ");
+        const nomes = mods.map((m) => m.nome).join(", ");
         return {
           n: String(idx + 1),
           period: `Mês ${mes}`,
@@ -125,7 +143,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
 
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
-      classif, plano, pilares, selectedMods, dataFmt, timeline, roiAbs,
+      classif, plano, pilares, selectedMods, frentesSel, dataFmt, timeline, roiAbs,
       valorCalculado, valorFinal, duracao, validadeDate, ancoragemFrase,
     };
   }, [form, modulosDb]);
@@ -232,23 +250,37 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               <div className="text-[12.5px] text-white/75 mt-1.5 leading-[1.65]">{data.plano.desc}</div>
             </div>
             <div className="border-[1.5px] border-t-0 border-[#e8e4e0] rounded-b-[10px] px-6 py-5">
-              <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">
-                Módulos incluídos nesta proposta
+              <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-2.5">
+                Frentes desta proposta
               </div>
-              <div className="flex flex-wrap gap-1.5 mb-3.5">
-                {data.selectedMods.length > 0 ? (
-                  data.selectedMods.map((m) => (
+              {data.frentesSel.length > 0 ? (
+                <div className="mb-3.5">
+                  {data.frentesSel.map((f) => (
                     <div
-                      key={m.id}
-                      className="bg-[#f0f7f4] border border-verde-menta rounded-[5px] px-2.5 py-1 text-[11px] font-semibold text-verde-raiz"
+                      key={f.pid}
+                      className="mb-3 pl-3.5 border-l-[2.5px]"
+                      style={{ borderColor: "#A0622A" }}
                     >
-                      {m.codigo} · {m.nome}
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-[13.5px] font-bold text-verde-raiz">{f.nome}</div>
+                        <div className="text-[8.5px] font-bold uppercase tracking-[0.12em]" style={{ color: "#A0622A" }}>
+                          Fase {f.fase}
+                        </div>
+                      </div>
+                      {f.resultado && (
+                        <div className="text-[11.5px] italic leading-snug" style={{ color: "#A0622A" }}>
+                          {f.resultado}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-[#718096] mt-0.5 leading-snug">
+                        {f.mods.map((m) => m.nome).join(" · ")}
+                      </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-[12px] text-[#718096]">Selecione os módulos na barra lateral</div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[12px] text-[#718096] mb-3.5">Selecione os módulos na barra lateral</div>
+              )}
             </div>
           </div>
 
@@ -261,7 +293,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                 {fmtMoney(data.valorFinal)}/mês
               </div>
               <div className="text-[11px] text-[#718096] mt-1.5">
-                {data.selectedMods.length} módulo{data.selectedMods.length === 1 ? "" : "s"} · {data.plano.dur}
+                {data.frentesSel.length} frente{data.frentesSel.length === 1 ? "" : "s"} · {data.plano.dur}
                 {data.valorCalculado > data.valorFinal && (
                   <span className="text-dourado">
                     {" "}· condição especial (de {fmtMoney(data.valorCalculado)})
