@@ -207,6 +207,21 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
 
         {/* DIAGNÓSTICO */}
         <Section label="01 · Resultado do Diagnóstico" title={`Diagnóstico 360° · ${data.nome}`}>
+          {data.fat > 0 && (
+            <div className="grid grid-cols-4 gap-2.5 mb-5">
+              {[
+                ["Faturamento atual", fmtMoney(data.fat)],
+                ["Meta", data.meta ? fmtMoney(data.meta) : "—"],
+                ["Potencial / mês", data.meta > data.fat ? "+" + fmtMoney(data.meta - data.fat) : "—"],
+                ["Maturidade", data.scoreMax > 0 ? Math.round(data.scorePct) + "%" : "—"],
+              ].map(([label, val], i) => (
+                <div key={i} className="bg-white border border-[#e8e4e0] rounded-[8px] px-3 py-2.5 text-center">
+                  <div className="font-display text-[19px] font-semibold text-verde-raiz leading-tight">{val}</div>
+                  <div className="text-[8.5px] uppercase tracking-[0.08em] text-[#8A8276] mt-1">{label}</div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-[auto_1fr] gap-5 items-center bg-[#f8f7f5] rounded-[10px] p-5 mb-5">
             <div className="text-center">
               <div className="font-display text-[48px] font-semibold text-verde-raiz leading-none">
@@ -234,7 +249,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                       {p.pct !== null ? `${p.pct}%` : "—"}
                     </div>
                   </div>
-                  <div className="h-1.5 bg-[#E2E8F0] rounded-[3px] overflow-hidden">
+                  <div className="h-2.5 bg-[#E2E8F0] rounded-[3px] overflow-hidden">
                     <div
                       className="h-full rounded-[3px] transition-all duration-500"
                       style={{ width: `${p.pct || 0}%`, background: color }}
@@ -322,11 +337,6 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                   </span>
                 )}
               </div>
-              {data.fat > 0 && data.meta > 0 && data.meta > data.fat && (
-                <div className="text-[11.5px] font-semibold text-verde-raiz mt-1.5">
-                  Retorno projetado: {data.roiAbs}.
-                </div>
-              )}
 
               {/* Duração e condição de pagamento */}
               <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">
@@ -374,8 +384,29 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           </div>
         </Section>
 
+        {/* RETORNO */}
+        {data.fat > 0 && data.meta > 0 && data.meta > data.fat && (
+          <Section label="03 · O Retorno" title="De onde você está para onde quer chegar">
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              {[
+                ["Hoje", fmtMoney(data.fat), "#718096"],
+                ["Meta", fmtMoney(data.meta), "#1C3D2E"],
+                ["Destravado", "+" + fmtMoney(data.meta - data.fat) + "/mês", "#A0622A"],
+              ].map(([label, val, color], i) => (
+                <div key={i} className="border-[1.5px] border-[#DDD8D0] rounded-[10px] px-4 py-4 text-center">
+                  <div className="text-[9px] font-bold tracking-[0.12em] uppercase text-dourado mb-1.5">{label}</div>
+                  <div className="font-display text-[24px] font-semibold leading-none" style={{ color }}>{val}</div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-5 py-4 text-[13px] leading-[1.7] text-quase-preto">
+              A pergunta certa não é quanto custa a consultoria. É <strong style={{ color: "#1C3D2E" }}>quanto você deixa na mesa a cada mês sem estrutura.</strong>
+            </div>
+          </Section>
+        )}
+
         {/* CRONOGRAMA */}
-        <Section label="03 · Cronograma de Execução" title="Fases do Trabalho">
+        <Section label="04 · Cronograma de Execução" title="Fases do Trabalho">
           <div className="relative pl-7">
             <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #E8DDD0)" }} />
             {data.timeline.map((t) => (
@@ -394,7 +425,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         </Section>
 
         {/* PRÓXIMOS PASSOS */}
-        <Section label="04 · Próximos Passos" title="Como iniciamos o trabalho">
+        <Section label="05 · Próximos Passos" title="Como iniciamos o trabalho">
           <div className="grid grid-cols-2 gap-3 mb-5">
             {[
               ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],
