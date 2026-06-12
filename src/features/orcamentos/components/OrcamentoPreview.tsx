@@ -54,9 +54,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       return [...byPilar.entries()]
         .map(([pilar, mods]) => {
           const pid = `p${String(pilar).padStart(2, "0")}`;
-          const f = FRENTES[pid] ?? { nome: mods[0].pilar_nome, resultado: "" };
+          const f = FRENTES[pid] ?? { nome: mods[0].pilar_nome, resultado: "", entrega: mods.map((m) => m.nome).join(" · ") };
           const fase = Math.min(...mods.map((m) => m.fase));
-          return { pid, pilar, fase, nome: f.nome, resultado: f.resultado, mods };
+          return { pid, pilar, fase, nome: f.nome, resultado: f.resultado, entrega: f.entrega, mods };
         })
         .sort((a, b) => a.fase - b.fase || a.pilar - b.pilar);
     })();
@@ -272,9 +272,11 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                           {f.resultado}
                         </div>
                       )}
-                      <div className="text-[11px] text-[#718096] mt-0.5 leading-snug">
-                        {f.mods.map((m) => m.nome).join(" · ")}
-                      </div>
+                      {f.entrega && (
+                        <div className="text-[11px] text-[#718096] mt-0.5 leading-snug">
+                          <span className="font-semibold">Inclui:</span> {f.entrega}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
