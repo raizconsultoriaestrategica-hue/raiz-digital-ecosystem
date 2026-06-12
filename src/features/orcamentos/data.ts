@@ -1,6 +1,5 @@
 export interface Pilar { id: string; name: string }
 export interface Plano { key: PlanoKey; badge: string; name: string; desc: string; valor: string; dur: string; roi: string }
-export interface Modulo { id: string; name: string; pilar: string }
 export interface Classif { max: number; label: string; desc: string }
 
 export type PlanoKey = "base" | "crescimento" | "expansao";
@@ -45,32 +44,9 @@ export const PLANOS: Record<PlanoKey, Plano> = {
   },
 };
 
-export const MODULOS_ALL: Modulo[] = [
-  { id: "1.1", name: "Posicionamento Digital", pilar: "Marketing Digital" },
-  { id: "1.2", name: "Identidade de Marca", pilar: "Marketing Digital" },
-  { id: "1.3", name: "Calendário Editorial", pilar: "Marketing Digital" },
-  { id: "2.1", name: "Estratégia de Tráfego Pago", pilar: "Captação & Tráfego" },
-  { id: "2.2", name: "Funil de Captação", pilar: "Captação & Tráfego" },
-  { id: "2.3", name: "Programa de Indicação", pilar: "Captação & Tráfego" },
-  { id: "3.1", name: "Protocolo de Recepção", pilar: "Atendimento & Conversão" },
-  { id: "3.2", name: "Consulta Estratégica (Apresentação de Planos)", pilar: "Atendimento & Conversão" },
-  { id: "3.3", name: "Follow-up e Reativação", pilar: "Atendimento & Conversão" },
-  { id: "4.1", name: "Estruturação Financeira", pilar: "Financeiro & Precificação" },
-  { id: "4.2", name: "Precificação Estratégica", pilar: "Financeiro & Precificação" },
-  { id: "4.3", name: "Controle de Fluxo de Caixa", pilar: "Financeiro & Precificação" },
-  { id: "4.4", name: "Gestão de Inadimplência", pilar: "Financeiro & Precificação" },
-  { id: "5.1", name: "Padronização de Processos (POPs)", pilar: "Gestão Operacional" },
-  { id: "5.2", name: "Gestão de Equipe", pilar: "Gestão Operacional" },
-  { id: "5.3", name: "Sistema de Gestão Clínica", pilar: "Gestão Operacional" },
-  { id: "5.4", name: "Tecnologia e Automação", pilar: "Gestão Operacional" },
-  { id: "5.5", name: "Dashboard de Indicadores", pilar: "Gestão Operacional" },
-  { id: "6.1", name: "Jornada do Paciente", pilar: "Relacionamento & Retenção" },
-  { id: "6.2", name: "Programa de Fidelização", pilar: "Relacionamento & Retenção" },
-  { id: "6.3", name: "Recall e Reativação", pilar: "Relacionamento & Retenção" },
-  { id: "7.1", name: "Modelo de Escala", pilar: "Crescimento & Expansão" },
-  { id: "7.2", name: "Documentação Replicável", pilar: "Crescimento & Expansão" },
-  { id: "7.3", name: "Viabilidade de Expansão", pilar: "Crescimento & Expansão" },
-];
+// A lista de módulos é a fonte de verdade no banco (tabela `modulos`), carregada
+// em runtime via useOrcamento. A constante estática anterior (MODULOS_ALL) estava
+// órfã e desatualizada em relação ao manual; foi removida para evitar divergência.
 
 export const CLASSIFS: Classif[] = [
   { max: 25, label: "🚧 Fundação a Construir", desc: "A base do negócio precisa ser estruturada. Enorme potencial de crescimento com orientação correta." },
