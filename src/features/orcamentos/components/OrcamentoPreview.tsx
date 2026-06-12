@@ -88,8 +88,21 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     const timelineFromModules = (() => {
       if (frentesSel.length === 0) return null;
       const mid = Math.max(1, Math.ceil(duracao / 2));
-      const f1 = frentesSel.filter((f) => f.fase === 1);
-      const f2 = frentesSel.filter((f) => f.fase >= 2);
+      let g1 = frentesSel.filter((f) => f.fase === 1);
+      let g2 = frentesSel.filter((f) => f.fase >= 2);
+      // Se todas as frentes caíram numa fase só, equilibra dividindo por ordem
+      // nas duas metades do ciclo, para o cronograma não concentrar tudo no início.
+      if (g2.length === 0 && g1.length > 2) {
+        const half = Math.ceil(g1.length / 2);
+        g2 = g1.slice(half);
+        g1 = g1.slice(0, half);
+      } else if (g1.length === 0 && g2.length > 2) {
+        const half = Math.ceil(g2.length / 2);
+        g1 = g2.slice(0, half);
+        g2 = g2.slice(half);
+      }
+      const f1 = g1;
+      const f2 = g2;
       const rows: { n: string; period: string; title: string; desc: string }[] = [];
       rows.push({
         n: "1",
@@ -188,7 +201,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
             <CoverMeta label="Localização" value={data.cidade} />
             <CoverMeta label="Data da proposta" value={data.dataFmt} />
             <CoverMeta label="Faturamento atual" value={data.fat ? fmtMoney(data.fat) : "—"} />
-            <CoverMeta label="Meta 6 meses" value={data.meta ? fmtMoney(data.meta) : "—"} />
+            <CoverMeta label="Meta" value={data.meta ? fmtMoney(data.meta) : "—"} />
           </div>
         </div>
 
@@ -386,7 +399,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
             {[
               ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],
               ["Pagamento Inicial", "Confirmação do primeiro pagamento via PIX ou transferência. Pagamento mensal integral ou em 2 parcelas no mês."],
-              ["Onboarding Estratégico", "Sessão de onboarding em até 7 dias: metas, indicadores e primeiro módulo definidos."],
+              ["Onboarding Estratégico", "Sessão de onboarding em até 7 dias: metas, indicadores e primeiras frentes definidas."],
               ["Dashboard Ativado", "Dashboard exclusivo do cliente configurado com KPIs iniciais do diagnóstico."],
             ].map(([t, d], i) => (
               <div key={i} className="border-[1.5px] border-[#DDD8D0] rounded-lg px-4 py-3.5 flex gap-3 items-start">
