@@ -83,41 +83,45 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
       .map((p) => ({ ...p, pctFallback: p.pct ?? 50 }))
       .sort((a, b) => a.pctFallback - b.pctFallback);
 
-    // Cronograma dinâmico: agrupa módulos selecionados por mes_execucao
+    // Cronograma realista por fases (não amontoa módulos num mês só). As frentes
+    // são distribuídas pelas duas metades do ciclo, espelhando o deck.
     const timelineFromModules = (() => {
-      if (selectedMods.length === 0) return null;
-
-      // Distribuir módulos por mês (mesma lógica de storage.ts/distribuirMesesExecucao)
-      const f1 = selectedMods.filter((m) => m.fase === 1);
-      const f2 = selectedMods.filter((m) => m.fase === 2);
-      const f3 = selectedMods.filter((m) => m.fase === 3);
-
-      type ModComMes = ModuloDb & { mes_execucao: number };
-      const distribuidos: ModComMes[] = [];
-
-      const meio = Math.ceil(f1.length / 2);
-      f1.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: i < meio ? 1 : 2 }));
-      f2.forEach((m) => distribuidos.push({ ...m, mes_execucao: 3 }));
-      f3.forEach((m, i) => distribuidos.push({ ...m, mes_execucao: Math.min(4 + i, 12) }));
-
-      // Agrupar por mês
-      const porMes = new Map<number, ModComMes[]>();
-      for (const m of distribuidos) {
-        if (!porMes.has(m.mes_execucao)) porMes.set(m.mes_execucao, []);
-        porMes.get(m.mes_execucao)!.push(m);
-      }
-
-      const mesesOrdenados = [...porMes.keys()].sort((a, b) => a - b);
-      return mesesOrdenados.map((mes, idx) => {
-        const mods = porMes.get(mes)!;
-        const nomes = mods.map((m) => m.nome).join(", ");
-        return {
-          n: String(idx + 1),
-          period: `Mês ${mes}`,
-          title: mods.length === 1 ? mods[0].nome : `${mods.length} módulos`,
-          desc: nomes,
-        };
+      if (frentesSel.length === 0) return null;
+      const mid = Math.max(1, Math.ceil(duracao / 2));
+      const f1 = frentesSel.filter((f) => f.fase === 1);
+      const f2 = frentesSel.filter((f) => f.fase >= 2);
+      const rows: { n: string; period: string; title: string; desc: string }[] = [];
+      rows.push({
+        n: "1",
+        period: "Semanas 1–2",
+        title: "Diagnóstico & Kickoff",
+        desc: "Onboarding, definição de metas e indicadores e cronograma detalhado de execução.",
       });
+      if (f1.length > 0) {
+        rows.push({
+          n: String(rows.length + 1),
+          period: `Meses 1–${mid}`,
+          title: "Fase 1 · Estruturação",
+          desc: f1.map((f) => f.nome).join(" · "),
+        });
+      }
+      if (f2.length > 0) {
+        rows.push({
+          n: String(rows.length + 1),
+          period: `Meses ${mid + 1}–${duracao}`,
+          title: "Fase 2 · Aceleração",
+          desc: f2.map((f) => f.nome).join(" · "),
+        });
+      }
+      rows.push({
+        n: String(rows.length + 1),
+        period: "Resultado",
+        title: "Faturamento em trajetória",
+        desc: meta
+          ? `Meta de ${fmtMoney(meta)} com processos documentados e menos dependência do dono.`
+          : "Crescimento com processos documentados e menos dependência do dono.",
+      });
+      return rows;
     })();
 
     // Fallback genérico (quando nenhum módulo está selecionado)
@@ -283,6 +287,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               ) : (
                 <div className="text-[12px] text-[#718096] mb-3.5">Selecione os módulos na barra lateral</div>
               )}
+              <div className="mt-1 pt-3 border-t border-[#EFE9DD] text-[10px] leading-snug text-[#8A8276] italic">
+                A Raiz desenha a estratégia, os scripts e os processos, treina sua equipe e orquestra os parceiros que você contrata, cobrando o resultado. A execução do dia a dia fica com a sua equipe ou com um parceiro especializado, que ajudamos a escolher e conduzimos como ponto focal.
+              </div>
             </div>
           </div>
 

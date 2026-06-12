@@ -18,12 +18,12 @@ export const PILARES: Pilar[] = [
  * deck. O cliente vê frentes, resultados e entregáveis em linguagem de valor,
  * nunca códigos nem nomes técnicos de módulo. */
 export const FRENTES: Record<string, { nome: string; resultado: string; entrega: string }> = {
-  p01: { nome: "Posicionamento & Conteúdo", resultado: "presença que vira autoridade e converte", entrega: "posicionamento documentado, linha editorial e calendário de conteúdo" },
-  p02: { nome: "Captação Previsível", resultado: "saber de onde vem cada paciente, com previsibilidade", entrega: "diagnóstico de canais, funil de captação e metas de aquisição" },
-  p03: { nome: "Conversão & Atendimento", resultado: "nenhum paciente se perde no contato", entrega: "scripts de atendimento e de fechamento, follow-up estruturado e treino da equipe" },
-  p04: { nome: "Receita & Margem", resultado: "faturar mais com os mesmos pacientes", entrega: "custo e margem por procedimento, tabela de preços e controle financeiro" },
+  p01: { nome: "Posicionamento & Conteúdo", resultado: "presença que vira autoridade e converte", entrega: "posicionamento documentado, linha editorial e calendário de conteúdo para a clínica publicar" },
+  p02: { nome: "Captação Previsível", resultado: "saber de onde vem cada paciente, com previsibilidade", entrega: "diagnóstico de canais, desenho do funil e gestão do parceiro de tráfego" },
+  p03: { nome: "Conversão & Atendimento", resultado: "nenhum paciente se perde no contato", entrega: "scripts de atendimento e fechamento, estrutura de follow-up e treino da equipe" },
+  p04: { nome: "Receita & Margem", resultado: "faturar mais com os mesmos pacientes", entrega: "custo e margem por procedimento, tabela de preços e rotina de controle financeiro" },
   p05: { nome: "Gestão & Sistema", resultado: "a operação para de depender do dono", entrega: "processos documentados, papéis definidos e ferramentas de gestão" },
-  p06: { nome: "Retenção & Reativação", resultado: "a base de pacientes volta a gerar caixa", entrega: "protocolo de pós-atendimento, recall de inativos e programa de indicação" },
+  p06: { nome: "Retenção & Reativação", resultado: "a base de pacientes volta a gerar caixa", entrega: "protocolo de pós-atendimento, estrutura de recall e programa de indicação" },
   p07: { nome: "Expansão & Operação", resultado: "crescer com estrutura, sem depender de você", entrega: "diagnóstico de maturidade e plano de expansão sustentável" },
 };
 
