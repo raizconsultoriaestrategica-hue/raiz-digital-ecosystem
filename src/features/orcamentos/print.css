@@ -2,6 +2,17 @@
    Quando o body tiver a classe `printing-orcamento`, escondemos tudo
    exceto o documento do preview e ajustamos o layout para A4. */
 
+/* Tipografia do documento de orçamento alinhada à apresentação (deck):
+   corpo em Lato, títulos em Lato Black. Escopado a .orc-doc para não
+   afetar o resto do app, que segue em Cormorant/Inter. */
+.orc-doc {
+  font-family: "Lato", system-ui, sans-serif;
+}
+.orc-doc .font-display {
+  font-family: "Lato", system-ui, sans-serif;
+  font-weight: 900;
+}
+
 /* Cabeçalho secundário fica oculto na tela; só aparece em print */
 .orc-running-header {
   display: none;
