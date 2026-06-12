@@ -370,9 +370,14 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                 <div className="text-right font-semibold text-quase-preto">{data.validadeDate}</div>
               </div>
 
-              {data.mensalidade.descontoIndicacao === 0 && data.mensalidade.mensalidadeLiquida > 0 && (
-                <div className="mt-3 pt-3 border-t border-[#EFE9DD] text-[11.5px] leading-[1.55]" style={{ color: "#A0622A" }}>
-                  <span className="font-semibold">Programa de indicação:</span> a cada cliente que você indica e fecha, são R$ 400 a menos na sua mensalidade, enquanto ele seguir ativo.
+              {data.mensalidade.mensalidadeLiquida > 0 && (
+                <div className="mt-3 pt-3 border-t border-[#EFE9DD]">
+                  <div className="text-[9px] font-bold tracking-[0.12em] uppercase mb-1" style={{ color: "#A0622A" }}>
+                    Programa de indicação
+                  </div>
+                  <div className="text-[11.5px] leading-[1.6] text-quase-preto">
+                    A cada cliente que você indica e fecha com a Raiz, são <span className="font-semibold">R$ 400 a menos</span> na sua mensalidade, todo mês, enquanto ele seguir ativo. É cumulativo: 3 indicados já são <span className="font-semibold">R$ 1.200 de desconto</span> por mês. Na prática, sua mensalidade pode ficar bem abaixo deste valor.
+                  </div>
                 </div>
               )}
 

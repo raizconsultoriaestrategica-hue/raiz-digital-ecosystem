@@ -525,27 +525,9 @@ export function OrcamentoSidebar(p: Props) {
         </div>
       </div>
 
-      {/* Programa de indicação */}
-      <div className="rounded-lg border border-white/15 bg-white/[0.04] px-3 py-3 mb-4">
-        <div className={sectionCls + " mb-2"}>Programa de indicação</div>
-        <label className={labelCls}>Indicados ativos (R$ 400 cada)</label>
-        <input
-          type="number"
-          min={0}
-          className={inputCls}
-          placeholder="0"
-          value={p.form.qtdIndicadosAtivos}
-          onChange={(e) => p.setField("qtdIndicadosAtivos", e.target.value)}
-        />
-        <div className="grid grid-cols-2 gap-y-1.5 mt-3 text-[11px]">
-          <div className="text-white/50">Desconto indicação</div>
-          <div className="text-right font-semibold text-white tabular-nums">- {fmtBRL(mensalidade.descontoIndicacao)}</div>
-          <div className="text-white/50">Mensalidade final</div>
-          <div className="text-right font-display font-semibold text-dourado tabular-nums text-[15px]">{fmtBRL(mensalidade.mensalidadeComIndicacao)}</div>
-        </div>
-        <div className="mt-2 text-[10px] text-white/40 leading-relaxed">
-          Teto: o desconto de indicação não ultrapassa a mensalidade líquida.
-        </div>
+      {/* Programa de indicação: explicado automaticamente na proposta (sem campo). */}
+      <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 mb-4 text-[10.5px] text-white/45 leading-relaxed">
+        <span className="font-bold text-white/60">Programa de indicação:</span> aparece explicado na proposta (R$ 400 a menos por indicado ativo, cumulativo). Não há campo aqui: o desconto entra na cobrança quando o cliente indicar.
       </div>
 
       <hr className="border-white/10 my-5" />
