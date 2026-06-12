@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { PLANOS } from "./data";
+import { calcMensalidade } from "./types";
 import type { OrcamentoForm } from "./types";
 
 export interface OrcamentoSalvo {
@@ -203,9 +204,10 @@ export async function saveOrcamento(
 
     const { data: userRes } = await supabase.auth.getUser();
 
-    // Valor final numérico (parse robusto)
-    const valorFinalNum = form.valorFinal ? Number(String(form.valorFinal).replace(/[^\d.,-]/g, "").replace(",", ".")) : null;
-    const valorFinalNumerico = valorFinalNum && !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : null;
+    // Mensalidade final (após desconto comercial e indicação). É o valor que
+    // aparece na proposta e vira o valor_mensal do contrato.
+    const mensalidade = calcMensalidade(form);
+    const valorFinalNumerico = mensalidade.mensalidadeComIndicacao > 0 ? mensalidade.mensalidadeComIndicacao : null;
 
     // === Passo C. Insert do orçamento (com ou sem PDF) ===
     const { data: orcInserted, error: insErr } = await supabase
@@ -214,8 +216,8 @@ export async function saveOrcamento(
         cliente_id: clienteId,
         plano: form.plano,
         plano_nome: planoInfo?.name ?? null,
-        valor: form.valorFinal
-          ? `R$ ${Number(form.valorFinal).toLocaleString("pt-BR")}`
+        valor: valorFinalNumerico
+          ? `R$ ${valorFinalNumerico.toLocaleString("pt-BR")}`
           : (planoInfo?.valor ?? null),
         score: form.score ? Number(form.score) : null,
         score_max: form.scoreMax ? Number(form.scoreMax) : null,
@@ -283,10 +285,9 @@ export async function saveOrcamento(
     // === Passo F. Criar contrato em contratos_raiz ===
     try {
       const DURACAO_MESES: Record<string, number> = { base: 4, crescimento: 5, expansao: 6 };
-      const duracao = DURACAO_MESES[form.plano] ?? 5;
-      // valorFinal é a MENSALIDADE (o PDF mostra "R$ X/mês"), não o total do ciclo.
-      // valor_mensal do contrato deve ser igual à mensalidade, sem dividir pela
-      // duração: caso contrário o MRR do painel admin fica subestimado.
+      const duracao = parseInt(form.cicloInicialMeses, 10) || DURACAO_MESES[form.plano] || 5;
+      // A mensalidade final (após descontos) vira o valor_mensal do contrato,
+      // sem dividir pela duração: caso contrário o MRR do painel fica subestimado.
       const valorMensal = valorFinalNumerico && valorFinalNumerico > 0 ? Math.round(valorFinalNumerico) : 0;
 
       const dataInicioStr = form.data || new Date().toISOString().slice(0, 10);
