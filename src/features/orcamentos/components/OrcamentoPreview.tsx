@@ -283,6 +283,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               ) : (
                 <div className="text-[12px] text-[#718096] mb-3.5">Selecione os módulos na barra lateral</div>
               )}
+              <div className="mt-1 pt-3 border-t border-[#EFE9DD] text-[10px] leading-snug text-[#8A8276] italic">
+                A Raiz desenha a estratégia, os scripts e os processos, treina sua equipe e orquestra os parceiros que você contrata, cobrando o resultado. A execução do dia a dia fica com a sua equipe ou com um parceiro especializado, que ajudamos a escolher e conduzimos como ponto focal.
+              </div>
             </div>
           </div>
 
