@@ -262,12 +262,17 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               </div>
               <div className="text-[11px] text-[#718096] mt-1.5">
                 {data.selectedMods.length} módulo{data.selectedMods.length === 1 ? "" : "s"} · {data.plano.dur}
-                {data.valorFinal !== data.valorCalculado && data.valorCalculado > 0 && (
+                {data.valorCalculado > data.valorFinal && (
                   <span className="text-dourado">
                     {" "}· condição especial (de {fmtMoney(data.valorCalculado)})
                   </span>
                 )}
               </div>
+              {data.fat > 0 && data.meta > 0 && data.meta > data.fat && (
+                <div className="text-[11.5px] font-semibold text-verde-raiz mt-1.5">
+                  Retorno projetado: {data.roiAbs}.
+                </div>
+              )}
 
               {/* Duração e condição de pagamento */}
               <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">

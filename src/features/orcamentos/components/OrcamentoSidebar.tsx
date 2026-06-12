@@ -467,7 +467,7 @@ export function OrcamentoSidebar(p: Props) {
           {selecionados.length} módulo{selecionados.length === 1 ? "" : "s"} selecionado
           {selecionados.length === 1 ? "" : "s"}
         </div>
-        <label className={labelCls}>Valor final acordado (R$)</label>
+        <label className={labelCls}>Valor final acordado (R$/mês)</label>
         <input
           type="number"
           className={inputCls}
@@ -479,7 +479,7 @@ export function OrcamentoSidebar(p: Props) {
           }}
         />
         <div className="mt-1 text-[10px] text-white/40">
-          Editável. Aplique desconto ou condição especial.
+          Mensalidade que aparece no PDF e vira o valor do contrato. Aplique desconto ou condição especial. Para ancorar como desconto, mantenha o "Valor calculado" acima dela.
         </div>
       </div>
 

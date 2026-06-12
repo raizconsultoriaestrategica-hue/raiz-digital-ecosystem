@@ -255,8 +255,10 @@ export async function saveOrcamento(
     try {
       const DURACAO_MESES: Record<string, number> = { base: 4, crescimento: 5, expansao: 6 };
       const duracao = DURACAO_MESES[form.plano] ?? 5;
-      const valorTotal = valorFinalNumerico ?? 0;
-      const valorMensal = valorTotal > 0 ? Math.round(valorTotal / duracao) : 0;
+      // valorFinal é a MENSALIDADE (o PDF mostra "R$ X/mês"), não o total do ciclo.
+      // valor_mensal do contrato deve ser igual à mensalidade, sem dividir pela
+      // duração: caso contrário o MRR do painel admin fica subestimado.
+      const valorMensal = valorFinalNumerico && valorFinalNumerico > 0 ? Math.round(valorFinalNumerico) : 0;
 
       const dataInicioStr = form.data || new Date().toISOString().slice(0, 10);
       const dataInicio = new Date(dataInicioStr + "T12:00:00");
