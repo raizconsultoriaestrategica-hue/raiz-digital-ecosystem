@@ -22,6 +22,8 @@ export interface OrcamentoForm {
   score: string;
   scoreMax: string;
   pilarScores: Record<string, string>; // p01..p07 → "0".."100"
+  /** Resumo da reunião (TL.DV), colado pelo consultor. A IA lê junto ao diagnóstico. */
+  resumoReuniao: string;
   plano: PlanoKey;
   analise: string;
   modulos: Record<string, boolean>; // id (codigo) → checked
@@ -73,6 +75,7 @@ export const initialForm = (): OrcamentoForm => ({
   score: "",
   scoreMax: "",
   pilarScores: {},
+  resumoReuniao: "",
   plano: "crescimento",
   analise: "",
   modulos: {},

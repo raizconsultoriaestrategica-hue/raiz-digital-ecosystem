@@ -184,13 +184,20 @@ export function OrcamentoSidebar(p: Props) {
     setGeneratingIA(true);
     setIaSucesso(false);
     try {
-      const result = await gerarAnaliseIA(p.form, p.modulosDb, selecionados);
+      const result = await gerarAnaliseIA(p.form, p.modulosDb);
       p.setField("analise", result.analise);
       p.setField("ancoragemIA", result.ancoragem);
       p.setField("ancoragem", null);
       p.setField("justificativasIA", result.justificativas);
+      // A IA monta as frentes e escolhe os módulos. Reflete nos dois.
+      if (result.frentes.length > 0) {
+        p.setField("frentes", result.frentes);
+        const modulosObj: Record<string, boolean> = {};
+        for (const f of result.frentes) for (const cod of f.modulos) modulosObj[cod] = true;
+        p.setField("modulos", modulosObj);
+      }
       setIaSucesso(true);
-      toast.success("Análise gerada com IA");
+      toast.success(result.frentes.length > 0 ? "Análise e frentes geradas com IA" : "Análise gerada com IA");
       setTimeout(() => setIaSucesso(false), 6000);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao gerar análise";
@@ -370,24 +377,36 @@ export function OrcamentoSidebar(p: Props) {
         ))}
       </div>
 
-      {/* Botão IA. Gerar análise, ancoragem e justificativas */}
+      {/* Resumo da reunião (TL.DV): a IA lê junto ao diagnóstico */}
+      <div className="mt-4">
+        <label className={labelCls}>Resumo da reunião (TL.DV)</label>
+        <textarea
+          rows={4}
+          className={inputCls + " resize-y"}
+          placeholder="Cole aqui o resumo da reunião gerado pelo TL.DV. A IA usa para personalizar a análise e as frentes."
+          value={p.form.resumoReuniao}
+          onChange={(e) => p.setField("resumoReuniao", e.target.value)}
+        />
+      </div>
+
+      {/* Botão IA. Gera análise, frentes, ancoragem e justificativas */}
       <div className="mt-2 mb-1">
         <button
           type="button"
           onClick={handleGerarIA}
           disabled={!podeGerarIA || generatingIA}
           className="w-full bg-gradient-to-r from-dourado to-[#b8932f] hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[12px] rounded-lg py-2.5 flex items-center justify-center gap-2 transition-opacity"
-          title={!podeGerarIA ? "Selecione um cliente e preencha ao menos um score de pilar" : "Gerar análise, ancoragem e justificativas com IA"}
+          title={!podeGerarIA ? "Selecione um cliente e preencha ao menos um score de pilar" : "Gerar análise, frentes, ancoragem e justificativas com IA"}
         >
           {generatingIA ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Gerando análise…
+              Gerando proposta…
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              Gerar análise com IA
+              Gerar proposta com IA
             </>
           )}
         </button>
