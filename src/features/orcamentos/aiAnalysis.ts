@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PILARES } from "./data";
+import { CONHECIMENTO_RAIZ } from "./conhecimentoRaiz";
 import type { ModuloDb, OrcamentoForm } from "./types";
 
 export interface AiAnalysisResult {
@@ -8,7 +9,9 @@ export interface AiAnalysisResult {
   justificativas: Record<string, string>;
 }
 
-const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica. Gere análises personalizadas para o diagnóstico de clientes (dentistas/médicos), com tom consultivo, direto e ancorado em dados. Nunca invente métricas. NUNCA use travessão (—); use ponto, vírgula ou dois-pontos no lugar. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.`;
+const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica. Baseie suas análises EXCLUSIVAMENTE na Base de Conhecimento Raiz abaixo e nos dados reais do cliente. Nunca invente serviço, módulo, métrica ou estatística; se um dado do cliente não veio, diga "não informado". Compare os indicadores do cliente com os benchmarks da base quando fizer sentido, citando a referência de mercado. Tom consultivo e direto, voz Raiz. NUNCA use travessão (—); use ponto, vírgula ou dois-pontos. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.
+
+${CONHECIMENTO_RAIZ}`;
 
 /** Remove travessão (—) do texto da IA, conforme padrão de escrita da Raiz. */
 function semTravessao(s: string): string {
@@ -36,7 +39,7 @@ function buildUserPrompt(
 
   return `Analise o diagnóstico 360° deste cliente e gere três blocos em JSON:
 
-1. "analise": texto de 3-4 parágrafos sobre os principais gargalos identificados, pilares críticos e oportunidades. Tom consultivo e direto, sem bullet points
+1. "analise": texto de 3-4 parágrafos sobre os principais gargalos identificados, pilares críticos e oportunidades. Tom consultivo e direto, sem bullet points. Quando fizer sentido, compare os indicadores do cliente com os benchmarks de mercado da Base de Conhecimento (no-show, conversão, retenção, margem, ticket) para dar peso e referência. Não invente número que o cliente não informou
 2. "ancoragem": uma frase de até 2 linhas que use obrigatoriamente números reais do cliente (faturamento atual, perdas calculadas por no-show, pacientes inativos ou conversão baixa) para mostrar o custo concreto da inércia. A frase deve ser direta e emocional. Falar o que ele está perdendo em reais por mês ou por ano, de forma que qualquer pessoa entenda sem precisar de explicação. Sem jargão, sem termos técnicos como ROI ou KPI. Tom de conversa honesta entre sócios. Exemplo de estrutura (não copiar, apenas referência de formato): 'Com [faturamento] por mês e [problema identificado], você está deixando cerca de R$X na mesa todo mês. Isso é R$Y por ano trabalhando de graça.' Calcule os números com base nos dados reais do diagnóstico.
 3. "justificativas": objeto onde cada chave é o código do módulo selecionado e o valor é uma frase curta (máx 15 palavras) explicando o impacto esperado para esse cliente específico
 
