@@ -62,10 +62,17 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
   const pageHpx = Math.floor(pageHmm * pxPerMm);
 
   // Pontos de quebra permitidos: topo da capa e de cada seção, em px do canvas.
-  // Quebrar nesses limites evita cortar conteúdo no meio.
+  // Usa a posição renderizada real (getBoundingClientRect) e a razão real
+  // canvas/nó, em vez de offsetTop*escala: assim o ponto é exato e seções
+  // curtas passam inteiras para a próxima página, sem órfãos.
+  const docRect = node.getBoundingClientRect();
+  const ratio = docRect.height > 0 ? canvas.height / docRect.height : scale;
   const breakEls = Array.from(node.querySelectorAll<HTMLElement>(".pg-cover, .orc-section"));
   const breakSet = new Set<number>([0, canvas.height]);
-  for (const el of breakEls) breakSet.add(Math.round(el.offsetTop * scale));
+  for (const el of breakEls) {
+    const top = (el.getBoundingClientRect().top - docRect.top) * ratio;
+    breakSet.add(Math.round(top));
+  }
   const breaks = Array.from(breakSet)
     .filter((b) => b >= 0 && b <= canvas.height)
     .sort((a, b) => a - b);
