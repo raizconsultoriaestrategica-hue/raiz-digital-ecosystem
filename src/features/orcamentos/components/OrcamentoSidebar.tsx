@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Printer, RotateCcw, Save, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
-import { ANCORAGENS, calcValorModulos, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcValorModulos, calcMensalidade, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 import { gerarAnaliseIA } from "../aiAnalysis";
@@ -63,15 +63,17 @@ export function OrcamentoSidebar(p: Props) {
     [selecionados, p.modulosDb]
   );
 
-  // Mantém "Valor Final Acordado" sincronizado com o "Valor Calculado"
-  // até que o consultor o edite manualmente (rastreado por flag).
-  const [valorFinalEdited, setValorFinalEdited] = useState(false);
+  // Sugere o "Valor de referência" a partir do valor calculado dos módulos,
+  // até o consultor editá-lo manualmente (rastreado por flag).
+  const [valorRefEdited, setValorRefEdited] = useState(false);
   useEffect(() => {
-    if (!valorFinalEdited) {
-      p.setField("valorFinal", String(valorCalculado));
+    if (!valorRefEdited) {
+      p.setField("valorReferencia", String(valorCalculado));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valorCalculado, valorFinalEdited]);
+  }, [valorCalculado, valorRefEdited]);
+
+  const mensalidade = useMemo(() => calcMensalidade(p.form), [p.form]);
 
   // Auto-preenche WhatsApp e Email do consultor logado
   const [consultorUserId, setConsultorUserId] = useState<string | null>(null);
@@ -453,34 +455,79 @@ export function OrcamentoSidebar(p: Props) {
         ))}
       </div>
 
-      {/* Valor calculado + valor final editável */}
+      {/* Precificação: referência, desconto e pagamento */}
       <div className="rounded-lg border border-dourado/30 bg-dourado/5 px-3 py-3 mb-4">
-        <div className="flex items-baseline justify-between mb-1">
+        <div className="flex items-baseline justify-between mb-2">
           <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.1em]">
-            Valor calculado
+            Valor calculado (módulos)
           </span>
-          <span className="font-display text-[18px] font-semibold text-dourado tabular-nums">
+          <span className="font-display text-[16px] font-semibold text-dourado tabular-nums">
             {fmtBRL(valorCalculado)}
           </span>
         </div>
-        <div className="text-[10px] text-white/40 mb-3">
-          {selecionados.length} módulo{selecionados.length === 1 ? "" : "s"} selecionado
-          {selecionados.length === 1 ? "" : "s"}
-        </div>
-        <label className={labelCls}>Valor final acordado (R$/mês)</label>
+
+        <label className={labelCls}>Valor de referência (R$/mês)</label>
         <input
           type="number"
           className={inputCls}
           placeholder={String(valorCalculado || 0)}
-          value={p.form.valorFinal}
+          value={p.form.valorReferencia}
           onChange={(e) => {
-            setValorFinalEdited(true);
-            p.setField("valorFinal", e.target.value);
+            setValorRefEdited(true);
+            p.setField("valorReferencia", e.target.value);
           }}
         />
-        <div className="mt-1 text-[10px] text-white/40">
-          Mensalidade que aparece no PDF e vira o valor do contrato. Aplique desconto ou condição especial. Para ancorar como desconto, mantenha o "Valor calculado" acima dela.
+
+        <label className={labelCls + " mt-3"}>Desconto comercial (R$)</label>
+        <input
+          type="number"
+          className={inputCls}
+          placeholder="0"
+          value={p.form.descontoComercial}
+          onChange={(e) => p.setField("descontoComercial", e.target.value)}
+        />
+
+        <div className="flex items-baseline justify-between mt-3 pt-2 border-t border-white/10">
+          <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.1em]">
+            Mensalidade líquida
+          </span>
+          <span className="font-display text-[18px] font-semibold text-white tabular-nums">
+            {fmtBRL(mensalidade.mensalidadeLiquida)}
+          </span>
         </div>
+
+        <div className="grid grid-cols-2 gap-2.5 mt-3">
+          <div>
+            <label className={labelCls}>Pagamento</label>
+            <select
+              className={inputCls + " cursor-pointer appearance-none"}
+              value={p.form.formaPagamento}
+              onChange={(e) => p.setField("formaPagamento", e.target.value)}
+            >
+              <option value="2x" className="bg-verde-raiz text-white">2x (dia 10 e 20)</option>
+              <option value="unica" className="bg-verde-raiz text-white">Parcela única</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Ciclo inicial</label>
+            <select
+              className={inputCls + " cursor-pointer appearance-none"}
+              value={p.form.cicloInicialMeses}
+              onChange={(e) => p.setField("cicloInicialMeses", e.target.value)}
+            >
+              <option value="" className="bg-verde-raiz text-white">Padrão do plano</option>
+              <option value="3" className="bg-verde-raiz text-white">3 meses</option>
+              <option value="4" className="bg-verde-raiz text-white">4 meses</option>
+              <option value="5" className="bg-verde-raiz text-white">5 meses</option>
+              <option value="6" className="bg-verde-raiz text-white">6 meses</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Programa de indicação: explicado automaticamente na proposta (sem campo). */}
+      <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 mb-4 text-[10.5px] text-white/45 leading-relaxed">
+        <span className="font-bold text-white/60">Programa de indicação:</span> aparece explicado na proposta (R$ 400 a menos por indicado ativo, cumulativo). Não há campo aqui: o desconto entra na cobrança quando o cliente indicar.
       </div>
 
       <hr className="border-white/10 my-5" />

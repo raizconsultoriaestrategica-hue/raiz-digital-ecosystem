@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { PILARES, PLANOS, FRENTES, fmtMoney, getBarColor, classifFor, type PlanoKey } from "../data";
-import { ANCORAGENS, calcValorModulos, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcMensalidade, type ModuloDb, type OrcamentoForm } from "../types";
 
 const DURACAO_MESES: Record<PlanoKey, number> = { base: 4, crescimento: 5, expansao: 6 };
 
@@ -35,13 +35,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     });
 
     const selectedMods = modulosDb.filter((m) => form.modulos[m.codigo]);
-    const valorCalculado = calcValorModulos(
-      selectedMods.map((m) => m.codigo),
-      modulosDb
-    );
-    const valorFinalNum = parseFloat(form.valorFinal);
-    const valorFinal =
-      !isNaN(valorFinalNum) && valorFinalNum > 0 ? valorFinalNum : valorCalculado;
+
+    // Mensalidade: valor de referência, desconto comercial e programa de indicação.
+    const mensalidade = calcMensalidade(form);
 
     // Frentes: agrupa os módulos selecionados por pilar e usa a linguagem do
     // deck (nome da frente + resultado), sem expor códigos de módulo ao cliente.
@@ -61,7 +57,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         .sort((a, b) => a.fase - b.fase || a.pilar - b.pilar);
     })();
 
-    const duracao = DURACAO_MESES[form.plano] ?? 5;
+    const duracao = parseInt(form.cicloInicialMeses, 10) || DURACAO_MESES[form.plano] || 5;
 
     const dataFmt = form.data
       ? new Date(form.data + "T12:00").toLocaleDateString("pt-BR", {
@@ -161,7 +157,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     return {
       nome, nomeCliente, nomeClinica, espec, cidade, fat, meta, score, scoreMax, scorePct,
       classif, plano, pilares, selectedMods, frentesSel, dataFmt, timeline, roiAbs,
-      valorCalculado, valorFinal, duracao, validadeDate, ancoragemFrase,
+      mensalidade, duracao, validadeDate, ancoragemFrase, formaPagamento: form.formaPagamento,
     };
   }, [form, modulosDb]);
 
@@ -320,57 +316,70 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               </div>
             </div>
           </div>
+        </Section>
 
+        {/* INVESTIMENTO */}
+        <Section label="03 · Investimento" title="Investimento & Condições">
           <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
             <div className="px-6 py-5 bg-white">
-              <div className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#718096] mb-1.5">
-                Investimento
-              </div>
               <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
-                {fmtMoney(data.valorFinal)}/mês
+                {fmtMoney(data.mensalidade.mensalidadeComIndicacao)}/mês
               </div>
               <div className="text-[11px] text-[#718096] mt-1.5">
-                {data.frentesSel.length} frente{data.frentesSel.length === 1 ? "" : "s"} · {data.plano.dur}
-                {data.valorCalculado > data.valorFinal && (
+                {data.frentesSel.length} frente{data.frentesSel.length === 1 ? "" : "s"} · ciclo de {data.duracao} meses · acompanhamento semanal
+                {data.mensalidade.valorReferencia > data.mensalidade.mensalidadeComIndicacao && (
                   <span className="text-dourado">
-                    {" "}· condição especial (de {fmtMoney(data.valorCalculado)})
+                    {" "}· de <span className="line-through">{fmtMoney(data.mensalidade.valorReferencia)}</span>
                   </span>
                 )}
               </div>
 
-              {/* Duração e condição de pagamento */}
+              {/* Descontos, duração e condição de pagamento */}
               <div className="mt-4 pt-3 border-t border-[#EFE9DD] grid grid-cols-2 gap-y-2 text-[12px]">
-                <div>
-                  <span className="text-[#718096]">Duração:</span>
-                </div>
-                <div className="text-right font-semibold text-quase-preto">
-                  Ciclo inicial de {data.plano.dur.split("·")[0].trim()}
-                </div>
+                {data.mensalidade.descontoComercial > 0 && (
+                  <>
+                    <div><span className="text-[#718096]">Desconto de relacionamento:</span></div>
+                    <div className="text-right font-semibold text-quase-preto">- {fmtMoney(data.mensalidade.descontoComercial)}</div>
+                  </>
+                )}
+                {data.mensalidade.descontoIndicacao > 0 && (
+                  <>
+                    <div><span className="text-[#718096]">Desconto de indicação ({data.mensalidade.qtdIndicados} ativo{data.mensalidade.qtdIndicados === 1 ? "" : "s"}):</span></div>
+                    <div className="text-right font-semibold text-quase-preto">- {fmtMoney(data.mensalidade.descontoIndicacao)}</div>
+                  </>
+                )}
+                <div><span className="text-[#718096]">Duração:</span></div>
+                <div className="text-right font-semibold text-quase-preto">Ciclo inicial de {data.duracao} meses</div>
                 <div className="col-span-2 text-[11px] text-[#718096] leading-[1.55]">
                   Com continuidade mensal conforme a evolução do projeto.
                 </div>
-                <div>
-                  <span className="text-[#718096]">Condição de pagamento:</span>
-                </div>
+                <div><span className="text-[#718096]">Condição de pagamento:</span></div>
                 <div className="text-right font-semibold text-verde-raiz">
-                  {fmtMoney(data.valorFinal)}/mês ou 2x de {fmtMoney(data.valorFinal / 2)}
+                  {data.formaPagamento === "unica"
+                    ? `${fmtMoney(data.mensalidade.mensalidadeComIndicacao)}/mês`
+                    : `${fmtMoney(data.mensalidade.mensalidadeComIndicacao)}/mês ou 2x de ${fmtMoney(data.mensalidade.mensalidadeComIndicacao / 2)}`}
                 </div>
                 <div className="col-span-2 text-[11px] text-[#718096] leading-[1.55]">
-                  Pagamento integral no mês, ou dividido em 2 parcelas iguais: a 1ª parte até o dia 10 e a 2ª parte até o dia 20 de cada mês.
+                  {data.formaPagamento === "unica"
+                    ? "Pagamento integral, em parcela única no mês."
+                    : "Pagamento integral no mês, ou dividido em 2 parcelas iguais: a 1ª parte até o dia 10 e a 2ª parte até o dia 20 de cada mês."}
                 </div>
-                <div>
-                  <span className="text-[#718096]">Formas de pagamento:</span>
-                </div>
-                <div className="text-right text-quase-preto">
-                  PIX ou Transferência
-                </div>
-                <div>
-                  <span className="text-[#718096]">Validade da proposta:</span>
-                </div>
-                <div className="text-right font-semibold text-quase-preto">
-                  {data.validadeDate}
-                </div>
+                <div><span className="text-[#718096]">Formas de pagamento:</span></div>
+                <div className="text-right text-quase-preto">PIX ou Transferência</div>
+                <div><span className="text-[#718096]">Validade da proposta:</span></div>
+                <div className="text-right font-semibold text-quase-preto">{data.validadeDate}</div>
               </div>
+
+              {data.mensalidade.mensalidadeLiquida > 0 && (
+                <div className="mt-3 pt-3 border-t border-[#EFE9DD]">
+                  <div className="text-[9px] font-bold tracking-[0.12em] uppercase mb-1" style={{ color: "#A0622A" }}>
+                    Programa de indicação
+                  </div>
+                  <div className="text-[11.5px] leading-[1.6] text-quase-preto">
+                    A cada cliente que você indica e fecha com a Raiz, são <span className="font-semibold">R$ 400 a menos</span> na sua mensalidade, todo mês, enquanto ele seguir ativo. É cumulativo: 3 indicados já são <span className="font-semibold">R$ 1.200 de desconto</span> por mês. Na prática, sua mensalidade pode ficar bem abaixo deste valor.
+                  </div>
+                </div>
+              )}
 
               {data.ancoragemFrase && (
                 <div
@@ -386,7 +395,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
 
         {/* RETORNO */}
         {data.fat > 0 && data.meta > 0 && data.meta > data.fat && (
-          <Section label="03 · O Retorno" title="De onde você está para onde quer chegar">
+          <Section label="04 · O Retorno" title="De onde você está para onde quer chegar">
             <div className="grid grid-cols-3 gap-3 mb-5">
               {[
                 ["Hoje", fmtMoney(data.fat), "#718096"],
@@ -406,7 +415,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         )}
 
         {/* CRONOGRAMA */}
-        <Section label="04 · Cronograma de Execução" title="Fases do Trabalho">
+        <Section label="05 · Cronograma de Execução" title="Fases do Trabalho">
           <div className="relative pl-7">
             <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #E8DDD0)" }} />
             {data.timeline.map((t) => (
@@ -425,7 +434,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         </Section>
 
         {/* PRÓXIMOS PASSOS */}
-        <Section label="05 · Próximos Passos" title="Como iniciamos o trabalho">
+        <Section label="06 · Próximos Passos" title="Como iniciamos o trabalho">
           <div className="grid grid-cols-2 gap-3 mb-5">
             {[
               ["Assinatura do Contrato", "Contrato de prestação de serviços enviado por e-mail para assinatura digital."],

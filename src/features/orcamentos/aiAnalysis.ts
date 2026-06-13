@@ -8,7 +8,12 @@ export interface AiAnalysisResult {
   justificativas: Record<string, string>;
 }
 
-const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica. Gere análises personalizadas para o diagnóstico de clientes (dentistas/médicos), com tom consultivo, direto e ancorado em dados. Nunca invente métricas. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.`;
+const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica. Gere análises personalizadas para o diagnóstico de clientes (dentistas/médicos), com tom consultivo, direto e ancorado em dados. Nunca invente métricas. NUNCA use travessão (—); use ponto, vírgula ou dois-pontos no lugar. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.`;
+
+/** Remove travessão (—) do texto da IA, conforme padrão de escrita da Raiz. */
+function semTravessao(s: string): string {
+  return s.replace(/\s*—\s*/g, ", ");
+}
 
 function buildUserPrompt(
   form: OrcamentoForm,
@@ -99,11 +104,18 @@ export async function gerarAnaliseIA(
     throw new Error("A IA retornou um formato inválido. Tente novamente.");
   }
 
-  return {
-    analise: String(parsed.analise || "").trim(),
-    ancoragem: String(parsed.ancoragem || "").trim(),
-    justificativas: (parsed.justificativas && typeof parsed.justificativas === "object")
+  const justRaw =
+    parsed.justificativas && typeof parsed.justificativas === "object"
       ? parsed.justificativas
-      : {},
+      : {};
+  const justificativas: Record<string, string> = {};
+  for (const [k, v] of Object.entries(justRaw)) {
+    justificativas[k] = semTravessao(String(v ?? ""));
+  }
+
+  return {
+    analise: semTravessao(String(parsed.analise || "").trim()),
+    ancoragem: semTravessao(String(parsed.ancoragem || "").trim()),
+    justificativas,
   };
 }
