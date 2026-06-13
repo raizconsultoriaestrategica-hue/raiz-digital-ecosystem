@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Printer, RotateCcw, Save, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
-import { ANCORAGENS, calcValorModulos, calcMensalidade, FASE_VALOR, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcValorModulos, calcMensalidade, frentesFromPilares, FASE_VALOR, type Frente, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 import { gerarAnaliseIA } from "../aiAnalysis";
@@ -74,6 +74,25 @@ export function OrcamentoSidebar(p: Props) {
   }, [valorCalculado, valorRefEdited]);
 
   const mensalidade = useMemo(() => calcMensalidade(p.form), [p.form]);
+
+  // Construtor de frentes
+  const selectedModsObj = useMemo(
+    () => p.modulosDb.filter((m) => p.form.modulos[m.codigo]),
+    [p.modulosDb, p.form.modulos]
+  );
+  const frentes = p.form.frentes || [];
+  const setFrentes = (fs: Frente[]) => p.setField("frentes", fs);
+  const seedFrentes = () => setFrentes(frentesFromPilares(selectedModsObj));
+  const addFrente = () => setFrentes([...frentes, { nome: "", resultado: "", entrega: "", fase: 1, modulos: [] }]);
+  const removeFrente = (i: number) => setFrentes(frentes.filter((_, idx) => idx !== i));
+  const patchFrente = (i: number, patch: Partial<Frente>) =>
+    setFrentes(frentes.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
+  const toggleModFrente = (i: number, cod: string) =>
+    patchFrente(i, {
+      modulos: frentes[i].modulos.includes(cod)
+        ? frentes[i].modulos.filter((c) => c !== cod)
+        : [...frentes[i].modulos, cod],
+    });
 
   // Auto-preenche WhatsApp e Email do consultor logado
   const [consultorUserId, setConsultorUserId] = useState<string | null>(null);
@@ -451,6 +470,77 @@ export function OrcamentoSidebar(p: Props) {
                 </div>
               );
             })}
+          </div>
+        ))}
+      </div>
+
+      {/* Construtor de frentes da proposta */}
+      <hr className="border-white/10 my-5" />
+      <div className={sectionCls}>Frentes da Proposta</div>
+      <div className="text-[10px] text-white/40 mb-2 leading-relaxed">
+        É o que o cliente vê no lugar dos módulos. Gere a partir dos módulos e edite, ou crie do zero. Vazio = agrupa por pilar automaticamente.
+      </div>
+      <div className="flex gap-2 mb-3">
+        <button type="button" onClick={seedFrentes} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[11px] rounded-md py-1.5">
+          ↻ Gerar dos módulos
+        </button>
+        <button type="button" onClick={addFrente} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[11px] rounded-md py-1.5">
+          + Frente
+        </button>
+      </div>
+      <div className="space-y-2.5 mb-4">
+        {frentes.map((f, i) => (
+          <div key={i} className="rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-2.5">
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                className={inputCls + " flex-1"}
+                placeholder="Nome da frente"
+                value={f.nome}
+                onChange={(e) => patchFrente(i, { nome: e.target.value })}
+              />
+              <select
+                className="bg-white/[0.08] border border-white/15 rounded px-1.5 py-2 text-[12px] text-white outline-none focus:border-dourado/60"
+                value={f.fase}
+                onChange={(e) => patchFrente(i, { fase: Number(e.target.value) })}
+              >
+                <option value={1} className="bg-verde-raiz text-white">F1</option>
+                <option value={2} className="bg-verde-raiz text-white">F2</option>
+                <option value={3} className="bg-verde-raiz text-white">F3</option>
+              </select>
+              <button type="button" onClick={() => removeFrente(i)} className="text-white/40 hover:text-red-400 text-[16px] leading-none px-1" title="Remover frente">
+                ×
+              </button>
+            </div>
+            <input
+              className={inputCls + " mb-2"}
+              placeholder="Resultado (o que muda)"
+              value={f.resultado}
+              onChange={(e) => patchFrente(i, { resultado: e.target.value })}
+            />
+            <input
+              className={inputCls + " mb-2"}
+              placeholder="Inclui (entregável)"
+              value={f.entrega}
+              onChange={(e) => patchFrente(i, { entrega: e.target.value })}
+            />
+            {selectedModsObj.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedModsObj.map((m) => {
+                  const on = f.modulos.includes(m.codigo);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => toggleModFrente(i, m.codigo)}
+                      title={m.nome}
+                      className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${on ? "bg-dourado/20 border-dourado text-white" : "bg-white/[0.04] border-white/15 text-white/40 hover:border-white/30"}`}
+                    >
+                      {m.codigo}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>

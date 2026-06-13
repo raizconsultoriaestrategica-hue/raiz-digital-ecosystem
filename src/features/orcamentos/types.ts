@@ -1,4 +1,14 @@
-import type { PlanoKey } from "./data";
+import { FRENTES, type PlanoKey } from "./data";
+
+/** Frente da proposta: agrupamento nomeado de módulos com resultado e entregável.
+ * O cliente vê isto (nome, resultado, entrega), nunca códigos de módulo. */
+export interface Frente {
+  nome: string;
+  resultado: string;
+  entrega: string;
+  fase: number; // 1 | 2 | 3
+  modulos: string[]; // códigos dos módulos nesta frente
+}
 
 export interface OrcamentoForm {
   nomeCliente: string;
@@ -33,6 +43,8 @@ export interface OrcamentoForm {
   ancoragemIA: string;
   /** Justificativas por código de módulo, geradas pela IA. */
   justificativasIA: Record<string, string>;
+  /** Frentes customizadas da proposta. Se vazio, são derivadas por pilar. */
+  frentes: Frente[];
 }
 
 /** Frases de ancoragem de valor (10 opções). */
@@ -74,7 +86,27 @@ export const initialForm = (): OrcamentoForm => ({
   ancoragem: null,
   ancoragemIA: "",
   justificativasIA: {},
+  frentes: [],
 });
+
+/** Gera as frentes padrão a partir dos módulos selecionados, agrupando por
+ * pilar e usando a linguagem do mapa FRENTES. Serve de ponto de partida
+ * editável no construtor de frentes. */
+export function frentesFromPilares(selectedMods: ModuloDb[]): Frente[] {
+  const byPilar = new Map<number, ModuloDb[]>();
+  for (const m of selectedMods) {
+    if (!byPilar.has(m.pilar)) byPilar.set(m.pilar, []);
+    byPilar.get(m.pilar)!.push(m);
+  }
+  return [...byPilar.entries()]
+    .map(([pilar, mods]) => {
+      const pid = `p${String(pilar).padStart(2, "0")}`;
+      const f = FRENTES[pid] ?? { nome: mods[0].pilar_nome, resultado: "", entrega: mods.map((m) => m.nome).join(" · ") };
+      const fase = Math.min(...mods.map((m) => m.fase));
+      return { nome: f.nome, resultado: f.resultado, entrega: f.entrega, fase, modulos: mods.map((m) => m.codigo) };
+    })
+    .sort((a, b) => a.fase - b.fase);
+}
 
 /** Pesos por fase (R$ por módulo) */
 export const FASE_VALOR: Record<number, number> = {
