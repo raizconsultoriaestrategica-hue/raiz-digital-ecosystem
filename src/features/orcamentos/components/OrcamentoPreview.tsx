@@ -39,9 +39,14 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
     // Mensalidade: valor de referência, desconto comercial e programa de indicação.
     const mensalidade = calcMensalidade(form);
 
-    // Frentes: agrupa os módulos selecionados por pilar e usa a linguagem do
-    // deck (nome da frente + resultado), sem expor códigos de módulo ao cliente.
+    // Frentes da proposta. Usa as frentes customizadas (construtor) quando
+    // existem; senão, deriva por pilar. O cliente vê nome/resultado/entrega.
     const frentesSel = (() => {
+      if (form.frentes && form.frentes.length > 0) {
+        return form.frentes
+          .map((f, i) => ({ key: "f" + i, fase: f.fase, nome: f.nome, resultado: f.resultado, entrega: f.entrega }))
+          .sort((a, b) => a.fase - b.fase);
+      }
       const byPilar = new Map<number, ModuloDb[]>();
       for (const m of selectedMods) {
         if (!byPilar.has(m.pilar)) byPilar.set(m.pilar, []);
@@ -52,7 +57,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           const pid = `p${String(pilar).padStart(2, "0")}`;
           const f = FRENTES[pid] ?? { nome: mods[0].pilar_nome, resultado: "", entrega: mods.map((m) => m.nome).join(" · ") };
           const fase = Math.min(...mods.map((m) => m.fase));
-          return { pid, pilar, fase, nome: f.nome, resultado: f.resultado, entrega: f.entrega, mods };
+          return { key: pid, fase, nome: f.nome, resultado: f.resultado, entrega: f.entrega, pilar };
         })
         .sort((a, b) => a.fase - b.fase || a.pilar - b.pilar);
     })();
@@ -285,7 +290,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                 <div className="mb-3.5">
                   {data.frentesSel.map((f) => (
                     <div
-                      key={f.pid}
+                      key={f.key}
                       className="mb-3 pl-3.5 border-l-[2.5px]"
                       style={{ borderColor: "#A0622A" }}
                     >
