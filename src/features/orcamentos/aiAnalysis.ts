@@ -12,15 +12,21 @@ export interface AiAnalysisResult {
 
 const SYSTEM_PROMPT = `Você é o Consultor Sênior da Raiz Consultoria Estratégica. Baseie suas análises EXCLUSIVAMENTE na Base de Conhecimento Raiz abaixo e nos dados reais do cliente. Nunca invente serviço, módulo, métrica ou estatística; se um dado do cliente não veio, diga "não informado". Compare os indicadores do cliente com os benchmarks da base quando fizer sentido.
 
-PÚBLICO E LINGUAGEM (muito importante): o texto vai DIRETO para o dono da clínica (dentista ou médico), que NÃO entende linguagem técnica nem de negócios. Escreva claro, objetivo, pessoal (fale com "você") e estratégico, com o valor evidente para ele. Frases curtas. Traduza qualquer conceito para o dia a dia da clínica. EVITE jargão (CAC, LTV, ROI, KPI, funil, lead, churn, benchmark); se precisar de um número de mercado, diga em palavras simples (ex.: "clínicas parecidas costumam recuperar X% dos pacientes que somem"). Nada de termo técnico cru. Direto ao ponto, sem encher linguiça.
+PÚBLICO E LINGUAGEM (muito importante): o texto vai DIRETO para o dono da clínica (dentista ou médico), que não domina termos técnicos de negócio. Escreva de forma CLARA e ACESSÍVEL, porém SOFISTICADA, ESTRATÉGICA e bem fundamentada, como um consultor sênior que respeita a inteligência do cliente. Escrita impecável: gramática e pontuação corretas, frases bem construídas, sem erros. Fale com "você", de forma pessoal e profissional. Evite jargão cru (CAC, LTV, ROI, KPI, funil, lead, churn); ao citar uma referência de mercado, explique em português claro o que significa em pacientes e em dinheiro. Mostre o diferencial da Raiz: profundidade, método e visão de quem entende o negócio por dentro. NÃO empobreça o texto, não seja genérico nem "mais do mesmo", e não invente nada nem saia do papel de consultoria.
 
-NUNCA use travessão (—); use ponto, vírgula ou dois-pontos. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.
+NUNCA use travessão (—); separe ideias com ponto final e parágrafos, não com travessão. Quando solicitado JSON, retorne APENAS JSON válido sem markdown, sem texto adicional, sem code fences.
 
 ${CONHECIMENTO_RAIZ}`;
 
-/** Remove travessão (—) do texto da IA, conforme padrão de escrita da Raiz. */
+/** Remove travessão (— e –) do texto da IA, conforme padrão de escrita da Raiz,
+ * sem criar lixo de pontuação (ex.: ".," ou vírgula dupla). */
 function semTravessao(s: string): string {
-  return s.replace(/\s*—\s*/g, ", ");
+  return s
+    .replace(/\s*[—–]\s*/g, ", ") // travessão vira vírgula
+    .replace(/([.!?;:]),\s*/g, "$1 ") // depois de ponto final, vira espaço (não vírgula)
+    .replace(/\s+,/g, ",") // espaço antes de vírgula
+    .replace(/,\s*,/g, ", ") // vírgula dupla
+    .replace(/[ \t]{2,}/g, " "); // espaços duplos
 }
 
 function buildUserPrompt(form: OrcamentoForm, modulosDb: ModuloDb[]): string {
@@ -38,7 +44,14 @@ function buildUserPrompt(form: OrcamentoForm, modulosDb: ModuloDb[]): string {
 
   return `Analise o diagnóstico 360° e o resumo da reunião deste cliente e gere quatro blocos em JSON:
 
-1. "analise": 3 parágrafos curtos, em linguagem SIMPLES e pessoal (fale com "você"), como se estivesse conversando com o dono da clínica. Mostre onde ele está perdendo dinheiro e por quê, traduzindo tudo para pacientes e reais no bolso. Quando usar uma referência de mercado, diga em palavras simples, sem termo técnico. Objetivo e estratégico, com valor claro. Não invente número que o cliente não informou.
+1. "analise": uma análise estratégica DIVIDIDA EM 3 OU 4 TÓPICOS COM TÍTULO. REGRA DE FORMATO OBRIGATÓRIA: cada tópico começa com uma linha que contém SÓ o título, prefixada por "### ". Depois do título, 2 a 4 frases objetivas, estratégicas e bem escritas, explicando o ponto e o que significa para o faturamento e a operação. Use o formato EXATO deste exemplo (não copie o conteúdo, só o formato):
+### A força e o risco da sua clínica
+Você tem um ticket alto e posicionamento reconhecido, mas quase tudo depende de você. Sem processos e sem equipe treinada, o crescimento esbarra no seu tempo.
+
+### Onde o seu dinheiro está escapando
+Com retenção em 8%, você não traz de volta quem já te conhece. Clínicas parecidas recuperam de 30% a 50% dos pacientes inativos, isso é receita que você já pagou para conquistar e deixa ir embora.
+
+Profundidade de consultor sênior, escrita impecável, sem jargão, mostrando o diferencial da Raiz. Não escreva parágrafos corridos sem título. Não invente número que o cliente não informou.
 2. "frentes": array com 3 a 6 frentes estratégicas de trabalho, priorizadas por impacto no faturamento, velocidade e prontidão de execução, de acordo com a realidade deste cliente. Não lidere com tráfego se o gargalo for conversão, retenção ou preço. Cada frente é um objeto: { "nome": nome comercial curto e claro, "resultado": uma frase simples do que muda para ele, "entrega": o que ele recebe, em linguagem do dia a dia (sem nome técnico de módulo), "fase": número 1, 2 ou 3 (sequência de execução), "modulos": array com os códigos dos módulos que compõem a frente, escolhidos APENAS do catálogo abaixo }.
 3. "ancoragem": uma frase de até 2 linhas que use obrigatoriamente números reais do cliente (faturamento atual, perdas por no-show, pacientes inativos ou conversão baixa) para mostrar o custo concreto da inércia. Direta e emocional, em reais por mês ou por ano, sem jargão. Exemplo de estrutura (não copiar): 'Com [faturamento] por mês e [problema], você está deixando cerca de R$X na mesa todo mês. Isso é R$Y por ano.' Calcule com base nos dados reais.
 4. "justificativas": objeto onde cada chave é o código de um módulo usado nas frentes e o valor é uma frase curta (máx 15 palavras) do impacto esperado para este cliente.
