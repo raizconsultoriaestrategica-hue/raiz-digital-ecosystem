@@ -61,53 +61,43 @@ export async function generateOrcamentoPDFBlob(): Promise<Blob> {
   const pxPerMm = canvas.width / pageWmm;
   const pageHpx = Math.floor(pageHmm * pxPerMm);
 
-  // Pontos de quebra permitidos: topo da capa e de cada seção, em px do canvas.
-  // Usa a posição renderizada real (getBoundingClientRect) e a razão real
-  // canvas/nó, em vez de offsetTop*escala: assim o ponto é exato e seções
-  // curtas passam inteiras para a próxima página, sem órfãos.
+  // Paginação FIXA: a quebra de página acontece apenas nos elementos marcados
+  // com data-page-break="true". Isso trava o layout em páginas determinísticas
+  // (capa+diagnóstico, análise, plano, investimento+retorno, cronograma+passos),
+  // em vez de empacotar gulosamente. Cada segmento entre duas quebras vira uma
+  // página; se um segmento for mais alto que a A4 (raro), ele é fatiado.
   const docRect = node.getBoundingClientRect();
   const ratio = docRect.height > 0 ? canvas.height / docRect.height : scale;
-  const breakEls = Array.from(node.querySelectorAll<HTMLElement>(".pg-cover, .orc-section"));
-  const breakSet = new Set<number>([0, canvas.height]);
-  for (const el of breakEls) {
-    const top = (el.getBoundingClientRect().top - docRect.top) * ratio;
-    breakSet.add(Math.round(top));
-  }
-  const breaks = Array.from(breakSet)
-    .filter((b) => b >= 0 && b <= canvas.height)
-    .sort((a, b) => a - b);
+  const breakEls = Array.from(node.querySelectorAll<HTMLElement>("[data-page-break='true']"));
+  const forced = breakEls
+    .map((el) => Math.round((el.getBoundingClientRect().top - docRect.top) * ratio))
+    .filter((b) => b > 0 && b < canvas.height);
+  const bounds = Array.from(new Set<number>([0, ...forced, canvas.height])).sort((a, b) => a - b);
 
-  // Paginação gulosa: empacota o máximo de seções por página sem estourar a A4.
   const slice = document.createElement("canvas");
   const ctx = slice.getContext("2d");
   if (!ctx) throw new Error("Não foi possível preparar a página do PDF.");
 
-  let pageStart = 0;
   let first = true;
-  let guard = 0;
-  while (pageStart < canvas.height - 1 && guard++ < 100) {
-    const maxEnd = pageStart + pageHpx;
-    // maior ponto de quebra que cabe nesta página
-    let pageEnd = -1;
-    for (const b of breaks) {
-      if (b > pageStart && b <= maxEnd) pageEnd = b;
+  for (let i = 0; i < bounds.length - 1; i++) {
+    let segStart = bounds[i];
+    const segEnd = bounds[i + 1];
+    let guard = 0;
+    while (segStart < segEnd - 1 && guard++ < 50) {
+      const sliceH = Math.min(pageHpx, segEnd - segStart);
+      slice.width = canvas.width;
+      slice.height = sliceH;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, slice.width, sliceH);
+      ctx.drawImage(canvas, 0, segStart, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+      const imgData = slice.toDataURL("image/jpeg", 0.95);
+      const imgHmm = sliceH / pxPerMm;
+      if (!first) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, 0, pageWmm, imgHmm);
+      first = false;
+      segStart += sliceH;
     }
-    // Seção mais alta que uma página: corte forçado (inevitável)
-    if (pageEnd <= pageStart) pageEnd = Math.min(maxEnd, canvas.height);
-
-    const sliceH = pageEnd - pageStart;
-    slice.width = canvas.width;
-    slice.height = sliceH;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, slice.width, sliceH);
-    ctx.drawImage(canvas, 0, pageStart, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-
-    const imgData = slice.toDataURL("image/jpeg", 0.95);
-    const imgHmm = sliceH / pxPerMm;
-    if (!first) pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, 0, pageWmm, imgHmm);
-    first = false;
-    pageStart = pageEnd;
   }
 
   return pdf.output("blob");
