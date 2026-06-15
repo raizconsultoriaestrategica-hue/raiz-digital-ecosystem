@@ -223,9 +223,9 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               ))}
             </div>
           )}
-          <div className="grid grid-cols-[auto_1fr] gap-5 items-center bg-[#f8f7f5] rounded-[10px] p-5 mb-5">
+          <div className="grid grid-cols-[auto_1fr] gap-5 items-center bg-[#f8f7f5] rounded-[10px] p-4 mb-4">
             <div className="text-center">
-              <div className="font-display text-[48px] font-semibold text-verde-raiz leading-none">
+              <div className="font-display text-[44px] font-semibold text-verde-raiz leading-none">
                 {data.score || "—"}
               </div>
               <div className="text-[11px] text-[#718096] mt-0.5">de {data.scoreMax} pts</div>
@@ -239,11 +239,11 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
             </div>
           </div>
 
-          <div className="mb-4">
+          <div>
             {data.pilares.map((p) => {
               const color = p.pct !== null ? getBarColor(p.pct) : "#E2E8F0";
               return (
-                <div key={p.id} className="mb-2.5">
+                <div key={p.id} className="mb-2">
                   <div className="flex justify-between items-center mb-1">
                     <div className="text-[12px] font-semibold text-quase-preto">{p.name}</div>
                     <div className="text-[11px] font-bold" style={{ color }}>
@@ -260,31 +260,41 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
               );
             })}
           </div>
+        </Section>
 
-          <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5 mt-5">
-            Análise Estratégica
+        {/* ANÁLISE ESTRATÉGICA — página própria */}
+        <div
+          className="orc-section px-[52px] py-8 border-t border-[#f0f0f0]"
+          data-page-break="true"
+        >
+          <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">
+            Análise do Consultor
           </div>
-          <div className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-5 py-4">
+          <h2 className="font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">
+            Análise Estratégica
+          </h2>
+          <div className="w-full h-px bg-gradient-to-r from-verde-raiz to-transparent mb-5" />
+          <div className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-6 py-5">
             {(form.analise || 'Gere a proposta com a IA ou preencha a análise manualmente.')
               .split(/\n+/)
               .map((l) => l.trim())
               .filter((l) => l.length > 0)
               .map((linha, i) =>
                 /^#{1,4}\s/.test(linha) ? (
-                  <div key={i} className="text-[12.5px] font-bold text-verde-raiz mt-3 first:mt-0 mb-1">
+                  <div key={i} className="text-[13.5px] font-bold text-verde-raiz mt-4 first:mt-0 mb-1.5">
                     {linha.replace(/^#{1,4}\s*/, "")}
                   </div>
                 ) : (
-                  <div key={i} className="text-[12px] leading-[1.7] text-quase-preto mb-1.5">
+                  <div key={i} className="text-[12.5px] leading-[1.8] text-quase-preto mb-2">
                     {linha}
                   </div>
                 )
               )}
           </div>
-        </Section>
+        </div>
 
         {/* PLANO */}
-        <Section label="02 · Plano Recomendado" title="Proposta de Trabalho">
+        <Section label="02 · Plano Recomendado" title="Proposta de Trabalho" pageBreak>
           <div className="mb-5">
             <div className="plan-header bg-verde-raiz rounded-t-[10px] px-6 py-5">
               <div className="inline-block bg-dourado rounded text-white text-[9px] font-bold tracking-[0.1em] px-2.5 py-[3px] mb-2">
@@ -335,7 +345,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         </Section>
 
         {/* INVESTIMENTO */}
-        <Section label="03 · Investimento" title="Investimento & Condições">
+        <Section label="03 · Investimento" title="Investimento & Condições" pageBreak>
           <div className="border-[1.5px] border-[#DDD8D0] rounded-[10px] overflow-hidden mb-5">
             <div className="px-6 py-5 bg-white">
               <div className="font-display text-[34px] font-semibold text-verde-raiz leading-none">
@@ -431,7 +441,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
         )}
 
         {/* CRONOGRAMA */}
-        <Section label="05 · Cronograma de Execução" title="Fases do Trabalho">
+        <Section label="05 · Cronograma de Execução" title="Fases do Trabalho" pageBreak>
           <div className="relative pl-7">
             <div className="absolute left-2.5 top-1.5 bottom-1.5 w-[2px]" style={{ background: "linear-gradient(to bottom, #1C3D2E, #E8DDD0)" }} />
             {data.timeline.map((t) => (
@@ -509,9 +519,12 @@ function CoverMeta({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Section({ label, title, children }: { label: string; title: string; children: React.ReactNode }) {
+function Section({ label, title, children, pageBreak }: { label: string; title: string; children: React.ReactNode; pageBreak?: boolean }) {
   return (
-    <div className="orc-section px-[52px] py-12 border-t border-[#f0f0f0] first-of-type:border-t-0">
+    <div
+      className="orc-section px-[52px] py-8 border-t border-[#f0f0f0] first-of-type:border-t-0"
+      data-page-break={pageBreak ? "true" : undefined}
+    >
       <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5">{label}</div>
       <h2 className="orc-section-title font-display text-[26px] font-semibold text-verde-raiz mb-4 leading-[1.15]">{title}</h2>
       <div className="w-full h-px bg-gradient-to-r from-verde-raiz to-transparent mb-5" />
