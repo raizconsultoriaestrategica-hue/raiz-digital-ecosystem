@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Printer, RotateCcw, Save, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PILARES, PLANOS } from "../data";
-import { ANCORAGENS, calcValorModulos, calcMensalidade, frentesFromPilares, FASE_VALOR, type Frente, type ModuloDb, type OrcamentoForm } from "../types";
+import { ANCORAGENS, calcValorModulos, calcMensalidade, type Frente, type ModuloDb, type OrcamentoForm } from "../types";
 import type { ClienteOpt } from "../hooks/useOrcamento";
 import { saveOrcamento } from "../storage";
 import { gerarAnaliseIA } from "../aiAnalysis";
@@ -42,16 +42,6 @@ export function OrcamentoSidebar(p: Props) {
   const [generatingIA, setGeneratingIA] = useState(false);
   const [iaSucesso, setIaSucesso] = useState(false);
 
-  // Agrupar módulos por pilar_nome (vindos do DB, ordenados por pilar/ordem)
-  const grouped = useMemo(() => {
-    const g: Record<string, ModuloDb[]> = {};
-    p.modulosDb.forEach((m) => {
-      if (!g[m.pilar_nome]) g[m.pilar_nome] = [];
-      g[m.pilar_nome].push(m);
-    });
-    return g;
-  }, [p.modulosDb]);
-
   // Códigos selecionados
   const selecionados = useMemo(
     () => Object.entries(p.form.modulos).filter(([, v]) => v).map(([k]) => k),
@@ -75,14 +65,10 @@ export function OrcamentoSidebar(p: Props) {
 
   const mensalidade = useMemo(() => calcMensalidade(p.form), [p.form]);
 
-  // Construtor de frentes
-  const selectedModsObj = useMemo(
-    () => p.modulosDb.filter((m) => p.form.modulos[m.codigo]),
-    [p.modulosDb, p.form.modulos]
-  );
+  // Frentes: a fonte de verdade da venda. Os módulos por trás de cada frente
+  // ficam "nos bastidores" (modo avançado), não há mais seleção manual de módulos.
   const frentes = p.form.frentes || [];
   const setFrentes = (fs: Frente[]) => p.setField("frentes", fs);
-  const seedFrentes = () => setFrentes(frentesFromPilares(selectedModsObj));
   const addFrente = () => setFrentes([...frentes, { nome: "", resultado: "", entrega: "", fase: 1, modulos: [] }]);
   const removeFrente = (i: number) => setFrentes(frentes.filter((_, idx) => idx !== i));
   const patchFrente = (i: number, patch: Partial<Frente>) =>
@@ -93,6 +79,19 @@ export function OrcamentoSidebar(p: Props) {
         ? frentes[i].modulos.filter((c) => c !== cod)
         : [...frentes[i].modulos, cod],
     });
+
+  // Os módulos contratados são derivados das frentes (união). Mantém
+  // form.modulos em sincronia para alimentar o save (Dashboard do cliente) e o
+  // cálculo de valor, sem o consultor precisar marcar módulo na mão.
+  useEffect(() => {
+    const obj: Record<string, boolean> = {};
+    for (const f of frentes) for (const c of f.modulos) obj[c] = true;
+    const cur = p.form.modulos || {};
+    const curOn = Object.keys(cur).filter((k) => cur[k]);
+    const same = curOn.length === Object.keys(obj).length && curOn.every((k) => obj[k]);
+    if (!same) p.setField("modulos", obj);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frentes]);
 
   // Auto-preenche WhatsApp e Email do consultor logado
   const [consultorUserId, setConsultorUserId] = useState<string | null>(null);
@@ -445,66 +444,14 @@ export function OrcamentoSidebar(p: Props) {
         />
       </div>
 
-      <div className={sectionCls}>Módulos Contratados</div>
-      <div className="text-[10px] text-white/40 mb-2 leading-relaxed">
-        Pré-marcados automaticamente: pilares com score &lt; 50%.<br />
-        Fase 1: {fmtBRL(FASE_VALOR[1])} · Fase 2: {fmtBRL(FASE_VALOR[2])} · Fase 3: {fmtBRL(FASE_VALOR[3])}
-      </div>
-      <div className="max-h-[260px] overflow-y-auto pr-1 mb-3">
-        {p.loadingModulos && (
-          <div className="text-[12px] text-white/40 py-2">Carregando módulos…</div>
-        )}
-        {Object.entries(grouped).map(([pilarName, mods]) => (
-          <div key={pilarName}>
-            <div className="text-[10px] font-bold text-white/35 uppercase tracking-[0.08em] mt-2 mb-1">
-              {pilarName}
-            </div>
-            {mods.map((m) => {
-              const just = p.form.justificativasIA?.[m.codigo];
-              const isOn = !!p.form.modulos[m.codigo];
-              return (
-                <div key={m.id}>
-                  <label
-                    className="flex items-center gap-2 py-1.5 cursor-pointer text-[12px] text-white/75"
-                    title={just || undefined}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isOn}
-                      onChange={() => p.toggleModulo(m.codigo)}
-                      className="w-[15px] h-[15px] accent-dourado"
-                    />
-                    <span className="flex-1">
-                      {m.codigo} · {m.nome}
-                    </span>
-                    <span className="text-[10px] text-white/35 tabular-nums">
-                      F{m.fase}
-                    </span>
-                  </label>
-                  {isOn && just && (
-                    <div className="ml-[23px] -mt-1 mb-1.5 text-[10.5px] italic text-dourado/75 leading-snug">
-                      💡 {just}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      {/* Construtor de frentes da proposta */}
-      <hr className="border-white/10 my-5" />
+      {/* Frentes: tela de revisão do que a IA montou. Os módulos ficam atrás de cada frente. */}
       <div className={sectionCls}>Frentes da Proposta</div>
       <div className="text-[10px] text-white/40 mb-2 leading-relaxed">
-        É o que o cliente vê no lugar dos módulos. Gere a partir dos módulos e edite, ou crie do zero. Vazio = agrupa por pilar automaticamente.
+        É o que o cliente vê na proposta. A IA gera as frentes a partir do diagnóstico; aqui você revisa, edita o texto ou cria do zero. Os módulos por trás (que alimentam o Dashboard) ficam no avançado de cada frente.
       </div>
-      <div className="flex gap-2 mb-3">
-        <button type="button" onClick={seedFrentes} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[11px] rounded-md py-1.5">
-          ↻ Gerar dos módulos
-        </button>
-        <button type="button" onClick={addFrente} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[11px] rounded-md py-1.5">
-          + Frente
+      <div className="mb-3">
+        <button type="button" onClick={addFrente} className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[11px] rounded-md py-1.5">
+          + Adicionar frente manualmente
         </button>
       </div>
       <div className="space-y-2.5 mb-4">
@@ -542,23 +489,29 @@ export function OrcamentoSidebar(p: Props) {
               value={f.entrega}
               onChange={(e) => patchFrente(i, { entrega: e.target.value })}
             />
-            {selectedModsObj.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedModsObj.map((m) => {
-                  const on = f.modulos.includes(m.codigo);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => toggleModFrente(i, m.codigo)}
-                      title={m.nome}
-                      className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${on ? "bg-dourado/20 border-dourado text-white" : "bg-white/[0.04] border-white/15 text-white/40 hover:border-white/30"}`}
-                    >
-                      {m.codigo}
-                    </button>
-                  );
-                })}
-              </div>
+            {p.modulosDb.length > 0 && (
+              <details className="mt-1.5">
+                <summary className="text-[10px] text-white/35 cursor-pointer select-none hover:text-white/55">
+                  ⚙ Módulos desta frente ({f.modulos.length}) · avançado
+                </summary>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {p.modulosDb.map((m) => {
+                    const on = f.modulos.includes(m.codigo);
+                    const just = p.form.justificativasIA?.[m.codigo];
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggleModFrente(i, m.codigo)}
+                        title={just ? `${m.codigo} · ${m.nome} — ${just}` : `${m.codigo} · ${m.nome}`}
+                        className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${on ? "bg-dourado/20 border-dourado text-white" : "bg-white/[0.04] border-white/15 text-white/40 hover:border-white/30"}`}
+                      >
+                        {m.codigo}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
             )}
           </div>
         ))}
@@ -568,7 +521,7 @@ export function OrcamentoSidebar(p: Props) {
       <div className="rounded-lg border border-dourado/30 bg-dourado/5 px-3 py-3 mb-4">
         <div className="flex items-baseline justify-between mb-2">
           <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.1em]">
-            Valor calculado (módulos)
+            Valor sugerido (base)
           </span>
           <span className="font-display text-[16px] font-semibold text-dourado tabular-nums">
             {fmtBRL(valorCalculado)}
