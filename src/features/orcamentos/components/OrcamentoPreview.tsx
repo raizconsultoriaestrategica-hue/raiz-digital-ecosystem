@@ -264,12 +264,23 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
           <div className="text-[9px] font-bold tracking-[0.14em] uppercase text-dourado mb-1.5 mt-5">
             Análise Estratégica
           </div>
-          <div
-            className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-5 py-4 text-[12.5px] leading-[1.8] text-quase-preto"
-            dangerouslySetInnerHTML={{
-              __html: (form.analise || 'Preencha o campo "Gargalos identificados" para inserir a análise.').replace(/\n/g, "<br>"),
-            }}
-          />
+          <div className="bg-[#f4f7f5] border-l-[3px] border-verde-raiz rounded-r-lg px-5 py-4">
+            {(form.analise || 'Gere a proposta com a IA ou preencha a análise manualmente.')
+              .split(/\n+/)
+              .map((l) => l.trim())
+              .filter((l) => l.length > 0)
+              .map((linha, i) =>
+                /^#{1,4}\s/.test(linha) ? (
+                  <div key={i} className="text-[12.5px] font-bold text-verde-raiz mt-3 first:mt-0 mb-1">
+                    {linha.replace(/^#{1,4}\s*/, "")}
+                  </div>
+                ) : (
+                  <div key={i} className="text-[12px] leading-[1.7] text-quase-preto mb-1.5">
+                    {linha}
+                  </div>
+                )
+              )}
+          </div>
         </Section>
 
         {/* PLANO */}
