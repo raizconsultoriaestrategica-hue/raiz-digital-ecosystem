@@ -315,12 +315,7 @@ export function OrcamentoPreview({ form, modulosDb }: Props) {
                       className="mb-3 pl-3.5 border-l-[2.5px]"
                       style={{ borderColor: "#A0622A" }}
                     >
-                      <div className="flex items-baseline gap-2">
-                        <div className="text-[13.5px] font-bold text-verde-raiz">{f.nome}</div>
-                        <div className="text-[8.5px] font-bold uppercase tracking-[0.12em]" style={{ color: "#A0622A" }}>
-                          Fase {f.fase}
-                        </div>
-                      </div>
+                      <div className="text-[13.5px] font-bold text-verde-raiz">{f.nome}</div>
                       {f.resultado && (
                         <div className="text-[11.5px] italic leading-snug" style={{ color: "#A0622A" }}>
                           {f.resultado}
