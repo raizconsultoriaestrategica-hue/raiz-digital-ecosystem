@@ -549,7 +549,9 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     y += 2;
   }
 
-  /* ========== Plano + próximos passos (sem valor/ROI, sem "Fase 1") ========== */
+  /* ========== Plano + próximos passos + contato (página própria) ========== */
+  // Plano começa em página nova, junto com Próximos Passos e o contato.
+  addPage();
   sectionTitle("PLANO RECOMENDADO", 22);
   setFont(17, "bold", GREEN);
   doc.text(plano.name, M, y);
@@ -610,6 +612,19 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     lines.forEach((line, i) => doc.text(line, M + 12, y + 1.5 + i * 4.6));
     y += stepH;
   });
+
+  /* ========== Contato (fecha a página) ========== */
+  y += 6;
+  ensure(24);
+  fill(GREEN);
+  doc.roundedRect(M, y, CW, 24, 2, 2, "F");
+  setFont(8, "bold", GOLD);
+  doc.text("DÚVIDAS OU MAIS INFORMAÇÕES", W / 2, y + 8, { align: "center" });
+  setFont(10.5, "bold", LINHO);
+  doc.text("WhatsApp: (44) 99999-3334", W / 2, y + 15, { align: "center" });
+  setFont(9, "normal", [210, 225, 215]);
+  doc.text("raizconsultoriaestrategica@gmail.com", W / 2, y + 20.5, { align: "center" });
+  y += 28;
 
   /* ========== Rodapé em todas as páginas ========== */
   const pc = doc.internal.pages.length - 1;
