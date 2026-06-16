@@ -160,28 +160,58 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     doc.text("MATURIDADE", cx, cy + 6, { align: "center" });
   };
 
-  // Caixa de texto que pagina mantendo o fundo por página (evita retângulo
-  // vazando para fora e evita órfão de 1-2 linhas no fim da página).
-  const drawTextBox = (lines: string[]) => {
+  // Renderiza a análise (texto da IA em markdown) numa caixa que pagina
+  // mantendo o fundo por página. Trata títulos (**...**) como subtítulos em
+  // negrito e remove marcadores markdown soltos. Mede a quebra de linha já
+  // com a fonte de render (senão o texto estoura a margem).
+  const drawAnalise = (text: string) => {
     const lineH = 4.8;
     const padV = 4;
+    type Item = { text: string; bold: boolean; gap: number };
+    const items: Item[] = [];
+    text.split(/\r?\n/).map((l) => l.trim()).forEach((line) => {
+      if (!line) return;
+      const heading = line.match(/^\*\*(.+?)\*\*:?\s*$/);
+      if (heading) {
+        setFont(10, "bold");
+        doc.splitTextToSize(heading[1].trim(), CW - 10).forEach((t: string, i: number) =>
+          items.push({ text: t, bold: true, gap: i === 0 && items.length ? 3 : 0 }));
+      } else {
+        const clean = line.replace(/\*\*/g, "").replace(/^#+\s*/, "");
+        setFont(9, "normal");
+        doc.splitTextToSize(clean, CW - 10).forEach((t: string, i: number) =>
+          items.push({ text: t, bold: false, gap: i === 0 && items.length ? 1.5 : 0 }));
+      }
+    });
+
     let i = 0;
-    while (i < lines.length) {
-      let cap = Math.max(1, Math.floor((BOTTOM - y - padV * 2) / lineH));
-      const remaining = lines.length - i;
-      // se só cabe um resto pequeno e não estamos no topo, joga tudo pra próxima
-      if (cap < remaining && cap < 3 && y > M) { addPage(); continue; }
-      cap = Math.min(cap, remaining);
-      const chunk = lines.slice(i, i + cap);
-      const boxH = chunk.length * lineH + padV * 2;
+    while (i < items.length) {
+      const avail = BOTTOM - y - padV * 2;
+      let used = 0;
+      let count = 0;
+      while (i + count < items.length) {
+        const h = lineH + items[i + count].gap;
+        if (used + h > avail && count > 0) break;
+        used += h;
+        count++;
+      }
+      // evita órfão pequeno no fim da página e título solto na última linha
+      if (count < items.length - i && count < 3 && y > M) { addPage(); continue; }
+      if (count > 0 && items[i + count - 1].bold && i + count < items.length) count--;
+      const chunk = items.slice(i, i + count);
+      const boxH = chunk.reduce((a, it) => a + lineH + it.gap, 0) + padV * 2;
       fill(LIGHT);
       doc.roundedRect(M, y, CW, boxH, 2, 2, "F");
-      setFont(9, "normal", DARK);
       let ty = y + padV + 3.2;
-      chunk.forEach((l) => { doc.text(l, M + 5, ty); ty += lineH; });
+      chunk.forEach((it) => {
+        ty += it.gap;
+        setFont(it.bold ? 10 : 9, it.bold ? "bold" : "normal", it.bold ? GREEN : DARK);
+        doc.text(it.text, M + 5, ty);
+        ty += lineH;
+      });
       y += boxH;
-      i += cap;
-      if (i < lines.length) addPage();
+      i += count;
+      if (i < items.length) addPage();
     }
     y += 6;
   };
@@ -269,6 +299,7 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     const labelCol = 32;
     const textW = CW - labelCol - 10;
     const lineH = 4.6;
+    setFont(8.5, "normal");
     const wrapped = faixaEntries.map((e) => ({
       ...e,
       lines: doc.splitTextToSize(e.text, textW) as string[],
@@ -386,10 +417,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
       ? `Com base no diagnóstico de ${client.name}, identificamos ${criticos.length} pilar(es) crítico(s) que explicam diretamente a dor relatada: "${dor}". Os gargalos mais urgentes estão em ${criticos.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}. Estruturar essas áreas é o próximo passo antes de escalar investimento. Para alcançar a meta de ${meta}, o caminho passa por organizar atendimento, conversão e financeiro com previsibilidade.`
       : `${client.name} apresenta boa maturidade nos pilares fundamentais. O foco agora é consolidar os pontos de atenção e escalar com consistência para alcançar a meta de ${meta}.`);
 
-  const analiseLines = doc.splitTextToSize(analiseTxt, CW - 10);
-  // título + ao menos as 3 primeiras linhas juntos
-  sectionTitle("ANÁLISE ESTRATÉGICA", Math.min(analiseLines.length, 3) * 4.8 + 8);
-  drawTextBox(analiseLines);
+  sectionTitle("ANÁLISE ESTRATÉGICA", 24);
+  drawAnalise(analiseTxt);
 
   // Prioridades
   setFont(11, "bold", GREEN);
@@ -560,6 +589,7 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     "Início do projeto: onboarding, definição de metas, indicadores e primeiras frentes.",
     "Acompanhamento contínuo, com a Raiz cobrando o resultado.",
   ];
+  setFont(9.5, "normal");
   const passoLines = passos.map((t) => doc.splitTextToSize(t, CW - 14) as string[]);
   sectionTitle("PRÓXIMOS PASSOS", passoLines[0].length * 4.6 + 8);
   passos.forEach((_t, idx) => {
