@@ -472,6 +472,37 @@ async function loadDiagnosticosFromTypedTable(): Promise<StoredDiagnostico[]> {
     });
   }
 
+  // notas/analise não ficam na tabela tipada `diagnostics`, e sim no EAV
+  // (dashboard_data, campos NOTAS/ANALISE). Busca em lote para que o PDF
+  // gerado pelo painel admin traga a análise completa, não vazia.
+  const ids = [...new Set(out.map((d) => d.cliente_id).filter((id): id is string => !!id))];
+  if (ids.length > 0) {
+    const { data: na } = await supabase
+      .from("dashboard_data")
+      .select("cliente_id, campo, valor")
+      .eq("tipo", "PILAR")
+      .eq("mes", "Diagnóstico")
+      .in("campo", ["NOTAS", "ANALISE"])
+      .in("cliente_id", ids);
+    if (na) {
+      const byId = new Map<string, { notas?: string; analise?: string }>();
+      na.forEach((r) => {
+        if (!r.cliente_id) return;
+        const e = byId.get(r.cliente_id) || {};
+        if (r.campo === "NOTAS") e.notas = r.valor || "";
+        else if (r.campo === "ANALISE") e.analise = r.valor || "";
+        byId.set(r.cliente_id, e);
+      });
+      out.forEach((d) => {
+        const e = d.cliente_id ? byId.get(d.cliente_id) : undefined;
+        if (e) {
+          d.notas = e.notas ?? d.notas;
+          d.analise = e.analise ?? d.analise;
+        }
+      });
+    }
+  }
+
   return out;
 }
 

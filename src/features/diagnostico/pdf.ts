@@ -47,8 +47,11 @@ function withOpacity(doc: jsPDF, opacity: number, draw: () => void) {
   }
 }
 
-/* Carrega o símbolo da marca e o tinge na cor alvo, preservando o alpha. */
-async function loadTintedSymbol(rgb: [number, number, number]): Promise<string | null> {
+/* Carrega o símbolo da marca e o tinge na cor alvo, preservando o alpha.
+   Retorna também as dimensões naturais para manter a proporção no PDF. */
+async function loadTintedSymbol(
+  rgb: [number, number, number],
+): Promise<{ url: string; w: number; h: number } | null> {
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const i = new Image();
@@ -57,16 +60,18 @@ async function loadTintedSymbol(rgb: [number, number, number]): Promise<string |
       i.onerror = reject;
       i.src = simbolo;
     });
+    const w = img.naturalWidth || 300;
+    const h = img.naturalHeight || 300;
     const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth || 300;
-    canvas.height = img.naturalHeight || 300;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, w, h);
     ctx.globalCompositeOperation = "source-in";
     ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/png");
+    ctx.fillRect(0, 0, w, h);
+    return { url: canvas.toDataURL("image/png"), w, h };
   } catch {
     return null;
   }
@@ -82,8 +87,8 @@ function parseNum(s?: string): number {
   const n = parseFloat(cleaned);
   return Number.isFinite(n) ? n : NaN;
 }
-function fmtMoney(n: number): string {
-  return "R$ " + Math.round(n).toLocaleString("pt-BR");
+function fmtBRL(n: number): string {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string) {
@@ -187,7 +192,13 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   doc.rect(0, 0, W, heroH, "F");
 
   const sym = await loadTintedSymbol(LINHO);
-  if (sym) withOpacity(doc, 0.08, () => doc.addImage(sym, "PNG", W - 70, -8, 70, 70));
+  if (sym) {
+    const box = 60;
+    const scale = box / Math.max(sym.w, sym.h);
+    const sw = sym.w * scale;
+    const sh = sym.h * scale;
+    withOpacity(doc, 0.08, () => doc.addImage(sym.url, "PNG", W - sw - 6, 4, sw, sh));
+  }
 
   setFont(9, "normal", [200, 220, 210]);
   doc.text("RAIZ CONSULTORIA ESTRATÉGICA · CONFIDENCIAL", M, 13);
@@ -247,33 +258,41 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   });
   y += chipRows * (cardH + gap) + 4;
 
-  // resumo da meta / dor
-  if (client.meta || client.dor) {
-    const faixaH = client.meta && client.dor ? 22 : 15;
+  // resumo da meta / dor (texto multi-linha, altura dinâmica)
+  const metaNum = parseNum(client.meta);
+  const metaDisplay = Number.isFinite(metaNum) ? fmtBRL(metaNum) : client.meta;
+  const faixaEntries = [
+    client.dor ? { label: "DOR RELATADA", text: client.dor } : null,
+    client.meta ? { label: "META", text: metaDisplay } : null,
+  ].filter((e): e is { label: string; text: string } => e !== null);
+  if (faixaEntries.length > 0) {
+    const labelCol = 32;
+    const textW = CW - labelCol - 10;
+    const lineH = 4.6;
+    const wrapped = faixaEntries.map((e) => ({
+      ...e,
+      lines: doc.splitTextToSize(e.text, textW) as string[],
+    }));
+    const faixaH = wrapped.reduce((a, e) => a + e.lines.length * lineH, 0) + (wrapped.length - 1) * 3 + 10;
     ensure(faixaH);
     fill(GREEN);
     doc.roundedRect(M, y, CW, faixaH, 2, 2, "F");
     let ly = y + 7;
-    if (client.dor) {
+    wrapped.forEach((e) => {
       setFont(8, "bold", GOLD);
-      doc.text("DOR RELATADA", M + 5, ly);
+      doc.text(e.label, M + 5, ly);
       setFont(8.5, "normal", LINHO);
-      doc.text(doc.splitTextToSize(client.dor, CW - 50)[0], M + 38, ly);
-      ly += 8;
-    }
-    if (client.meta) {
-      setFont(8, "bold", GOLD);
-      doc.text("META", M + 5, ly);
-      setFont(8.5, "normal", LINHO);
-      doc.text(doc.splitTextToSize(client.meta, CW - 50)[0], M + 38, ly);
-    }
+      e.lines.forEach((line, i) => doc.text(line, M + 5 + labelCol, ly + i * lineH));
+      ly += e.lines.length * lineH + 3;
+    });
     y += faixaH + 8;
   }
 
-  /* ========== Resultado por pilar (flui, não força página) ========== */
-  sectionTitle("RESULTADO POR PILAR", 15);
-  activePilares.forEach((p) => {
-    ensure(15);
+  /* ========== Resultado por pilar (ordenado do pior ao melhor, bloco atômico) ========== */
+  // follow = altura de todas as barras, para garantir título + bloco inteiro
+  // na mesma página (nenhum pilar quebra sozinho para a página seguinte).
+  sectionTitle("RESULTADO POR PILAR", sorted.length * 11 + 4);
+  sorted.forEach((p) => {
     const { pct } = getScore(scores, p.id, ramo);
     const st = getStatus(pct);
     const sc = STATUS_COLORS[st.cls] ?? GREEN;
@@ -358,8 +377,11 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   const dor = client.dor || "não informada";
   const meta = client.meta || "não informada";
   const criticos = sorted.filter((p) => getScore(scores, p.id, ramo).pct < 0.35);
-  const analiseTxt = (notas && notas.trim())
-    || (snapshot.analise && snapshot.analise.trim())
+  // Usa a versão mais completa entre notas e analise (o botão "Gerar com IA"
+  // concatena a análise nas notas, então a maior contém o texto integral da IA).
+  const notasTxt = (notas || "").trim();
+  const analiseField = (snapshot.analise || "").trim();
+  const analiseTxt = (notasTxt.length >= analiseField.length ? notasTxt : analiseField)
     || (criticos.length > 0
       ? `Com base no diagnóstico de ${client.name}, identificamos ${criticos.length} pilar(es) crítico(s) que explicam diretamente a dor relatada: "${dor}". Os gargalos mais urgentes estão em ${criticos.slice(0, 2).map((p) => p.name.split("&")[0].trim()).join(" e ")}. Estruturar essas áreas é o próximo passo antes de escalar investimento. Para alcançar a meta de ${meta}, o caminho passa por organizar atendimento, conversão e financeiro com previsibilidade.`
       : `${client.name} apresenta boa maturidade nos pilares fundamentais. O foco agora é consolidar os pontos de atenção e escalar com consistência para alcançar a meta de ${meta}.`);
@@ -458,8 +480,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
       setFont(8, "bold", GRAY);
       doc.text("DA SITUAÇÃO ATUAL ATÉ A META", M + 5, y + 7);
       setFont(8.5, "bold", GREEN);
-      doc.text(`Hoje: ${fmtMoney(fatAtual)}`, M + 5, y + 14);
-      doc.text(`Meta: ${fmtMoney(fatMeta)}`, W - M - 5, y + 14, { align: "right" });
+      doc.text(`Hoje: ${fmtBRL(fatAtual)}`, M + 5, y + 14);
+      doc.text(`Meta: ${fmtBRL(fatMeta)}`, W - M - 5, y + 14, { align: "right" });
       const bw = CW - 10;
       fill(TRACK);
       doc.roundedRect(M + 5, y + 17, bw, 4, 2, 2, "F");
@@ -474,8 +496,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
       const good = r.lowerBetter ? r.val <= r.bench : r.val >= r.bench;
       const c = good ? STATUS_COLORS.bom : STATUS_COLORS.atencao;
       const unit = r.type === "percent" ? "%" : "";
-      const fmtV = r.type === "money" ? fmtMoney(r.val) : `${r.val}${unit}`;
-      const fmtB = r.type === "money" ? fmtMoney(r.bench) : `${r.bench}${unit}`;
+      const fmtV = r.type === "money" ? fmtBRL(r.val) : `${r.val}${unit}`;
+      const fmtB = r.type === "money" ? fmtBRL(r.bench) : `${r.bench}${unit}`;
       setFont(9, "bold", DARK);
       doc.text(r.label, M, y);
       setFont(8.5, "bold", c);
@@ -498,13 +520,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     y += 2;
   }
 
-  /* ========== Plano + cronograma (sem valor/ROI) ========== */
-  sectionTitle("PLANO RECOMENDADO", 30);
-  fill(GOLD);
-  doc.roundedRect(M, y, CW, 8, 2, 2, "F");
-  setFont(10, "bold", GREEN);
-  doc.text(plano.badge, M + 6, y + 5.5);
-  y += 13;
+  /* ========== Plano + próximos passos (sem valor/ROI, sem "Fase 1") ========== */
+  sectionTitle("PLANO RECOMENDADO", 22);
   setFont(17, "bold", GREEN);
   doc.text(plano.name, M, y);
   y += 8;
@@ -515,7 +532,7 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
 
   ensure(7 + 7);
   setFont(10, "bold", DARK);
-  doc.text("Frentes de trabalho:", M, y);
+  doc.text("Principais frentes do projeto:", M, y);
   y += 7;
   plano.modulos.forEach((mod) => {
     ensure(7);
@@ -532,35 +549,36 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   setFont(8, "bold", GRAY);
   doc.text("DURAÇÃO ESTIMADA", M + 6, y + 5.5);
   setFont(10, "bold", GREEN);
-  doc.text(plano.duracao, M + 6, y + 10.5);
+  doc.text("6 meses", M + 6, y + 10.5);
   y += 20;
 
-  // Cronograma
-  sectionTitle("CRONOGRAMA DE EXECUÇÃO", 13);
-  const fases = [
-    { n: "1", p: "Semanas 1–2", t: "Diagnóstico Profundo & Kickoff" },
-    { n: "2", p: "Meses 1–2", t: `Estruturação: ${sorted[0]?.name.split("&")[0].trim() ?? ""}` },
-    { n: "3", p: "Mês 2–3", t: `Ativação: ${sorted[1]?.name.split("&")[0].trim() ?? ""}` },
-    { n: "4", p: "Mês 3+", t: "Aceleração & Consolidação" },
-    { n: "5", p: "Resultado Final", t: "Crescimento Sustentável" },
+  // Próximos passos
+  const passos = [
+    "Apresentação do Planejamento Estratégico e da proposta de investimento personalizada.",
+    "Assinatura do contrato.",
+    "Pagamento inicial.",
+    "Início do projeto: onboarding, definição de metas, indicadores e primeiras frentes.",
+    "Acompanhamento contínuo, com a Raiz cobrando o resultado.",
   ];
-  fases.forEach((f, idx) => {
-    ensure(12);
+  const passoLines = passos.map((t) => doc.splitTextToSize(t, CW - 14) as string[]);
+  sectionTitle("PRÓXIMOS PASSOS", passoLines[0].length * 4.6 + 8);
+  passos.forEach((_t, idx) => {
+    const lines = passoLines[idx];
+    const stepH = Math.max(10, lines.length * 4.6 + 4);
+    ensure(stepH);
     fill(GREEN);
     doc.circle(M + 4, y + 1, 4, "F");
     setFont(9, "bold", LINHO);
-    doc.text(f.n, M + 4, y + 2.3, { align: "center" });
-    if (idx < fases.length - 1 && y + 12 <= BOTTOM) {
+    doc.text(String(idx + 1), M + 4, y + 2.3, { align: "center" });
+    if (idx < passos.length - 1 && y + stepH <= BOTTOM) {
       stroke([200, 210, 200]);
       doc.setLineWidth(0.4);
-      doc.line(M + 4, y + 5.5, M + 4, y + 11.5);
+      doc.line(M + 4, y + 5.5, M + 4, y + stepH - 0.5);
       doc.setLineWidth(0.2);
     }
-    setFont(7, "bold", GOLD);
-    doc.text(f.p.toUpperCase(), M + 12, y);
-    setFont(10, "bold", DARK);
-    doc.text(f.t, M + 12, y + 4.5);
-    y += 12;
+    setFont(9.5, "normal", DARK);
+    lines.forEach((line, i) => doc.text(line, M + 12, y + 1.5 + i * 4.6));
+    y += stepH;
   });
 
   /* ========== Rodapé em todas as páginas ========== */
