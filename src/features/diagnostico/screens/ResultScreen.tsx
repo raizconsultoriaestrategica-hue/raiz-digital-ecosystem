@@ -231,9 +231,14 @@ export function ResultScreen({
     }
   };
 
-  const handlePDF = () => {
-    const snap = buildSnapshot();
-    generatePDF(snap, notas);
+  const handlePDF = async () => {
+    try {
+      const snap = buildSnapshot();
+      await generatePDF(snap, notas);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Falha ao gerar PDF";
+      toast.error(msg);
+    }
   };
 
   return (

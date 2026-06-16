@@ -57,9 +57,9 @@ export function RepositorioDiagnosticos() {
     }
   };
 
-  const handlePDF = (d: StoredDiagnostico) => {
+  const handlePDF = async (d: StoredDiagnostico) => {
     try {
-      generatePDF(d, d.notas || "");
+      await generatePDF(d, d.notas || "");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao gerar PDF";
       toast.error(msg);
