@@ -449,7 +449,7 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     doc.text(doc.splitTextToSize(prioInsights[i], CW - 60)[0], M + 6, y + 12.5);
     y += 17;
   });
-  y += 4;
+  y += 12;
 
   // Evidências do diagnóstico
   const evidencias: { pilar: string; q: string; label: string }[] = [];
