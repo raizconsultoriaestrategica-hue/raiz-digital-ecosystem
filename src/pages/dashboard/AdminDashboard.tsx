@@ -361,10 +361,10 @@ export default function AdminDashboard() {
       ? ativos.reduce((s, l) => s + (Number(l.cliente.orcamento_inicial) || 0), 0) / totalAtivos
       : 0;
 
-  const handleVerResultado = (l: LinhaPainel) => {
+  const handleVerResultado = async (l: LinhaPainel) => {
     if (!l.diag) return;
     try {
-      generatePDF(l.diag, l.diag.notas);
+      await generatePDF(l.diag, l.diag.notas);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao gerar PDF";
       toast.error(msg);
