@@ -11,7 +11,6 @@ import {
   Target,
   RefreshCw,
   Sparkles,
-  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -45,14 +44,12 @@ const PROBLEMAS = [
 ];
 
 const DADOS = [
-  { n: "73%", d: "das clínicas fecham em 5 anos por falta de gestão" },
-  { n: "R$18k", d: "de faturamento médio deixado na mesa por mês por ineficiência" },
   { n: "57%", d: "das clínicas investem em redes sociais sem conseguir medir retorno real" },
   { n: "15%", d: "das consultas são perdidas por faltas, um dinheiro que desaparece todo mês sem ser percebido" },
 ];
 
 const STATS = [
-  { n: "+R$2M", d: "em faturamento incremental gerado com clientes Raiz" },
+  { n: "14+", d: "anos em marketing, vendas e operações" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
   { n: "4", d: "etapas do método Raiz de resultado" },
   { n: "100%", d: "dedicado a clínicas de saúde" },
@@ -76,7 +73,7 @@ const PILARES = [
 ];
 
 const PARA_VOCE = [
-  "Fatura entre R$15k e R$90k/mês e quer crescer com previsibilidade",
+  "Fatura de R$ 15 mil a R$ 90 mil/mês e quer crescer com previsibilidade",
   "Está disposto a implementar processos e abrir o financeiro",
   "Quer parar de ser o gargalo da própria operação",
   "Investe em marketing mas não mede o retorno",
@@ -225,7 +222,7 @@ function Hero() {
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
-              O problema quase nunca é falta de dedicação. Dentistas, médicos estéticos e dermatologistas que faturam entre R$15 mil e R$90 mil por mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
+              O problema quase nunca é falta de dedicação. Dentistas, médicos estéticos e dermatologistas que faturam de R$ 15 mil a R$ 90 mil/mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
             </p>
             <p className="mt-6 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
               A Raiz entra para olhar o todo, identificar exatamente onde o crescimento está travado e construir, junto com você, um caminho claro para destravar esse resultado.
@@ -242,8 +239,8 @@ function Hero() {
               14+ anos em marketing, vendas, tecnologia e operações em múltiplos mercados e segmentos, com visão estratégica aplicada ao crescimento de negócios de saúde
             </p>
             <div className="mt-6">
-              <div className="inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
-                ⏰ Vagas limitadas para Maio/2026. Apenas 4 vagas disponíveis neste ciclo.
+              <div className="inline-block rounded-md border border-linho/20 bg-linho/10 px-4 py-2 font-body text-sm text-linho/80">
+                Atendemos um número limitado de clínicas por vez, para manter o acompanhamento semanal próximo.
               </div>
             </div>
           </div>
@@ -358,7 +355,7 @@ function Dados() {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-12 grid max-w-3xl gap-6 md:grid-cols-2">
             {DADOS.map((d, i) => (
               <div
                 key={i}
@@ -517,7 +514,7 @@ function Founder() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {["14+ anos", "100+ clientes em 14 anos", "R$2M+ gerados"].map((p) => (
+              {["14+ anos em marketing, vendas e operações", "100% dedicado a clínicas de saúde"].map((p) => (
                 <span
                   key={p}
                   className="rounded-full border border-verde-raiz/20 bg-linho px-4 py-2 font-body text-sm font-semibold text-verde-raiz"
@@ -646,93 +643,26 @@ function SeteP() {
   );
 }
 
-/* ---------- RESULTADOS ---------- */
-function Resultados() {
-  const antes = [
-    "Faturamento R$18k–R$22k/mês",
-    "Conversão menor que 30%",
-    "Dono em 100% das decisões",
-    "Marketing sem ROI",
-    "Equipe sem autonomia",
-  ];
-  const depois = [
-    "Faturamento escalado para R$52k/mês",
-    "Conversão 68% com script novo",
-    "Equipe autônoma com KPIs",
-    "CAC rastreado, custo caiu 40%",
-    "Dentista-dono com 2 dias livres por semana",
-  ];
-
+/* ---------- ORIGEM ---------- */
+function Origem() {
   return (
     <section className="bg-off-white py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
-            Resultados reais
+            Como a Raiz nasceu
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            De R$18k para R$52k em 6 meses. Veja o que mudou.
-          </h2>
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 md:items-stretch">
-            <div className="flex flex-col rounded-xl border border-red-900/30 bg-red-950/10 p-8">
-              <div className="font-body text-xs font-semibold uppercase tracking-wider text-red-900/80">Antes</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-quase-preto/80">
-                {antes.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <X className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-700" />
-                    <span>{i}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
-              <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-verde-raiz">
-                {depois.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-dourado" />
-                    <span>{i}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal delay={180}>
-          <div className="relative mt-12 overflow-hidden rounded-xl border-l-4 border-dourado bg-marrom-raiz p-10 shadow-editorial md:p-12">
+          <div className="relative mt-8 overflow-hidden rounded-xl border-l-4 border-dourado bg-marrom-raiz p-10 shadow-editorial md:p-12">
             <span className="absolute -left-2 top-2 font-display leading-none text-dourado/15 select-none" style={{ fontSize: "10rem" }} aria-hidden>
               "
             </span>
-            <div className="relative grid items-center gap-8 md:grid-cols-3">
-              <div className="md:col-span-1">
-                <div className="font-display text-dourado" style={{ fontSize: "clamp(3.5rem, 7vw, 4.5rem)", lineHeight: 1 }}>
-                  3×
-                </div>
-                <div className="mt-2 font-body text-sm uppercase tracking-wider text-dourado/80">faturamento</div>
-              </div>
-              <div className="md:col-span-2">
-                <p className="font-display text-2xl italic leading-snug text-linho md:text-3xl">
-                  "Em 4 meses, a Raiz identificou onde eu estava perdendo dinheiro sem saber. Reestruturamos o atendimento, ajustamos a precificação e o faturamento cresceu 3 vezes com a mesma quantidade de pacientes."
-                </p>
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-linho/20 ring-2 ring-dourado/40">
-                    <User className="h-8 w-8 text-linho/60" />
-                  </div>
-                  <div className="font-body text-sm text-linho/70">
-                    Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="relative max-w-4xl font-display text-2xl leading-snug text-linho md:text-3xl">
+              A Raiz nasceu de um favor a uma amiga dentista: agenda cheia, faturamento travado. Três meses de ajustes em preço, atendimento e processo, e o faturamento destravou. A demanda sempre esteve lá. O que faltava era estrutura.
+            </p>
           </div>
-          <p className="mt-6 font-body font-light text-sm text-quase-preto/60">
-            Resultado de cliente real. Números documentados no portal Raiz com KPIs mensais.
-          </p>
         </Reveal>
       </div>
     </section>
@@ -799,12 +729,9 @@ function Planos() {
     <section id="planos" className="bg-off-white py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/15 p-5 text-amber-800">
+          <div className="rounded-xl border border-verde-raiz/20 bg-verde-menta/40 p-5 text-verde-raiz">
             <p className="font-body text-sm md:text-base">
-              ⏰ <strong>Vagas limitadas para novas clínicas em Maio/2026</strong>. Apenas 4 vagas disponíveis neste ciclo.{" "}
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-amber-900">
-                Garantir minha vaga →
-              </a>
+              Atendemos um número limitado de clínicas por vez, para manter o acompanhamento semanal próximo.
             </p>
           </div>
 
@@ -1111,7 +1038,7 @@ function CtaFinal() {
             </Button>
           </div>
           <p className="mt-6 font-body font-light text-sm text-linho/50">
-            Sem compromisso. Apenas 4 vagas em Maio/2026. Resposta em até 24h.
+            Sem compromisso. Resposta em até 24h.
           </p>
         </Reveal>
       </div>
@@ -1212,7 +1139,7 @@ export default function Home() {
         <Founder />
         <Metodo />
         <SeteP />
-        <Resultados />
+        <Origem />
         <Qualificacao />
         <Planos />
         <Calculadora />
