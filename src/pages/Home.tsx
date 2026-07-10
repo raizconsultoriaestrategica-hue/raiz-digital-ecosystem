@@ -90,9 +90,9 @@ const NAO_VOCE = [
 ];
 
 const PLANOS = [
-  { nome: "PLANO RAIZ DE BASE", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas que precisam de base antes de escalar", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","Reuniões quinzenais de 1h","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz de Base", destaque: false },
-  { nome: "PLANO RAIZ DE CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas com potencial claro e gargalo identificado", itens: ["Tudo do Plano Raiz de Base + reuniões semanais de 1h30","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Raiz de Crescimento", destaque: true },
-  { nome: "PLANO RAIZ DE EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas que querem crescer com um sócio estratégico ativo", itens: ["Tudo do Plano Raiz de Crescimento + presencial mensal","Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz"], cta: "Falar sobre o Plano Raiz de Expansão", destaque: false },
+  { nome: "RAIZ DE BASE", sub: "Para quem está estruturando", itens: ["Fases Diagnóstico e Estancar", "Posicionamento, preço e processos de conversão", "Tráfego: auditoria e plano de mídia, sem execução"], ritmo: "Reuniões quinzenais · a partir de 3 meses", cta: "Falar sobre o Raiz de Base", destaque: false },
+  { nome: "RAIZ DE CRESCIMENTO", sub: "O mais contratado", itens: ["Protocolo até a fase Acelerar", "Campanhas de Meta Ads criadas e geridas pela equipe Raiz", "Conversão, financeiro e gestão", "Google Ads opcional"], ritmo: "Reuniões semanais · 4 a 6 meses", cta: "Falar sobre o Raiz de Crescimento", destaque: true },
+  { nome: "RAIZ DE EXPANSÃO", sub: "Para quem vai escalar", itens: ["Protocolo completo: Meta + Google inclusos", "IA aplicada à clínica", "Preparação de expansão"], ritmo: "Semanal + sessão estratégica · a partir de 6 meses", cta: "Falar sobre o Raiz de Expansão", destaque: false },
 ];
 
 const FAQ = [
@@ -102,6 +102,7 @@ const FAQ = [
   { q: "Já contratei consultoria antes e não funcionou. Por que seria diferente?", a: "A maioria das consultorias entrega um relatório e some. A Raiz fica. Acompanhamos a execução ao lado do seu time, com reuniões periódicas, metas documentadas e portal com KPIs em tempo real. O resultado é rastreado, não prometido." },
   { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si não tem custo e não tem compromisso de contratação." },
   { q: "Funciona para médicos estéticos e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estéticos e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
+  { q: "Vocês fazem os anúncios ou eu preciso contratar uma agência?", a: "Fazemos. A partir do plano Crescimento, as campanhas de Meta e Google Ads são criadas, geridas e otimizadas pela equipe de tráfego da Raiz, dentro do Protocolo. Você tem um contrato e um responsável, sem precisar coordenar consultor e agência separados. A verba de mídia é paga por você direto às plataformas." },
 ];
 
 const fmtBRL = (v: number) =>
@@ -768,15 +769,14 @@ function Planos() {
               >
                 {p.destaque && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-dourado px-4 py-1 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz">
-                    Mais escolhido
+                    O mais contratado
                   </span>
                 )}
                 <div className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-verde-raiz">
                   {p.nome}
                 </div>
-                <div className="mt-4 font-display text-2xl text-verde-raiz">{p.preco}</div>
-                <div className="mt-1 font-body text-sm text-quase-preto/60">{p.contrato}</div>
-                <p className="mt-4 font-body font-light text-sm text-quase-preto/75">{p.sub}</p>
+                <div className="mt-4 font-display text-2xl text-verde-raiz">{p.sub}</div>
+                <div className="mt-1 font-body text-sm text-quase-preto/60">{p.ritmo}</div>
 
                 <ul className="mt-6 flex-1 space-y-3">
                   {p.itens.map((i) => (
@@ -802,7 +802,7 @@ function Planos() {
           </div>
 
           <p className="mt-8 text-center font-body font-light text-sm text-muted-foreground">
-            O investimento é definido depois do Diagnóstico 360°, com base no porte e nos objetivos da sua clínica. Sem proposta padrão.
+            Investimento a partir de R$ 2.000/mês. Escopo e valor definidos após o Diagnóstico 360°. Execução de tráfego inclusa a partir do plano Crescimento (verba de mídia à parte).
           </p>
         </Reveal>
       </div>
