@@ -28,7 +28,7 @@ import BrandLogo from "@/components/brand/BrandLogo";
 const WHATSAPP_URL = "https://wa.me/5544999993334?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
 
 const NAV_LINKS = [
-  { label: "O Método", href: "#metodo" },
+  { label: "O Protocolo", href: "#protocolo" },
   { label: "Os 7 Pilares", href: "#diagnostico" },
   { label: "Planos", href: "#planos" },
   { label: "Calculadora", href: "#calculadora" },
@@ -51,15 +51,15 @@ const DADOS = [
 const STATS = [
   { n: "14+", d: "anos em marketing, vendas e operações" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
-  { n: "4", d: "etapas do método Raiz de resultado" },
+  { n: "4", d: "fases do Protocolo Raiz" },
   { n: "100%", d: "dedicado a clínicas de saúde" },
 ];
 
-const ETAPAS = [
-  { n: "01", t: "Diagnóstico 360°", d: "A gente avalia os 7 pilares da sua clínica: marketing, captação, atendimento, financeiro, gestão, retenção e expansão. Você sai com um diagnóstico documentado, semáforo por indicador e os três gargalos prioritários na mão." },
-  { n: "02", t: "Planejamento Estratégico", d: "Plano de 90 dias com metas financeiras, responsáveis definidos e priorização por impacto. Nada de recomendação genérica. Cada ação é calibrada pro estágio da sua clínica." },
-  { n: "03", t: "Execução Guiada", d: "A gente acompanha a implementação com o seu time. Reuniões periódicas, checklists de execução e portal do cliente com KPIs em tempo real. Você nunca fica sozinho com um plano na gaveta." },
-  { n: "04", t: "Resultado Mensurável", d: "Cada meta tem um número. O crescimento é rastreado mês a mês no seu dashboard. Você vê, com clareza, o quanto a clínica avançou desde o primeiro dia." },
+const FASES_PROTOCOLO = [
+  { n: "0", t: "Diagnóstico 360°", prazo: "Semanas 1-2", d: "35 perguntas, 7 pilares, pontuação em tempo real. Você enxerga os gargalos antes de qualquer proposta." },
+  { n: "1", t: "Estancar", prazo: "Dias 1-30", d: "Script de atendimento, follow-up, confirmação e preço. A conversão para de vazar antes de investir em anúncio." },
+  { n: "2", t: "Acelerar", prazo: "Dias 30-90", d: "Campanhas de Meta e Google criadas e geridas pela equipe Raiz, funil e reativação da sua base de contatos." },
+  { n: "3", t: "Sustentar", prazo: "Dia 90+", d: "Retenção, recall, indicações e processos. A clínica roda com menos dependência de você." },
 ];
 
 const PILARES = [
@@ -232,7 +232,7 @@ function Hero() {
                 <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico 360°</a>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-linho/30 bg-transparent px-8 py-6 text-linho hover:bg-linho/10 hover:text-linho">
-                <a href="#metodo">Ver o Método</a>
+                <a href="#protocolo">Ver o Protocolo</a>
               </Button>
             </div>
             <p className="mt-8 font-body font-light text-sm text-linho/60">
@@ -548,33 +548,45 @@ function Founder() {
   );
 }
 
-/* ---------- METODO ---------- */
-function Metodo() {
+/* ---------- PROTOCOLO ---------- */
+function Protocolo() {
   return (
-    <section id="metodo" className="bg-linho py-20 md:py-28">
+    <section id="protocolo" className="bg-linho py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
             Como funciona
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">O Método Raiz em 4 etapas</h2>
+          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">O Protocolo Raiz</h2>
           <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/70">
-            Cada etapa tem uma entrega concreta, um prazo definido e uma métrica para acompanhar o avanço.
+            Cuidamos da sua clínica como você cuida de um paciente: diagnóstico, tratamento em fases e manutenção.
           </p>
         </Reveal>
 
         <Reveal delay={120}>
           <div className="relative mt-14 grid gap-6 md:grid-cols-4">
             <div className="absolute left-0 right-0 top-12 hidden h-px bg-dourado/30 md:block" />
-            {ETAPAS.map((e) => (
+            {FASES_PROTOCOLO.map((e) => (
               <article key={e.n} className="relative rounded-xl border border-border bg-off-white p-6 shadow-soft">
                 <div className="relative z-10 mx-auto -mt-12 flex h-14 w-14 items-center justify-center rounded-full bg-verde-raiz font-display text-xl text-dourado shadow-editorial">
                   {e.n}
                 </div>
                 <h3 className="mt-4 text-center font-display text-xl text-verde-raiz">{e.t}</h3>
+                <div className="mt-1 text-center font-body text-xs font-semibold uppercase tracking-wider text-dourado">
+                  {e.prazo}
+                </div>
                 <p className="mt-3 text-center font-body font-light text-sm leading-relaxed text-quase-preto/70">{e.d}</p>
               </article>
             ))}
+          </div>
+        </Reveal>
+
+        <Reveal delay={180}>
+          <div className="mt-12 rounded-xl border-l-4 border-dourado bg-verde-raiz p-8 shadow-editorial md:p-10">
+            <p className="font-display text-xl leading-snug text-linho md:text-2xl">
+              Anúncio só entra com o atendimento medido e convertendo. Rodar tráfego para uma clínica sem processo é pagar para perder lead.{" "}
+              <em className="text-dourado not-italic">Primeiro estancamos. Depois aceleramos.</em>
+            </p>
           </div>
         </Reveal>
       </div>
@@ -1075,7 +1087,7 @@ function HomeFooter() {
             <ul className="mt-4 space-y-2 font-body font-light text-sm text-linho/60">
               <li><a href="#problema" className="hover:text-linho">Por que a Raiz?</a></li>
               <li><a href="#founder" className="hover:text-linho">Quem é Patrick</a></li>
-              <li><a href="#metodo" className="hover:text-linho">O Método</a></li>
+              <li><a href="#protocolo" className="hover:text-linho">O Protocolo</a></li>
               <li><a href="#diagnostico" className="hover:text-linho">Diagnóstico 360°</a></li>
               <li><a href="#planos" className="hover:text-linho">Planos</a></li>
               <li><a href="#faq" className="hover:text-linho">Perguntas frequentes</a></li>
@@ -1137,7 +1149,7 @@ export default function Home() {
         <Dados />
         <Diferencial />
         <Founder />
-        <Metodo />
+        <Protocolo />
         <SeteP />
         <Origem />
         <Qualificacao />
