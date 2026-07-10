@@ -11,7 +11,6 @@ import {
   Target,
   RefreshCw,
   Sparkles,
-  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -29,7 +28,7 @@ import BrandLogo from "@/components/brand/BrandLogo";
 const WHATSAPP_URL = "https://wa.me/5544999993334?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
 
 const NAV_LINKS = [
-  { label: "O Método", href: "#metodo" },
+  { label: "O Protocolo", href: "#protocolo" },
   { label: "Os 7 Pilares", href: "#diagnostico" },
   { label: "Planos", href: "#planos" },
   { label: "Calculadora", href: "#calculadora" },
@@ -45,24 +44,22 @@ const PROBLEMAS = [
 ];
 
 const DADOS = [
-  { n: "73%", d: "das clínicas fecham em 5 anos por falta de gestão" },
-  { n: "R$18k", d: "de faturamento médio deixado na mesa por mês por ineficiência" },
   { n: "57%", d: "das clínicas investem em redes sociais sem conseguir medir retorno real" },
   { n: "15%", d: "das consultas são perdidas por faltas, um dinheiro que desaparece todo mês sem ser percebido" },
 ];
 
 const STATS = [
-  { n: "+R$2M", d: "em faturamento incremental gerado com clientes Raiz" },
+  { n: "14+", d: "anos em marketing, vendas e operações" },
   { n: "7", d: "pilares estratégicos mapeados e trabalhados" },
-  { n: "4", d: "etapas do método Raiz de resultado" },
+  { n: "4", d: "fases do Protocolo Raiz" },
   { n: "100%", d: "dedicado a clínicas de saúde" },
 ];
 
-const ETAPAS = [
-  { n: "01", t: "Diagnóstico 360°", d: "A gente avalia os 7 pilares da sua clínica: marketing, captação, atendimento, financeiro, gestão, retenção e expansão. Você sai com um diagnóstico documentado, semáforo por indicador e os três gargalos prioritários na mão." },
-  { n: "02", t: "Planejamento Estratégico", d: "Plano de 90 dias com metas financeiras, responsáveis definidos e priorização por impacto. Nada de recomendação genérica. Cada ação é calibrada pro estágio da sua clínica." },
-  { n: "03", t: "Execução Guiada", d: "A gente acompanha a implementação com o seu time. Reuniões periódicas, checklists de execução e portal do cliente com KPIs em tempo real. Você nunca fica sozinho com um plano na gaveta." },
-  { n: "04", t: "Resultado Mensurável", d: "Cada meta tem um número. O crescimento é rastreado mês a mês no seu dashboard. Você vê, com clareza, o quanto a clínica avançou desde o primeiro dia." },
+const FASES_PROTOCOLO = [
+  { n: "0", t: "Diagnóstico 360°", prazo: "Semanas 1-2", d: "35 perguntas, 7 pilares, pontuação em tempo real. Você enxerga os gargalos antes de qualquer proposta." },
+  { n: "1", t: "Estancar", prazo: "Dias 1-30", d: "Script de atendimento, follow-up, confirmação e preço. A conversão para de vazar antes de investir em anúncio." },
+  { n: "2", t: "Acelerar", prazo: "Dias 30-90", d: "Campanhas de Meta e Google criadas e geridas pela equipe Raiz, funil e reativação da sua base de contatos." },
+  { n: "3", t: "Sustentar", prazo: "Dia 90+", d: "Retenção, recall, indicações e processos. A clínica roda com menos dependência de você." },
 ];
 
 const PILARES = [
@@ -76,7 +73,7 @@ const PILARES = [
 ];
 
 const PARA_VOCE = [
-  "Fatura entre R$15k e R$90k/mês e quer crescer com previsibilidade",
+  "Fatura de R$ 15 mil a R$ 90 mil/mês e quer crescer com previsibilidade",
   "Está disposto a implementar processos e abrir o financeiro",
   "Quer parar de ser o gargalo da própria operação",
   "Investe em marketing mas não mede o retorno",
@@ -93,9 +90,9 @@ const NAO_VOCE = [
 ];
 
 const PLANOS = [
-  { nome: "PLANO RAIZ DE BASE", preco: "Sob consulta", contrato: "Contrato trimestral mínimo", sub: "Para clínicas que precisam de base antes de escalar", itens: ["Diagnóstico 360° completo","Plano de ação 90 dias","Reuniões quinzenais de 1h","Dashboards de KPI","Suporte WhatsApp dias úteis"], cta: "Falar sobre o Plano Raiz de Base", destaque: false },
-  { nome: "PLANO RAIZ DE CRESCIMENTO", preco: "Sob consulta", contrato: "Contrato semestral", sub: "Para clínicas com potencial claro e gargalo identificado", itens: ["Tudo do Plano Raiz de Base + reuniões semanais de 1h30","Marketing, comercial e financeiro em paralelo","Treinamento de equipe (recepção e vendas)","Reestruturação de precificação e mix","Suporte prioritário"], cta: "Falar sobre o Plano Raiz de Crescimento", destaque: true },
-  { nome: "PLANO RAIZ DE EXPANSÃO", preco: "Sob consulta", contrato: "Contrato anual", sub: "Para clínicas que querem crescer com um sócio estratégico ativo", itens: ["Tudo do Plano Raiz de Crescimento + presencial mensal","Atuação semanal com Patrick como sócio estratégico","Estratégia de escala e expansão de unidades","Estruturação societária","Rede de parceiros da Raiz"], cta: "Falar sobre o Plano Raiz de Expansão", destaque: false },
+  { nome: "RAIZ DE BASE", sub: "Para quem está estruturando", itens: ["Fases Diagnóstico e Estancar", "Posicionamento, preço e processos de conversão", "Tráfego: auditoria e plano de mídia, sem execução"], ritmo: "Reuniões quinzenais · a partir de 3 meses", cta: "Falar sobre o Raiz de Base", destaque: false },
+  { nome: "RAIZ DE CRESCIMENTO", sub: "O mais contratado", itens: ["Protocolo até a fase Acelerar", "Campanhas de Meta Ads criadas e geridas pela equipe Raiz", "Conversão, financeiro e gestão", "Google Ads opcional"], ritmo: "Reuniões semanais · 4 a 6 meses", cta: "Falar sobre o Raiz de Crescimento", destaque: true },
+  { nome: "RAIZ DE EXPANSÃO", sub: "Para quem vai escalar", itens: ["Protocolo completo: Meta + Google inclusos", "IA aplicada à clínica", "Preparação de expansão"], ritmo: "Semanal + sessão estratégica · a partir de 6 meses", cta: "Falar sobre o Raiz de Expansão", destaque: false },
 ];
 
 const FAQ = [
@@ -105,6 +102,7 @@ const FAQ = [
   { q: "Já contratei consultoria antes e não funcionou. Por que seria diferente?", a: "A maioria das consultorias entrega um relatório e some. A Raiz fica. Acompanhamos a execução ao lado do seu time, com reuniões periódicas, metas documentadas e portal com KPIs em tempo real. O resultado é rastreado, não prometido." },
   { q: "Quanto custa?", a: "O investimento é definido depois do Diagnóstico 360°, com base no porte da clínica e nos objetivos mapeados. O Diagnóstico em si não tem custo e não tem compromisso de contratação." },
   { q: "Funciona para médicos estéticos e dermatologistas também?", a: "Sim. A metodologia Raiz foi desenvolvida para clínicas de saúde: dentistas, médicos estéticos e dermatologistas. Os 7 pilares e os 22 módulos são adaptados ao perfil e ao momento de cada clínica." },
+  { q: "Vocês fazem os anúncios ou eu preciso contratar uma agência?", a: "Fazemos. A partir do plano Crescimento, as campanhas de Meta e Google Ads são criadas, geridas e otimizadas pela equipe de tráfego da Raiz, dentro do Protocolo. Você tem um contrato e um responsável, sem precisar coordenar consultor e agência separados. A verba de mídia é paga por você direto às plataformas." },
 ];
 
 const fmtBRL = (v: number) =>
@@ -170,9 +168,6 @@ function Nav() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <Button asChild className="hidden bg-dourado text-marrom-raiz hover:bg-dourado/90 md:inline-flex">
-            <a href="https://raizconsultoriaestrategica.com.br/login" target="_blank" rel="noopener noreferrer">Acessar Plataforma</a>
-          </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-linho lg:hidden" aria-label="Abrir menu">
@@ -186,9 +181,6 @@ function Nav() {
                     {l.label}
                   </a>
                 ))}
-                <Button asChild className="mt-6 bg-dourado text-marrom-raiz hover:bg-dourado/90">
-                  <a href="https://raizconsultoriaestrategica.com.br/login" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>Acessar Plataforma</a>
-                </Button>
               </nav>
             </SheetContent>
           </Sheet>
@@ -225,7 +217,7 @@ function Hero() {
               <em className="text-dourado not-italic">A gente sabe exatamente por quê.</em>
             </h1>
             <p className="mt-8 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
-              O problema quase nunca é falta de dedicação. Dentistas, médicos estéticos e dermatologistas que faturam entre R$15 mil e R$90 mil por mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
+              O problema quase nunca é falta de dedicação. Dentistas, médicos estéticos e dermatologistas que faturam de R$ 15 mil a R$ 90 mil/mês geralmente trabalham muito, mas acabam colocando energia no lugar errado.
             </p>
             <p className="mt-6 max-w-2xl font-body font-light text-lg leading-relaxed text-linho/75 md:text-xl">
               A Raiz entra para olhar o todo, identificar exatamente onde o crescimento está travado e construir, junto com você, um caminho claro para destravar esse resultado.
@@ -235,15 +227,15 @@ function Hero() {
                 <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">Quero meu Diagnóstico 360°</a>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-linho/30 bg-transparent px-8 py-6 text-linho hover:bg-linho/10 hover:text-linho">
-                <a href="#metodo">Ver o Método</a>
+                <a href="#protocolo">Ver o Protocolo</a>
               </Button>
             </div>
             <p className="mt-8 font-body font-light text-sm text-linho/60">
               14+ anos em marketing, vendas, tecnologia e operações em múltiplos mercados e segmentos, com visão estratégica aplicada ao crescimento de negócios de saúde
             </p>
             <div className="mt-6">
-              <div className="inline-block rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 font-body text-sm text-amber-300">
-                ⏰ Vagas limitadas para Maio/2026. Apenas 4 vagas disponíveis neste ciclo.
+              <div className="inline-block rounded-md border border-linho/20 bg-linho/10 px-4 py-2 font-body text-sm text-linho/80">
+                Atendemos um número limitado de clínicas por vez, para manter o acompanhamento semanal próximo.
               </div>
             </div>
           </div>
@@ -358,7 +350,7 @@ function Dados() {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-12 grid max-w-3xl gap-6 md:grid-cols-2">
             {DADOS.map((d, i) => (
               <div
                 key={i}
@@ -517,7 +509,7 @@ function Founder() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {["14+ anos", "100+ clientes em 14 anos", "R$2M+ gerados"].map((p) => (
+              {["14+ anos em marketing, vendas e operações", "100% dedicado a clínicas de saúde"].map((p) => (
                 <span
                   key={p}
                   className="rounded-full border border-verde-raiz/20 bg-linho px-4 py-2 font-body text-sm font-semibold text-verde-raiz"
@@ -551,33 +543,45 @@ function Founder() {
   );
 }
 
-/* ---------- METODO ---------- */
-function Metodo() {
+/* ---------- PROTOCOLO ---------- */
+function Protocolo() {
   return (
-    <section id="metodo" className="bg-linho py-20 md:py-28">
+    <section id="protocolo" className="bg-linho py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
             Como funciona
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">O Método Raiz em 4 etapas</h2>
+          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">O Protocolo Raiz</h2>
           <p className="mt-6 max-w-3xl font-body font-light text-lg text-quase-preto/70">
-            Cada etapa tem uma entrega concreta, um prazo definido e uma métrica para acompanhar o avanço.
+            Cuidamos da sua clínica como você cuida de um paciente: diagnóstico, tratamento em fases e manutenção.
           </p>
         </Reveal>
 
         <Reveal delay={120}>
           <div className="relative mt-14 grid gap-6 md:grid-cols-4">
             <div className="absolute left-0 right-0 top-12 hidden h-px bg-dourado/30 md:block" />
-            {ETAPAS.map((e) => (
+            {FASES_PROTOCOLO.map((e) => (
               <article key={e.n} className="relative rounded-xl border border-border bg-off-white p-6 shadow-soft">
                 <div className="relative z-10 mx-auto -mt-12 flex h-14 w-14 items-center justify-center rounded-full bg-verde-raiz font-display text-xl text-dourado shadow-editorial">
                   {e.n}
                 </div>
                 <h3 className="mt-4 text-center font-display text-xl text-verde-raiz">{e.t}</h3>
+                <div className="mt-1 text-center font-body text-xs font-semibold uppercase tracking-wider text-dourado">
+                  {e.prazo}
+                </div>
                 <p className="mt-3 text-center font-body font-light text-sm leading-relaxed text-quase-preto/70">{e.d}</p>
               </article>
             ))}
+          </div>
+        </Reveal>
+
+        <Reveal delay={180}>
+          <div className="mt-12 rounded-xl border-l-4 border-dourado bg-verde-raiz p-8 shadow-editorial md:p-10">
+            <p className="font-display text-xl leading-snug text-linho md:text-2xl">
+              Anúncio só entra com o atendimento medido e convertendo. Rodar tráfego para uma clínica sem processo é pagar para perder lead.{" "}
+              <em className="text-dourado not-italic">Primeiro estancamos. Depois aceleramos.</em>
+            </p>
           </div>
         </Reveal>
       </div>
@@ -646,93 +650,26 @@ function SeteP() {
   );
 }
 
-/* ---------- RESULTADOS ---------- */
-function Resultados() {
-  const antes = [
-    "Faturamento R$18k–R$22k/mês",
-    "Conversão menor que 30%",
-    "Dono em 100% das decisões",
-    "Marketing sem ROI",
-    "Equipe sem autonomia",
-  ];
-  const depois = [
-    "Faturamento escalado para R$52k/mês",
-    "Conversão 68% com script novo",
-    "Equipe autônoma com KPIs",
-    "CAC rastreado, custo caiu 40%",
-    "Dentista-dono com 2 dias livres por semana",
-  ];
-
+/* ---------- ORIGEM ---------- */
+function Origem() {
   return (
     <section className="bg-off-white py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
           <span className="font-body font-semibold uppercase tracking-[0.22em] text-xs text-verde-raiz">
-            Resultados reais
+            Como a Raiz nasceu
           </span>
-          <h2 className="mt-4 font-display text-4xl text-verde-raiz md:text-5xl">
-            De R$18k para R$52k em 6 meses. Veja o que mudou.
-          </h2>
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 md:items-stretch">
-            <div className="flex flex-col rounded-xl border border-red-900/30 bg-red-950/10 p-8">
-              <div className="font-body text-xs font-semibold uppercase tracking-wider text-red-900/80">Antes</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-quase-preto/80">
-                {antes.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <X className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-700" />
-                    <span>{i}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex flex-col rounded-xl border border-dourado/40 bg-bege-terroso p-8 shadow-editorial">
-              <div className="font-body text-xs font-semibold uppercase tracking-wider text-dourado">Após 6 meses</div>
-              <ul className="mt-5 flex-1 space-y-4 font-body font-light text-verde-raiz">
-                {depois.map((i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-dourado" />
-                    <span>{i}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal delay={180}>
-          <div className="relative mt-12 overflow-hidden rounded-xl border-l-4 border-dourado bg-marrom-raiz p-10 shadow-editorial md:p-12">
+          <div className="relative mt-8 overflow-hidden rounded-xl border-l-4 border-dourado bg-marrom-raiz p-10 shadow-editorial md:p-12">
             <span className="absolute -left-2 top-2 font-display leading-none text-dourado/15 select-none" style={{ fontSize: "10rem" }} aria-hidden>
               "
             </span>
-            <div className="relative grid items-center gap-8 md:grid-cols-3">
-              <div className="md:col-span-1">
-                <div className="font-display text-dourado" style={{ fontSize: "clamp(3.5rem, 7vw, 4.5rem)", lineHeight: 1 }}>
-                  3×
-                </div>
-                <div className="mt-2 font-body text-sm uppercase tracking-wider text-dourado/80">faturamento</div>
-              </div>
-              <div className="md:col-span-2">
-                <p className="font-display text-2xl italic leading-snug text-linho md:text-3xl">
-                  "Em 4 meses, a Raiz identificou onde eu estava perdendo dinheiro sem saber. Reestruturamos o atendimento, ajustamos a precificação e o faturamento cresceu 3 vezes com a mesma quantidade de pacientes."
-                </p>
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-linho/20 ring-2 ring-dourado/40">
-                    <User className="h-8 w-8 text-linho/60" />
-                  </div>
-                  <div className="font-body text-sm text-linho/70">
-                    Dra. Anna Krause · Especialista em Facetas de Resina · Sinop, MT
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="relative max-w-4xl font-display text-2xl leading-snug text-linho md:text-3xl">
+              A Raiz nasceu de um favor a uma amiga dentista: agenda cheia, faturamento travado. Três meses de ajustes em preço, atendimento e processo, e o faturamento destravou. A demanda sempre esteve lá. O que faltava era estrutura.
+            </p>
           </div>
-          <p className="mt-6 font-body font-light text-sm text-quase-preto/60">
-            Resultado de cliente real. Números documentados no portal Raiz com KPIs mensais.
-          </p>
         </Reveal>
       </div>
     </section>
@@ -799,12 +736,9 @@ function Planos() {
     <section id="planos" className="bg-off-white py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-6">
         <Reveal>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/15 p-5 text-amber-800">
+          <div className="rounded-xl border border-verde-raiz/20 bg-verde-menta/40 p-5 text-verde-raiz">
             <p className="font-body text-sm md:text-base">
-              ⏰ <strong>Vagas limitadas para novas clínicas em Maio/2026</strong>. Apenas 4 vagas disponíveis neste ciclo.{" "}
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-amber-900">
-                Garantir minha vaga →
-              </a>
+              Atendemos um número limitado de clínicas por vez, para manter o acompanhamento semanal próximo.
             </p>
           </div>
 
@@ -829,15 +763,14 @@ function Planos() {
               >
                 {p.destaque && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-dourado px-4 py-1 font-body text-xs font-semibold uppercase tracking-wider text-marrom-raiz">
-                    Mais escolhido
+                    O mais contratado
                   </span>
                 )}
                 <div className="font-body text-xs font-semibold uppercase tracking-[0.22em] text-verde-raiz">
                   {p.nome}
                 </div>
-                <div className="mt-4 font-display text-2xl text-verde-raiz">{p.preco}</div>
-                <div className="mt-1 font-body text-sm text-quase-preto/60">{p.contrato}</div>
-                <p className="mt-4 font-body font-light text-sm text-quase-preto/75">{p.sub}</p>
+                <div className="mt-4 font-display text-2xl text-verde-raiz">{p.sub}</div>
+                <div className="mt-1 font-body text-sm text-quase-preto/60">{p.ritmo}</div>
 
                 <ul className="mt-6 flex-1 space-y-3">
                   {p.itens.map((i) => (
@@ -863,7 +796,7 @@ function Planos() {
           </div>
 
           <p className="mt-8 text-center font-body font-light text-sm text-muted-foreground">
-            O investimento é definido depois do Diagnóstico 360°, com base no porte e nos objetivos da sua clínica. Sem proposta padrão.
+            Investimento a partir de R$ 2.000/mês. Escopo e valor definidos após o Diagnóstico 360°. Execução de tráfego inclusa a partir do plano Crescimento (verba de mídia à parte).
           </p>
         </Reveal>
       </div>
@@ -1111,7 +1044,7 @@ function CtaFinal() {
             </Button>
           </div>
           <p className="mt-6 font-body font-light text-sm text-linho/50">
-            Sem compromisso. Apenas 4 vagas em Maio/2026. Resposta em até 24h.
+            Sem compromisso. Resposta em até 24h.
           </p>
         </Reveal>
       </div>
@@ -1148,7 +1081,7 @@ function HomeFooter() {
             <ul className="mt-4 space-y-2 font-body font-light text-sm text-linho/60">
               <li><a href="#problema" className="hover:text-linho">Por que a Raiz?</a></li>
               <li><a href="#founder" className="hover:text-linho">Quem é Patrick</a></li>
-              <li><a href="#metodo" className="hover:text-linho">O Método</a></li>
+              <li><a href="#protocolo" className="hover:text-linho">O Protocolo</a></li>
               <li><a href="#diagnostico" className="hover:text-linho">Diagnóstico 360°</a></li>
               <li><a href="#planos" className="hover:text-linho">Planos</a></li>
               <li><a href="#faq" className="hover:text-linho">Perguntas frequentes</a></li>
@@ -1210,9 +1143,9 @@ export default function Home() {
         <Dados />
         <Diferencial />
         <Founder />
-        <Metodo />
+        <Protocolo />
         <SeteP />
-        <Resultados />
+        <Origem />
         <Qualificacao />
         <Planos />
         <Calculadora />
