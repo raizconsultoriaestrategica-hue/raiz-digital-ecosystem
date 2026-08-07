@@ -31,7 +31,7 @@ interface Body {
 
   // diagnóstico
   clientName?: string;
-  ramo?: "dentista" | "medico";
+  ramo?: "dentista" | "medico" | "psicologo";
   classifLabel?: string;
   planoName?: string;
   totalPct?: number;
@@ -78,7 +78,12 @@ Deno.serve(async (req) => {
         metaConsultoria = "—",
       } = body;
 
-      const ramoLabel = ramo === "medico" ? "consultório médico" : "clínica odontológica";
+      const ramoLabel =
+        ramo === "psicologo"
+          ? "consultório de psicologia"
+          : ramo === "medico"
+            ? "consultório médico"
+            : "clínica odontológica";
 
       const fmtKpis = (list: KpiMensal[]) =>
         list.length === 0
@@ -95,7 +100,12 @@ Deno.serve(async (req) => {
               })
               .join("\n");
 
-      systemPrompt = `Você é um consultor experiente da Raiz Consultoria Estratégica, especialista em ${ramoLabel}, conversando direto com o dono da clínica. Fale como gente: direto, humano, sem firula corporativa nem academiquês. Use "você". Frases curtas e objetivas, sem rodeios. Português brasileiro informal mas profissional. Sem emojis. Nunca comece com "Prezado", "Olá" ou qualquer saudação. Vá direto ao ponto. Nunca prometa números como garantia.`;
+      const regrasPsiMensal =
+        ramo === "psicologo"
+          ? ` Regras específicas do ramo psicologia: nunca prometa resultados terapêuticos nem use linguagem de cura ou garantia (o Código de Ética do CFP veda promessa de resultado). Ao falar de marketing, sempre dentro das regras de publicidade do CFP: sem depoimentos de pacientes, sem preço como propaganda, sem exposição de casos. Trate retenção como assiduidade e permanência no processo terapêutico (redução de faltas e abandono), não como recall de inativos.`
+          : "";
+
+      systemPrompt = `Você é um consultor experiente da Raiz Consultoria Estratégica, especialista em ${ramoLabel}, conversando direto com o dono da clínica. Fale como gente: direto, humano, sem firula corporativa nem academiquês. Use "você". Frases curtas e objetivas, sem rodeios. Português brasileiro informal mas profissional. Sem emojis. Nunca comece com "Prezado", "Olá" ou qualquer saudação. Vá direto ao ponto. Nunca prometa números como garantia.${regrasPsiMensal}`;
 
       userPrompt = `Escreva a análise mensal de ${clientName} (${ramoLabel}) falando direto com o dono da clínica.
 
@@ -148,7 +158,12 @@ Total: 220-320 palavras.`;
       }
 
       const sorted = [...pilares].sort((a, b) => a.pct - b.pct);
-      const ramoLabel = ramo === "medico" ? "consultório médico" : "clínica odontológica";
+      const ramoLabel =
+        ramo === "psicologo"
+          ? "consultório de psicologia"
+          : ramo === "medico"
+            ? "consultório médico"
+            : "clínica odontológica";
       const pilaresTxt = sorted
         .map(
           (p, i) =>
@@ -156,7 +171,12 @@ Total: 220-320 palavras.`;
         )
         .join("\n");
 
-      systemPrompt = `Você é um consultor sênior da Raiz Consultoria Estratégica, especialista em ${ramoLabel}. Escreva análises estratégicas diretas, objetivas e acionáveis em português do Brasil. Tom profissional, sem clichês, sem emojis. Use parágrafos curtos. Nunca prometa números financeiros específicos como garantia.`;
+      const regrasPsi =
+        ramo === "psicologo"
+          ? ` Regras específicas do ramo psicologia: nunca prometa resultados terapêuticos nem use linguagem de cura ou garantia (o Código de Ética do CFP veda promessa de resultado). Ao recomendar ações de marketing, sempre dentro das regras de publicidade do CFP (Resolução 06/2019): sem depoimentos de pacientes, sem preço como propaganda, sem exposição de casos clínicos. Trate retenção como assiduidade e permanência no processo terapêutico (redução de faltas e abandono precoce). Nunca mencione valores de planos ou investimento: no ramo psicologia, o investimento é apresentado apenas no planejamento personalizado.`
+          : "";
+
+      systemPrompt = `Você é um consultor sênior da Raiz Consultoria Estratégica, especialista em ${ramoLabel}. Escreva análises estratégicas diretas, objetivas e acionáveis em português do Brasil. Tom profissional, sem clichês, sem emojis. Use parágrafos curtos. Nunca prometa números financeiros específicos como garantia.${regrasPsi}`;
 
       userPrompt = `Gere uma análise estratégica para ${clientName} (${ramoLabel}).
 

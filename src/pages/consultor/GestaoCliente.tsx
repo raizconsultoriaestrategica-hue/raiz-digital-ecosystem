@@ -172,6 +172,7 @@ export default function GestaoCliente() {
     odontologia: "Odontologia",
     medicina: "Medicina",
     estetica: "Estética",
+    psicologia: "Psicologia",
     outros: "Outros",
   };
 
@@ -499,7 +500,12 @@ export default function GestaoCliente() {
             body: {
               mode: "mensal",
               clientName: cliente.nome_cliente,
-              ramo: cliente.ramo === "medico" ? "medico" : "dentista",
+              ramo:
+                cliente.ramo === "psicologia" || cliente.ramo === "psicologo"
+                  ? "psicologo"
+                  : cliente.ramo === "medico" || cliente.ramo === "medicina" || cliente.ramo === "estetica"
+                    ? "medico"
+                    : "dentista",
               mesReferencia: mesRef,
               mesAnterior: mesAnt,
               kpisAtuais,

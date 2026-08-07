@@ -10,13 +10,14 @@ export type CampoAtivacao =
 export type ErrosCadastro = Partial<Record<CampoCadastro, string>>;
 export type ErrosAtivacao = Partial<Record<CampoAtivacao, string>>;
 
-export const RAMOS_VALIDOS = ["odontologia", "medicina", "estetica", "outros"] as const;
+export const RAMOS_VALIDOS = ["odontologia", "medicina", "estetica", "psicologia", "outros"] as const;
 export type Ramo = (typeof RAMOS_VALIDOS)[number];
 
 export const RAMO_LABEL: Record<Ramo, string> = {
   odontologia: "Odontologia",
   medicina: "Medicina",
   estetica: "Estética",
+  psicologia: "Psicologia",
   outros: "Outros",
 };
 

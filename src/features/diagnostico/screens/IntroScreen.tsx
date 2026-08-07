@@ -9,6 +9,12 @@ import type { Ramo } from "../types";
 import { getPilaresByRamo } from "../logic";
 import { RepositorioDiagnosticos } from "./RepositorioDiagnosticos";
 
+const RAMO_CARDS: Record<Ramo, { emoji: string; nome: string; sub: string }> = {
+  dentista: { emoji: "🦷", nome: "Odontologia", sub: "Clínicas e dentistas" },
+  medico: { emoji: "🩺", nome: "Saúde / Medicina", sub: "Consultórios e clínicas médicas" },
+  psicologo: { emoji: "🧠", nome: "Psicologia", sub: "Psicólogos, consultórios e clínicas" },
+};
+
 interface IntroScreenProps {
   ramo: Ramo;
   onRamoChange: (r: Ramo) => void;
@@ -73,9 +79,10 @@ export function IntroScreen({ ramo, onRamoChange, onStart }: IntroScreenProps) {
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-linho/45">
               Selecione o ramo
             </div>
-            <div className="mt-2.5 grid grid-cols-2 gap-3">
-              {(["dentista", "medico"] as Ramo[]).map((r) => {
+            <div className="mt-2.5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(["dentista", "medico", "psicologo"] as Ramo[]).map((r) => {
                 const sel = ramo === r;
+                const meta = RAMO_CARDS[r];
                 return (
                   <button
                     key={r}
@@ -86,13 +93,11 @@ export function IntroScreen({ ramo, onRamoChange, onStart }: IntroScreenProps) {
                       sel && "border-dourado bg-dourado/15",
                     )}
                   >
-                    <div className="text-2xl">{r === "dentista" ? "🦷" : "🩺"}</div>
+                    <div className="text-2xl">{meta.emoji}</div>
                     <div className={cn("mt-1 text-sm font-semibold", sel ? "text-dourado" : "text-linho")}>
-                      {r === "dentista" ? "Odontologia" : "Saúde / Medicina"}
+                      {meta.nome}
                     </div>
-                    <div className="text-[11px] text-linho/55">
-                      {r === "dentista" ? "Clínicas e dentistas" : "Consultórios e clínicas médicas"}
-                    </div>
+                    <div className="text-[11px] text-linho/55">{meta.sub}</div>
                   </button>
                 );
               })}

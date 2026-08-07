@@ -261,6 +261,7 @@ export default function AdminDashboard() {
     odontologia: "Odontologia",
     medicina: "Medicina",
     estetica: "Estética",
+    psicologia: "Psicologia",
     outros: "Outros",
   };
 

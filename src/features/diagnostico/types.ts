@@ -33,7 +33,7 @@ export interface Classif {
 export type ScoreValue = number | "SKIP" | null;
 export type ScoresMap = Record<string, ScoreValue[]>;
 
-export type Ramo = "dentista" | "medico";
+export type Ramo = "dentista" | "medico" | "psicologo";
 
 export interface ClientData {
   name: string;
@@ -52,8 +52,10 @@ export interface ClientData {
   pacientes: string;
   /** Especialidade selecionada via dropdown (ramo dependente) */
   especialidade?: string;
-  /** % de receita por convênio (apenas ramo médico) */
+  /** % de receita por convênio (ramos médico e psicólogo: convênios/plataformas) */
   convenio?: string;
+  /** Modalidade de atendimento: presencial/híbrido/online (apenas ramo psicólogo) */
+  modalidade?: string;
 }
 
 export interface SelOpts {

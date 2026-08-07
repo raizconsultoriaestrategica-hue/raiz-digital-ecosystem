@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { CLASSIFS, fromRamoCanonico, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, PILARES, PLANOS, toRamoCanonico } from "./data";
+import { CLASSIFS, fromRamoCanonico, getPilaresByRamo, getPlanosByRamo, KPI_INIT_FIELDS, kpiBenchmarkByRamo, kpiCampoByRamo, PILARES, PLANOS, toRamoCanonico } from "./data";
 import type { ClientData, DiagnosticoSnapshot, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "./types";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -110,8 +110,8 @@ export async function saveDiagnosticoToSupabase(
     KPI_INIT_FIELDS.forEach((f) => {
       const v = snapshot.kpisIniciais?.[f.key];
       if (!v) return;
-      const campo = ramo === "medico" && f.campoMed ? f.campoMed : f.campo;
-      const benchmark = ramo === "medico" ? f.benchmarkMed : f.benchmarkDent;
+      const campo = kpiCampoByRamo(f, ramo);
+      const benchmark = kpiBenchmarkByRamo(f, ramo);
       rows.push({
         cliente_id: clienteId, tipo: "KPI", mes: "Inicial",
         campo, valor: String(v), benchmark: benchmark ?? null,
