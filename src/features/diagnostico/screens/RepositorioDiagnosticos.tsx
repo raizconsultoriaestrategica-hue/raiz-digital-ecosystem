@@ -137,7 +137,7 @@ function DiagCard({
 }: { d: StoredDiagnostico; onPDF: () => void; onDelete: () => void }) {
   const dt = d.timestamp ? new Date(d.timestamp) : null;
   const dateLabel = dt ? dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
-  const ramoLabel = d.ramo === "medico" ? "Médico" : "Dentista";
+  const ramoLabel = d.ramo === "psicologo" ? "Psicólogo" : d.ramo === "medico" ? "Médico" : "Dentista";
   const pct = Math.round((d.totalPct ?? 0) * 100);
 
   return (

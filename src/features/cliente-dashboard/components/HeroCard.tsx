@@ -20,9 +20,11 @@ export default function HeroCard({ cfg, avgPct }: Props) {
 
   const titulo = cfg.nome_clinica || cfg.cliente_nome || "Clínica";
   const eyebrow =
-    cfg.ramo === "medico"
-      ? "Consultoria Estratégica em Medicina"
-      : "Consultoria Estratégica em Odontologia";
+    cfg.ramo === "psicologia" || cfg.ramo === "psicologo"
+      ? "Consultoria Estratégica em Psicologia"
+      : cfg.ramo === "medico" || cfg.ramo === "medicina"
+        ? "Consultoria Estratégica em Medicina"
+        : "Consultoria Estratégica em Odontologia";
 
   return (
     <section className="relative overflow-hidden rounded-xl bg-verde-raiz px-6 py-7 shadow-editorial sm:px-9 sm:py-8">

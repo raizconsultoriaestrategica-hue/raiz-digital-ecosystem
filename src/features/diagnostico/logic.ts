@@ -1,10 +1,11 @@
-import { CLASSIFS, PILARES, PILARES_MEDICO, PLANOS, PLANOS_MEDICO } from "./data";
+import { CLASSIFS, PILARES, PILARES_MEDICO, PILARES_PSICOLOGO, PLANOS, PLANOS_MEDICO, PLANOS_PSICOLOGO } from "./data";
 import type { Classif, Pilar, Plano, Ramo, ScoresMap, SelOpts } from "./types";
 
 export function isAutonomo(sel: SelOpts): boolean {
   return (
     sel.tipo === "Dentista Autônomo" ||
     sel.tipo === "Médico Autônomo" ||
+    sel.tipo === "Psicólogo(a) Autônomo(a)" ||
     sel.func === "Nenhum (só eu)"
   );
 }
@@ -13,6 +14,7 @@ export function shouldSkipExpansao(sel: SelOpts): boolean {
   return (
     sel.tipo === "Dentista Autônomo" ||
     sel.tipo === "Médico Autônomo" ||
+    sel.tipo === "Psicólogo(a) Autônomo(a)" ||
     sel.func === "Nenhum (só eu)" ||
     sel.func === "1 funcionário" ||
     sel.func === "1–2 funcionários"
@@ -20,6 +22,7 @@ export function shouldSkipExpansao(sel: SelOpts): boolean {
 }
 
 export function getPilaresByRamo(ramo: Ramo = "dentista"): Pilar[] {
+  if (ramo === "psicologo") return PILARES_PSICOLOGO;
   return ramo === "medico" ? PILARES_MEDICO : PILARES;
 }
 
@@ -78,7 +81,8 @@ export function getClassif(pct: number): Classif {
 }
 
 export function getPlano(pct: number, ramo: Ramo = "dentista"): Plano {
-  const planos = ramo === "medico" ? PLANOS_MEDICO : PLANOS;
+  const planos =
+    ramo === "psicologo" ? PLANOS_PSICOLOGO : ramo === "medico" ? PLANOS_MEDICO : PLANOS;
   return planos.find((pl) => pl.trigger(pct)) ?? planos[planos.length - 1];
 }
 

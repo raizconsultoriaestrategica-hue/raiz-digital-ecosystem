@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import simbolo from "@/assets/simbolo.png";
-import { KPI_INIT_FIELDS } from "./data";
+import { KPI_INIT_FIELDS, kpiBenchmarkByRamo, kpiLabelByRamo } from "./data";
 import {
   getActivePilares, getScore, getSortedByPct, getStatus,
 } from "./logic";
@@ -264,8 +264,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
     { label: "Perfil", value: client.tipo },
     { label: "Especialidade", value: client.especialidade || client.proc },
     { label: "Tempo de atuação", value: client.tempo },
-    { label: "Pacientes / mês", value: client.pacientes },
-    { label: ramo === "medico" ? "Salas" : "Cadeiras", value: client.cadeiras },
+    { label: ramo === "psicologo" ? "Sessões / semana" : "Pacientes / mês", value: client.pacientes },
+    { label: ramo === "psicologo" ? "Estrutura" : ramo === "medico" ? "Salas" : "Cadeiras", value: client.cadeiras },
     { label: "Faturamento atual", value: client.fat },
   ].filter((c) => c.value && String(c.value).trim());
   const cols = 3;
@@ -492,8 +492,8 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   const kpiRows = kpiFields
     .map((f) => {
       const val = parseNum(kpis[f.key]);
-      const bench = parseNum(ramo === "medico" ? (f.benchmarkMed ?? f.benchmarkDent) : f.benchmarkDent);
-      const label = ramo === "medico" && f.labelMedico ? f.labelMedico : f.label;
+      const bench = parseNum(kpiBenchmarkByRamo(f, ramo) ?? (ramo === "medico" ? f.benchmarkDent : undefined));
+      const label = kpiLabelByRamo(f, ramo);
       return { label, val, bench, lowerBetter: f.key === "noshow", type: f.type };
     })
     .filter((r) => Number.isFinite(r.val));

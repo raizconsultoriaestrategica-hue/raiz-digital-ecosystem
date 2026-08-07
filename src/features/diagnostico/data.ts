@@ -2,27 +2,30 @@ import type { Pilar, Plano, Classif } from "./types";
 
 export const ADMIN_PIN = "raiz360";
 
-export type Ramo = "dentista" | "medico";
+export type Ramo = "dentista" | "medico" | "psicologo";
 
 /** Vocabulário canônico de ramo no banco (clientes.ramo, diagnostics.ramo). */
-export type RamoCanonico = "odontologia" | "medicina" | "estetica" | "outros";
+export type RamoCanonico = "odontologia" | "medicina" | "estetica" | "psicologia" | "outros";
 
 /**
- * Converte o ramo interno do diagnóstico (dentista|medico) para o vocabulário
- * canônico gravado no banco. Necessário porque diagnostics.ramo tem CHECK em
- * ('odontologia','medicina','estetica','outros').
+ * Converte o ramo interno do diagnóstico (dentista|medico|psicologo) para o
+ * vocabulário canônico gravado no banco. Necessário porque diagnostics.ramo
+ * tem CHECK em ('odontologia','medicina','estetica','psicologia','outros').
  */
 export function toRamoCanonico(ramo: Ramo): RamoCanonico {
+  if (ramo === "psicologo") return "psicologia";
   return ramo === "medico" ? "medicina" : "odontologia";
 }
 
 /**
  * Converte o ramo canônico do banco de volta para o ramo interno usado pela
  * lógica de pilares/planos. Aceita também os valores legados (dentista|medico)
- * de registros pré-migração. medicina/estetica/outros caem em "medico"
- * (conjunto de pilares de saúde); odontologia em "dentista".
+ * de registros pré-migração. psicologia cai em "psicologo";
+ * medicina/estetica/outros caem em "medico" (conjunto de pilares de saúde);
+ * odontologia em "dentista".
  */
 export function fromRamoCanonico(ramo: string | null | undefined): Ramo {
+  if (ramo === "psicologo" || ramo === "psicologia") return "psicologo";
   if (ramo === "medico" || ramo === "medicina" || ramo === "estetica" || ramo === "outros") {
     return "medico";
   }
@@ -191,7 +194,89 @@ export const PILARES_MEDICO: Pilar[] = [
   },
 ];
 
+/* ============================================================
+ * PILARES. Versão PSICÓLOGO
+ * ============================================================ */
+export const PILARES_PSICOLOGO: Pilar[] = [
+  {
+    id: "p01", num: "01", name: "Marketing Digital & Posicionamento", max: 15,
+    desc: "Avalia nicho, presença digital, autoridade e capacidade de atrair pacientes dentro das regras de publicidade do CFP.",
+    questions: [
+      { text: "O(a) psicólogo(a) tem nicho de atuação claramente definido e comunicado (público, demandas e abordagem)?", labels: ["Atende tudo sem definição de nicho", "Tem foco, mas não comunica", "Comunica o nicho sem estratégia", "Nicho definido + comunicação estratégica consistente"] },
+      { text: "Produz conteúdo educativo regularmente para se posicionar como autoridade na sua área?", labels: ["Não produz conteúdo", "Esporádico, sem planejamento", "Publica com alguma regularidade, sem estratégia", "Calendário editorial com conteúdo de autoridade"] },
+      { text: "A identidade visual (perfil, site, materiais) transmite profissionalismo e acolhimento condizentes com o posicionamento?", labels: ["Sem identidade visual definida", "Visual básico e despadronizado", "Identidade básica com alguma consistência", "Marca sólida, coerente e reconhecível no nicho"] },
+      { text: "Tem presença completa e atualizada no Google (Perfil da Empresa, site ou página profissional encontrável na busca)?", labels: ["Sem presença no Google", "Perfil incompleto ou desatualizado", "Perfil completo, gerenciado esporadicamente", "Presença completa, atualizada e otimizada para busca local"] },
+      { text: "Conhece e aplica as regras de publicidade do CFP (Resolução 06/2019) de forma estratégica?", labels: ["Não sabe o que pode ou não fazer", "Sabe das restrições, não tem estratégia", "Segue as regras com divulgação básica", "Marketing ético e estratégico, alinhado ao CFP"] },
+    ],
+  },
+  {
+    id: "p02", num: "02", name: "Captação & Tráfego", max: 15,
+    desc: "Mede como novos pacientes chegam, a rede de encaminhamento, a estratégia ativa de captação e o custo de aquisição.",
+    questions: [
+      { text: "Qual é a principal fonte de novos pacientes hoje?", labels: ["Apenas espera passiva — sem estratégia", "Indicação por acaso", "Indicação + redes sociais orgânicas", "Múltiplos canais ativos e estruturados"] },
+      { text: "Cultiva ativamente uma rede de encaminhamento (psiquiatras, médicos, escolas, empresas, outros psicólogos)?", labels: ["Não tem rede de encaminhamento", "Recebe encaminhamentos por acaso", "Mantém alguns contatos, sem rotina", "Rede ativa, cultivada com relacionamento constante"] },
+      { text: "Investe em tráfego pago (Meta Ads, Google Ads) com estratégia e acompanhamento de resultados?", labels: ["Nunca investiu", "Já tentou, parou sem resultado", "Investe sem acompanhar ROI", "Estratégia ativa com métricas e ajustes periódicos"] },
+      { text: "Tem funil de captação estruturado para transformar contatos em sessões agendadas (página profissional, WhatsApp, agendamento)?", labels: ["Não tem estrutura alguma", "Só recebe contatos pelo WhatsApp", "Página ou link de agendamento básico", "Funil com qualificação, agendamento e confirmação"] },
+      { text: "Sabe qual é o custo de aquisição por novo paciente (CAC)?", labels: ["Não conhece o conceito", "Sabe o que é, nunca calculou", "Tem estimativa aproximada", "Calcula e monitora mensalmente"] },
+    ],
+  },
+  {
+    id: "p03", num: "03", name: "Atendimento & Conversão", max: 15,
+    desc: "Analisa a jornada do primeiro contato à primeira sessão: tempo de resposta, acolhimento, contrato terapêutico e continuidade.",
+    questions: [
+      { text: "Qual é o tempo médio de resposta a um novo contato pelo WhatsApp ou formulário?", labels: [">24h ou não responde sempre", "Mesmo dia, mas com atraso", "Até 2 horas", "Até 30 minutos com protocolo definido"] },
+      { text: "Tem processo estruturado e acolhedor para conduzir o novo contato até a primeira sessão agendada?", labels: ["Improvisa a cada contato", "Algumas mensagens salvas no WhatsApp", "Roteiro básico de acolhimento", "Processo completo por etapa, do contato ao agendamento"] },
+      { text: "Tem contrato terapêutico claro apresentado no início (valores, frequência, política de faltas e cancelamentos, reajustes)?", labels: ["Nada combinado formalmente", "Combina verbalmente o básico", "Contrato informal, apresentado às vezes", "Contrato terapêutico claro, apresentado a todo paciente"] },
+      { text: "Faz follow-up de contatos que não agendaram ou pararam de responder?", labels: ["Não faz — contato sumiu, acabou", "1 tentativa e desiste", "Faz, mas sem sequência definida", "Sequência de follow-up respeitosa e estruturada"] },
+      { text: "A primeira sessão tem estrutura pensada para gerar vínculo e continuidade (enquadre, expectativas, próximos passos)?", labels: ["Sem estrutura definida", "Depende do improviso do dia", "Estrutura básica, sem padrão", "Primeira sessão estruturada, com enquadre e combinados claros"] },
+    ],
+  },
+  {
+    id: "p04", num: "04", name: "Financeiro & Precificação", max: 15,
+    desc: "Identifica controle financeiro real, precificação da hora clínica, mix particular x convênios/plataformas e formalização.",
+    questions: [
+      { text: "As finanças pessoais e do consultório estão completamente separadas e controladas?", labels: ["Tudo misturado", "Contas separadas, mas com mistura", "Separadas com controle mínimo", "Separação total + DRE mensal estruturado"] },
+      { text: "Sabe o custo real da sua hora clínica (sala, plataformas, impostos, supervisão, formação continuada) e precifica com base nisso?", labels: ["Precifica por intuição ou pelo preço da região", "Tem ideia, sem cálculo formal", "Já calculou, mas não atualiza", "Cálculo da hora clínica atualizado e usado na precificação"] },
+      { text: "Qual é a proporção de receita de convênios/plataformas vs. particular e como está sendo gerenciada?", labels: ["Depende quase 100% de convênios/plataformas", "Tem particular, sem estratégia", "Trabalha para aumentar particular, sem plano", "Estratégia de mix com metas definidas"] },
+      { text: "Controla o fluxo de caixa com projeção de receita, considerando sazonalidades (férias, dezembro/janeiro) e inadimplência?", labels: ["Não controla", "Anota entradas e saídas", "Planilha básica sem projeção", "Fluxo detalhado com projeção e sazonalidades"] },
+      { text: "A operação está formalizada (PJ ou carnê-leão em dia, contabilidade, recibos para reembolso, riscos fiscais avaliados)?", labels: ["Nada formalizado", "Formalização parcial, com pendências", "Formalizado, sem assessoria ativa", "Assessoria contábil ativa + emissão de recibos estruturada"] },
+    ],
+  },
+  {
+    id: "p05", num: "05", name: "Gestão Operacional", max: 18,
+    desc: "Verifica processos, sistemas, prontuário e agenda que sustentam o crescimento sem depender só do profissional.",
+    questions: [
+      { text: "Os processos críticos estão documentados (agendamento, cancelamento, reagendamento, entrada de novo paciente)?", labels: ["Nada documentado", "Algumas anotações informais", "Documentação parcial", "Processos documentados, treinados e atualizados"] },
+      { text: "Usa software de gestão com prontuário eletrônico, agenda e financeiro, adequado ao sigilo e à LGPD?", labels: ["Papel ou anotações informais", "Ferramentas soltas (agenda + planilha)", "Sistema em uso com recursos básicos", "Sistema completo, seguro e com relatórios"] },
+      { text: "Tem processo estruturado de gestão da agenda para maximizar ocupação (horários nobres, lista de espera, encaixes)?", labels: ["Agenda com muitos buracos", "Gerencia informalmente", "Algum processo, não maximizado", "Agenda otimizada com protocolo de preenchimento"] },
+      { text: "A clínica consegue funcionar normalmente se o dono se ausentar por alguns dias?", labels: ["Para completamente", "Funciona com muitos problemas", "Funciona com dificuldade", "Funciona com autonomia real"], onlyWithTeam: true },
+      { text: "Os papéis e responsabilidades de cada membro da equipe estão claramente definidos?", labels: ["Confusão constante de tarefas", "Definição verbal informal", "Cargos definidos sem documentação", "Matriz de responsabilidades documentada"], onlyWithTeam: true },
+      { text: "Usa ferramentas de Inteligência Artificial no dia a dia (com cuidado com sigilo e dados de pacientes)?", labels: ["Nunca usou", "Já experimentou, usa pouco", "Usa para conteúdo ou comunicação", "Integrada a processos, com política de sigilo"] },
+    ],
+  },
+  {
+    id: "p06", num: "06", name: "Relacionamento & Retenção", max: 12,
+    desc: "Avalia assiduidade, engajamento no processo terapêutico, experiência do paciente e continuidade do tratamento.",
+    questions: [
+      { text: "Tem processo ativo para reduzir faltas e cancelamentos (lembretes automáticos, política de faltas aplicada)?", labels: ["Sem processo — faltas frequentes", "Cobra faltas às vezes, sem regra clara", "Lembrete básico por WhatsApp", "Protocolo de lembretes + política de faltas aplicada"] },
+      { text: "Acompanha o engajamento dos pacientes e age quando alguém começa a faltar ou some do processo?", labels: ["Paciente sumiu — sem ação", "Percebe, mas raramente age", "Contato ocasional, sem processo", "Monitoramento ativo com contato de cuidado estruturado"] },
+      { text: "Como é a experiência do paciente do primeiro contato ao encerramento (alta terapêutica estruturada)?", labels: ["Básica, sem diferencial", "Organizada, sem encantamento", "Boa experiência consistente", "Experiência cuidadosa em todas as etapas, incluindo encerramento"] },
+      { text: "Mede a satisfação e o progresso percebido dos pacientes de forma sistemática (feedback estruturado, escalas de acompanhamento)?", labels: ["Não mede", "Avalia pela percepção", "Pede feedback esporadicamente", "Medição sistemática + ajustes no serviço"] },
+    ],
+  },
+  {
+    id: "p07", num: "07", name: "Crescimento & Expansão", max: 9,
+    desc: "Avalia a maturidade para o próximo salto: psicólogos associados, clínica multiprofissional, grupos, cursos ou supervisão.",
+    questions: [
+      { text: "Tem clareza sobre quando e como expandir (psicólogos associados, clínica, atendimento em grupo, cursos, supervisão)?", labels: ["Nunca pensou no assunto", "Quer expandir, sem saber como", "Tem ideia do caminho, sem plano", "Plano estruturado com viabilidade calculada"] },
+      { text: "Os processos atuais estão documentados a ponto de serem replicados por outros profissionais?", labels: ["Processos não existem formalmente", "Na cabeça do dono", "Documentados parcialmente", "Manual completo e replicável testado"] },
+      { text: "A receita atual tem previsibilidade suficiente para suportar o custo de expansão?", labels: ["Instável e imprevisível", "Razoável sem previsibilidade", "Previsibilidade moderada", "Alta previsibilidade com reserva de capital"] },
+    ],
+  },
+];
+
 export function getPilaresByRamo(ramo: Ramo): Pilar[] {
+  if (ramo === "psicologo") return PILARES_PSICOLOGO;
   return ramo === "medico" ? PILARES_MEDICO : PILARES;
 }
 
@@ -210,7 +295,20 @@ export const PLANOS_MEDICO: Plano[] = [
   { trigger: () => true, badge: "FASE 2–3 · EXPANSÃO", name: "Raiz de Expansão", desc: "Para consultórios com boa base que buscam o próximo nível. Consolidamos posicionamento de autoridade, redução de convênios, expansão de serviços de alto valor e estrutura para crescimento sustentável.", modulos: ["Marketing Digital", "Crescimento & Expansão", "Relacionamento & Retenção", "Financeiro & Precificação"], valor: "R$ 5.000 – R$ 8.000/mês", duracao: "5–6 meses · 1 encontro/semana", roi: "+80–150%" },
 ];
 
+/**
+ * Planos do ramo Psicologia. Por decisão comercial, valores NÃO são
+ * comunicados no diagnóstico (investimento é apresentado apenas no
+ * planejamento personalizado). Os campos valor/roi ficam neutros de
+ * propósito; hoje nenhum deles é renderizado na UI ou no PDF.
+ */
+export const PLANOS_PSICOLOGO: Plano[] = [
+  { trigger: (p) => p < 0.35, badge: "FASE 1. BASE", name: "Raiz de Base", desc: "Para psicólogos e consultórios que precisam construir a fundação. Estruturamos financeiro, atendimento e operação para encher a agenda, reduzir dependência de convênios e plataformas e criar previsibilidade.", modulos: ["Financeiro & Precificação", "Atendimento & Conversão", "Gestão Operacional", "Marketing Digital"], valor: "Investimento apresentado no planejamento personalizado", duracao: "3–4 meses · 1 encontro/semana", roi: "—" },
+  { trigger: (p) => p < 0.65, badge: "FASE 1–2 · CRESCIMENTO", name: "Raiz de Crescimento", desc: "Para consultórios com alguma estrutura mas crescimento estagnado. Expandimos captação de pacientes particulares, marketing ético dentro das regras do CFP e gestão financeira para acelerar com consistência.", modulos: ["Captação & Tráfego", "Marketing Digital", "Atendimento & Conversão", "Financeiro & Precificação", "Gestão Operacional"], valor: "Investimento apresentado no planejamento personalizado", duracao: "4–5 meses · 1 encontro/semana", roi: "—" },
+  { trigger: () => true, badge: "FASE 2–3 · EXPANSÃO", name: "Raiz de Expansão", desc: "Para consultórios e clínicas com boa base, prontos para o próximo nível. Consolidamos posicionamento de autoridade, retenção e assiduidade, equipe de psicólogos associados e estrutura para crescimento sustentável.", modulos: ["Marketing Digital", "Crescimento & Expansão", "Relacionamento & Retenção", "Gestão Operacional"], valor: "Investimento apresentado no planejamento personalizado", duracao: "5–6 meses · 1 encontro/semana", roi: "—" },
+];
+
 export function getPlanosByRamo(ramo: Ramo): Plano[] {
+  if (ramo === "psicologo") return PLANOS_PSICOLOGO;
   return ramo === "medico" ? PLANOS_MEDICO : PLANOS;
 }
 
@@ -236,12 +334,20 @@ export const PILAR_MAP: Record<string, string> = {
 export const OPT_FAT = ["Até R$10k", "R$10–25k", "R$25–50k", "R$50–100k", "R$100k+"];
 export const OPT_TIPO_DENT = ["Dentista Autônomo", "Clínica Pequena (1-2 cadeiras)", "Clínica Média (3-5 cadeiras)", "Clínica Grande (5+ cadeiras)"];
 export const OPT_TIPO_MED = ["Médico Autônomo", "Consultório Pequeno (1–2 salas)", "Clínica Médica Média", "Clínica Médica Grande"];
+export const OPT_TIPO_PSI = ["Psicólogo(a) Autônomo(a)", "Consultório Pequeno (1–2 salas)", "Clínica de Psicologia (3+ profissionais)", "Clínica Multiprofissional"];
 export const OPT_FUNC = ["Nenhum (só eu)", "1 funcionário", "2–3 funcionários", "4–6 funcionários", "7–10 funcionários", "10+ funcionários"];
 export const OPT_TICKET = ["Até R$500", "R$500–1.500", "R$1.500–4.000", "R$4.000+"];
 export const OPT_CADEIRAS = ["1 cadeira", "2–3 cadeiras", "4–5 cadeiras", "+6 cadeiras"];
 export const OPT_TEMPO = ["Menos de 1 ano", "1–3 anos", "3–7 anos", "+7 anos"];
 export const OPT_PACIENTES = ["Menos de 10", "10–30 pacientes", "30–60 pacientes", "+60 pacientes"];
 export const OPT_CONVENIO = ["0% — 100% particular", "Até 30% convênios", "30–60% convênios", "60%+ convênios"];
+
+/* Opções específicas do ramo Psicologia */
+export const OPT_SALAS_PSI = ["Atendo só online", "1 sala", "2–3 salas", "4+ salas"];
+export const OPT_SESSOES_PSI = ["Menos de 10", "10–20 sessões", "20–30 sessões", "+30 sessões"];
+export const OPT_TICKET_PSI = ["Até R$100", "R$100–180", "R$180–300", "R$300+"];
+export const OPT_CONVENIO_PSI = ["0% — 100% particular", "Até 30% convênios/plataformas", "30–60% convênios/plataformas", "60%+ convênios/plataformas"];
+export const OPT_MODALIDADE_PSI = ["100% presencial", "Maioria presencial", "Maioria online", "100% online"];
 
 export const ESPECIALIDADES_DENT = [
   "Clínico Geral", "Ortodontia", "Implantodontia", "Endodontia", "Periodontia",
@@ -257,17 +363,29 @@ export const ESPECIALIDADES_MED = [
   "Cirurgia Plástica & Estética", "Oncologia", "Outra",
 ];
 
+export const ESPECIALIDADES_PSI = [
+  "Terapia Cognitivo-Comportamental (TCC)", "Psicanálise", "Psicologia Analítica (Junguiana)",
+  "Gestalt-terapia", "Abordagem Centrada na Pessoa (ACP)", "Terapia de Casais e Família (Sistêmica)",
+  "Análise do Comportamento (ABA)", "Neuropsicologia", "Psicologia Infantil",
+  "Psicologia do Adolescente", "Avaliação Psicológica", "Psicologia Organizacional", "Outra",
+];
+
 /* KPIs Iniciais. Definição declarativa para reuso (form + persistência + dashboard) */
 export interface KpiInitField {
   key: keyof KpisIniciais;
   label: string;
   labelMedico?: string;
+  labelPsi?: string;
   type: "money" | "percent";
   benchmarkDent?: string;
   benchmarkMed?: string;
+  /** Benchmark do ramo psicologia. Vários ficam sem valor de propósito:
+   * não há fonte pública confiável; serão calibrados com os primeiros clientes. */
+  benchmarkPsi?: string;
   /** Campo no CSV/dashboard_data */
   campo: string;
   campoMed?: string;
+  campoPsi?: string;
 }
 export interface KpisIniciais {
   fat?: string;
@@ -281,9 +399,29 @@ export interface KpisIniciais {
 export const KPI_INIT_FIELDS: KpiInitField[] = [
   { key: "fat", label: "Faturamento Atual (R$)", type: "money", campo: "faturamento_bruto" },
   { key: "meta_fat", label: "Meta de Faturamento em 6 meses (R$)", type: "money", campo: "meta_faturamento_6m" },
-  { key: "conversao", label: "Taxa de Conversão (%)", labelMedico: "Taxa de Agendamento (%)", type: "percent", benchmarkDent: "55", benchmarkMed: "60", campo: "taxa_conversao", campoMed: "taxa_agendamento" },
-  { key: "ticket", label: "Ticket Médio (R$)", type: "money", benchmarkDent: "2000", benchmarkMed: "350", campo: "ticket_medio_rs" },
-  { key: "ocupacao", label: "Ocupação de Cadeiras (%)", labelMedico: "Proporção Particular (%)", type: "percent", benchmarkDent: "75", benchmarkMed: "60", campo: "ocupacao_cadeiras", campoMed: "proporcao_particular" },
-  { key: "noshow", label: "Taxa de No-show (%)", type: "percent", benchmarkDent: "10", benchmarkMed: "10", campo: "taxa_no_show" },
+  { key: "conversao", label: "Taxa de Conversão (%)", labelMedico: "Taxa de Agendamento (%)", labelPsi: "Conversão de Contatos em Sessão (%)", type: "percent", benchmarkDent: "55", benchmarkMed: "60", campo: "taxa_conversao", campoMed: "taxa_agendamento" },
+  { key: "ticket", label: "Ticket Médio (R$)", labelPsi: "Valor Médio por Sessão (R$)", type: "money", benchmarkDent: "2000", benchmarkMed: "350", benchmarkPsi: "258", campo: "ticket_medio_rs" },
+  { key: "ocupacao", label: "Ocupação de Cadeiras (%)", labelMedico: "Proporção Particular (%)", labelPsi: "Ocupação da Agenda (%)", type: "percent", benchmarkDent: "75", benchmarkMed: "60", campo: "ocupacao_cadeiras", campoMed: "proporcao_particular", campoPsi: "ocupacao_agenda" },
+  { key: "noshow", label: "Taxa de No-show (%)", labelPsi: "Faltas e Cancelamentos (%)", type: "percent", benchmarkDent: "10", benchmarkMed: "10", campo: "taxa_no_show" },
   { key: "margem", label: "Margem Líquida (%)", type: "percent", benchmarkDent: "20", benchmarkMed: "25", campo: "margem_liquida" },
 ];
+
+/* Seletores de label/benchmark/campo de KPI por ramo. Centralizam a regra
+ * para DadosScreen, persistence e pdf não repetirem ternários por ramo. */
+export function kpiLabelByRamo(f: KpiInitField, ramo: Ramo): string {
+  if (ramo === "psicologo" && f.labelPsi) return f.labelPsi;
+  if (ramo === "medico" && f.labelMedico) return f.labelMedico;
+  return f.label;
+}
+
+export function kpiBenchmarkByRamo(f: KpiInitField, ramo: Ramo): string | undefined {
+  if (ramo === "psicologo") return f.benchmarkPsi;
+  if (ramo === "medico") return f.benchmarkMed;
+  return f.benchmarkDent;
+}
+
+export function kpiCampoByRamo(f: KpiInitField, ramo: Ramo): string {
+  if (ramo === "psicologo" && f.campoPsi) return f.campoPsi;
+  if (ramo === "medico" && f.campoMed) return f.campoMed;
+  return f.campo;
+}

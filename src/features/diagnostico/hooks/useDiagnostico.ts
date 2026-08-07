@@ -20,7 +20,7 @@ interface State {
 const emptyClient: ClientData = {
   name: "", cidade: "", proc: "", objetivo: "", dor: "", meta: "", data: "",
   fat: "—", tipo: "—", func: "—", ticket: "—", cadeiras: "—", tempo: "—", pacientes: "—",
-  especialidade: "", convenio: "",
+  especialidade: "", convenio: "", modalidade: "",
 };
 
 const initialState: State = {
@@ -95,6 +95,7 @@ function reducer(state: State, action: Action): State {
         tempo: sel.tempo || "—",
         pacientes: sel.pacientes || "—",
         convenio: sel.convenio || state.client.convenio || "",
+        modalidade: sel.modalidade || state.client.modalidade || "",
       };
       return {
         ...state,

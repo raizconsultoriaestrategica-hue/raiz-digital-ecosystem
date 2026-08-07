@@ -13,8 +13,11 @@ import { ClienteSelector, type ClienteRow } from "../components/ClienteSelector"
 import { supabase } from "@/integrations/supabase/client";
 import { saveClienteConfigToSupabase, fatLabelToNumber, parseMoneyToNumber } from "../persistence";
 import {
-  OPT_CADEIRAS, OPT_CONVENIO, OPT_FAT, OPT_FUNC, OPT_PACIENTES, OPT_TEMPO, OPT_TICKET,
-  OPT_TIPO_DENT, OPT_TIPO_MED, ESPECIALIDADES_DENT, ESPECIALIDADES_MED, KPI_INIT_FIELDS,
+  OPT_CADEIRAS, OPT_CONVENIO, OPT_CONVENIO_PSI, OPT_FAT, OPT_FUNC, OPT_MODALIDADE_PSI,
+  OPT_PACIENTES, OPT_SALAS_PSI, OPT_SESSOES_PSI, OPT_TEMPO, OPT_TICKET, OPT_TICKET_PSI,
+  OPT_TIPO_DENT, OPT_TIPO_MED, OPT_TIPO_PSI,
+  ESPECIALIDADES_DENT, ESPECIALIDADES_MED, ESPECIALIDADES_PSI,
+  KPI_INIT_FIELDS, kpiBenchmarkByRamo, kpiLabelByRamo,
 } from "../data";
 import type { ClientData, KpisIniciaisData, Ramo, ScoresMap, SelOpts } from "../types";
 import type { PreviousDiagPayload } from "../hooks/useDiagnostico";
@@ -41,8 +44,9 @@ export function DadosScreen({
 }: DadosScreenProps) {
   const canProceed = client.name.trim().length > 0;
   const isMed = ramo === "medico";
-  const tipoOptions = isMed ? OPT_TIPO_MED : OPT_TIPO_DENT;
-  const especialidades = isMed ? ESPECIALIDADES_MED : ESPECIALIDADES_DENT;
+  const isPsi = ramo === "psicologo";
+  const tipoOptions = isPsi ? OPT_TIPO_PSI : isMed ? OPT_TIPO_MED : OPT_TIPO_DENT;
+  const especialidades = isPsi ? ESPECIALIDADES_PSI : isMed ? ESPECIALIDADES_MED : ESPECIALIDADES_DENT;
 
   // Popula os campos do form a partir do cadastro do cliente.
   // Usada tanto pelo onChange do ClienteSelector quanto pelo useEffect de
@@ -111,8 +115,8 @@ export function DadosScreen({
           {/* Ramo de atuação */}
           <div>
             <Label className="mb-2 block">Ramo de atuação *</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["dentista", "medico"] as Ramo[]).map((r) => (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {(["dentista", "medico", "psicologo"] as Ramo[]).map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -122,7 +126,7 @@ export function DadosScreen({
                     ramo === r && "border-verde-musgo bg-verde-menta font-semibold text-verde-raiz",
                   )}
                 >
-                  {r === "dentista" ? "🦷 Odontologia" : "🩺 Saúde / Medicina"}
+                  {r === "dentista" ? "🦷 Odontologia" : r === "medico" ? "🩺 Saúde / Medicina" : "🧠 Psicologia"}
                 </button>
               ))}
             </div>
@@ -224,14 +228,35 @@ export function DadosScreen({
           <SelectGroup label="Faturamento atual" group="fat" value={selOpts.fat} options={OPT_FAT} onChange={onSel} />
           <SelectGroup label="Tipo de operação" group="tipo" value={selOpts.tipo} options={tipoOptions} onChange={onSel} />
           <SelectGroup label="Equipe" group="func" value={selOpts.func} options={OPT_FUNC} onChange={onSel} />
-          <SelectGroup label="Ticket médio" group="ticket" value={selOpts.ticket} options={OPT_TICKET} onChange={onSel} />
-          {!isMed && (
+          <SelectGroup
+            label={isPsi ? "Valor médio por sessão" : "Ticket médio"}
+            group="ticket"
+            value={selOpts.ticket}
+            options={isPsi ? OPT_TICKET_PSI : OPT_TICKET}
+            onChange={onSel}
+          />
+          {!isMed && !isPsi && (
             <SelectGroup label="Cadeiras / consultórios" group="cadeiras" value={selOpts.cadeiras} options={OPT_CADEIRAS} onChange={onSel} cols={4} />
           )}
+          {isPsi && (
+            <SelectGroup label="Estrutura de atendimento" group="cadeiras" value={selOpts.cadeiras} options={OPT_SALAS_PSI} onChange={onSel} cols={4} />
+          )}
           <SelectGroup label="Tempo de operação" group="tempo" value={selOpts.tempo} options={OPT_TEMPO} onChange={onSel} />
-          <SelectGroup label="Pacientes ativos / mês" group="pacientes" value={selOpts.pacientes} options={OPT_PACIENTES} onChange={onSel} />
+          <SelectGroup
+            label={isPsi ? "Sessões por semana" : "Pacientes ativos / mês"}
+            group="pacientes"
+            value={selOpts.pacientes}
+            options={isPsi ? OPT_SESSOES_PSI : OPT_PACIENTES}
+            onChange={onSel}
+          />
+          {isPsi && (
+            <SelectGroup label="Modalidade de atendimento" group="modalidade" value={selOpts.modalidade} options={OPT_MODALIDADE_PSI} onChange={onSel} cols={4} />
+          )}
           {isMed && (
             <SelectGroup label="% de receita por convênio" group="convenio" value={selOpts.convenio} options={OPT_CONVENIO} onChange={onSel} />
+          )}
+          {isPsi && (
+            <SelectGroup label="% de receita de convênios/plataformas" group="convenio" value={selOpts.convenio} options={OPT_CONVENIO_PSI} onChange={onSel} />
           )}
 
           {/* KPIs Iniciais */}
@@ -243,8 +268,8 @@ export function DadosScreen({
             </p>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {KPI_INIT_FIELDS.map((f) => {
-                const label = isMed && f.labelMedico ? f.labelMedico : f.label;
-                const benchmark = isMed ? f.benchmarkMed : f.benchmarkDent;
+                const label = kpiLabelByRamo(f, ramo);
+                const benchmark = kpiBenchmarkByRamo(f, ramo);
                 return (
                   <div key={f.key}>
                     <Label className="text-xs">{label}</Label>
