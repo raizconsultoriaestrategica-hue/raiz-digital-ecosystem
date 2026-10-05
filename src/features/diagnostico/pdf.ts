@@ -621,7 +621,7 @@ export async function generatePDF(snapshot: DiagnosticoSnapshot, notas?: string)
   setFont(8, "bold", GOLD);
   doc.text("DÚVIDAS OU MAIS INFORMAÇÕES", W / 2, y + 8, { align: "center" });
   setFont(10.5, "bold", LINHO);
-  doc.text("WhatsApp: (44) 99999-3334", W / 2, y + 15, { align: "center" });
+  doc.text("WhatsApp: (44) 99180-3600", W / 2, y + 15, { align: "center" });
   setFont(9, "normal", [210, 225, 215]);
   doc.text("raizconsultoriaestrategica@gmail.com", W / 2, y + 20.5, { align: "center" });
   y += 28;
