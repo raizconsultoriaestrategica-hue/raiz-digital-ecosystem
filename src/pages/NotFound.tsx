@@ -29,7 +29,7 @@ const NotFound = () => {
             className="border-verde-raiz/30 text-verde-raiz hover:bg-verde-raiz/5"
           >
             <a
-              href="https://wa.me/5544999993334?text=Vim%20pelo%20site%20da%20Raiz%20e%20quero%20conversar"
+              href="https://wa.me/5544991803600?text=Vim%20pelo%20site%20da%20Raiz%20e%20quero%20conversar"
               target="_blank"
               rel="noopener noreferrer"
             >

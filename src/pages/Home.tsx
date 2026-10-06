@@ -25,7 +25,7 @@ import patrickEstrategico from "@/assets/patrick-estrategico.webp";
 import patrickLifestyle from "@/assets/patrick-lifestyle.webp";
 import BrandLogo from "@/components/brand/BrandLogo";
 
-const WHATSAPP_URL = "https://wa.me/5544999993334?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
+const WHATSAPP_URL = "https://wa.me/5544991803600?text=Vim%20pelo%20site%20e%20quero%20agendar%20meu%20Diagn%C3%B3stico%20360%C2%B0";
 
 const NAV_LINKS = [
   { label: "O Protocolo", href: "#protocolo" },
@@ -1095,7 +1095,7 @@ function HomeFooter() {
                 raizconsultoriaestrategica@gmail.com
               </a><br />
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-linho transition-colors">
-                (44) 99999-3334
+                (44) 99180-3600
               </a><br />
               <a href="https://instagram.com/consult.raiz" target="_blank" rel="noopener noreferrer" className="hover:text-linho transition-colors">
                 @consult.raiz
